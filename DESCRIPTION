@@ -16,7 +16,9 @@ Imports:
     ingredients (>= 2.2.0),
     iBreakDown (>= 2.0.1),
     ranger,
-    xgboost
+    xgboost,
+    catboost,
+    lightgbm
 Suggests:
     knitr,
     rmarkdown,
