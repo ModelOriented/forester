@@ -53,8 +53,8 @@ make_xgboost <- function(data, target, type = "regression")
   ### Conditions:
   # Check data class
   if (!any(class(data) %in% c("data.frame", "dgCMatrix", "matrix", "data.table")))
-    stop("Object is not one of the types: 'data.frame','dgCMatrix','matrix','data.table")
-
+    stop("Object is not one of the types: 'data.frame', 'dgCMatrix', 'matrix', 'data.table")
+  
   # Unify data class to data frame
   if (any(class(data) == "matrix"))
   {
@@ -68,7 +68,7 @@ make_xgboost <- function(data, target, type = "regression")
   {
     data <- as.data.frame(as.matrix(data))
   }
-
+  
   ### Data processing level 1/2 (remove NAs, split label and training frame,...)
   # Remove rows with NA values (I will write in the documentation of function):
   data <- na.omit(data)
@@ -77,26 +77,26 @@ make_xgboost <- function(data, target, type = "regression")
   if (nrow(data) == 0 | ncol(data) < 2) {
     stop("The data frame is empty or has too little columns.")
   }
-
+  
   # Check if target is one of colnames of data frame
   if (!is.character(target) | !(target %in% colnames(data)))
     stop(
       "Either 'target' input is not a character or data does not have column named similar to 'target'"
     )
-
+  
   # Change character columns to factors
   data[sapply(data, is.character)] <-
     lapply(data[sapply(data, is.character)], as.factor)
-
+  
   # Extract the target vector from our dataframe:
   label_column <- data[[target]]
-
+  
   # Check condition for type between "classification" and "regression":
   if ((type != "classification") & (type != "regression"))
     stop("Type of problem is invalid.")
-
-
-
+  
+  
+  
   ### Conditions and processing on target column:
   # Binary Classification
   if (type == "classification")
@@ -110,7 +110,7 @@ make_xgboost <- function(data, target, type = "regression")
     {
       stop("Too many classes for binary classification")
     }
-
+    
     # Coercing the target from factor to numeric values:
     if (class(label_column) == "factor")
     {
@@ -120,7 +120,7 @@ make_xgboost <- function(data, target, type = "regression")
       var_all  <- as.character(unique(data[, target]))
       message(paste("MECHANISM: ", var_true, " -> 1 and ", var_all[!var_all  %in% var_true], " -> 0."))
     }
-
+    
     # Rescaling target columns to be in [0,1]
     uniq_vals <- unique(label_column)
     if ((min(uniq_vals) != 0) | (max(uniq_vals) != 1))
@@ -134,7 +134,7 @@ make_xgboost <- function(data, target, type = "regression")
       label_column[label_column == min]  <- 0
     }
   }
-
+  
   # Regression:
   if (type == "regression")
   {
@@ -147,13 +147,13 @@ make_xgboost <- function(data, target, type = "regression")
     # Double-check for numeric type of label column:
     label_column <- as.numeric(label_column)
   }
-
-
-
+  
+  
+  
   ### Data processing level 2/2
   # Data frame without target
-  data_info <- data[, !(colnames(data) %in% target), drop = FALSE]
-
+  data_info <- data[,!(colnames(data) %in% target), drop = FALSE]
+  
   # One-hot encoding for categorical features in Data frame without target
   names_factor <-
     colnames(data_info)[sapply(data_info, is.factor)] # finding names of categorical attributes
@@ -169,16 +169,18 @@ make_xgboost <- function(data, target, type = "regression")
                                FALSE)
     )
   # using model.matrix to create one-hot encoded matrix
-
+  
   # Transform from data frame type to matrix to prepare for XGBboost model:
   data_encoded_matrix <- data.matrix(data_encoded)
-
+  
   # Convert to object used in XGBoost model:
-  dtrain <- xgboost::xgb.DMatrix(data = data_encoded_matrix, label = label_column)
-
+  dtrain <-
+    xgboost::xgb.DMatrix(data = data_encoded_matrix, label = label_column)
+  
   ### Creating predict function:
   xgboost_predict <- function(object, newdata) {
-    names_factor_newdata <- colnames(newdata)[sapply(newdata, is.factor)]
+    names_factor_newdata <-
+      colnames(newdata)[sapply(newdata, is.factor)]
     vector_index_newdata <-
       which(colnames(newdata) %in% names_factor_newdata)
     data_encoded_newdata <-
@@ -192,40 +194,44 @@ make_xgboost <- function(data, target, type = "regression")
     data_encoded_matrix_newdata <- data.matrix(data_encoded_newdata)
     return (predict(object, data_encoded_matrix_newdata))
   }
-
-
-
+  
+  
+  
   ### XGBoost Model
   # Regression
   if (type == "regression") {
     model <- xgboost::xgb.train(
       data = dtrain,
       verbose = 0,
-      max.depth=8, eta=0.3,
-      nrounds=4, nthread=2,
+      max.depth = 8,
+      eta = 0.3,
+      nrounds = 4,
+      nthread = 2,
       objective = "reg:linear"
     )
   }
-
+  
   # Binary classification
   if (type == "classification") {
     model <- xgboost::xgb.train(
       data = dtrain,
       verbose = 0,
-      max.depth=8, eta=0.3,
-      nrounds=4, nthread=2,
+      max.depth = 8,
+      eta = 0.3,
+      nrounds = 4,
+      nthread = 2,
       eval_metric = "logloss",
       objective = "binary:logistic"
     )
   }
-
-
-
+  
+  
+  
   ### Explainer from DALEX
   # For simplicity, take processed matrix from original data frame for explanation purpose:
   explainer_automate_xgb <- DALEX::explain(
     model,
-    data = data[,-which(names(data) == target), drop =
+    data = data[, -which(names(data) == target), drop =
                   FALSE],
     y = label_column,
     predict_function = xgboost_predict,
@@ -233,5 +239,3 @@ make_xgboost <- function(data, target, type = "regression")
   )
   return(explainer_automate_xgb)
 }
-
-

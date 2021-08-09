@@ -56,7 +56,7 @@ make_lightgbm <- function(data, target, type = "regression")
   ### Conditions:
   # Check data class
   if (!any(class(data) %in% c("data.frame", "dgCMatrix", "matrix", "data.table")))
-    stop("Object is not one of the types: 'data.frame','dgCMatrix','matrix','data.table")
+    stop("Object is not one of the types: 'data.frame', 'dgCMatrix', 'matrix', 'data.table")
 
   # Unify data class to data frame
   if (any(class(data) == "matrix"))

@@ -1,5 +1,4 @@
 context("Check make functions")
-library(data.table)
 
 source("objects_for_tests.R")
 
@@ -8,7 +7,7 @@ test_make_functions <- function(make_function) {
   test_that(paste(substitute(make_function), ": An invalid data"), {
     expect_error(
       make_function(agaricus.train, "label", "classification"),
-      "Object is not one of the types: 'data.frame','dgCMatrix','matrix','data.table"
+      "Object is not one of the types: 'data.frame', 'dgCMatrix', 'matrix', 'data.table"
     )
   })
   
@@ -27,7 +26,7 @@ test_make_functions <- function(make_function) {
   })
   
   test_that(paste(substitute(make_function), ": A data.table as data"), {
-    dt <- as.data.table(apartments)
+    dt <- data.table::as.data.table(apartments)
     model <- make_function(dt, "m2.price", "regression")
     expect_s3_class(model, "explainer")
   })
