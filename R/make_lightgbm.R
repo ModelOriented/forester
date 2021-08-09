@@ -1,42 +1,44 @@
-#' Automated Function for Explaining XGBoost model
+#' Automated Function for Explaining LightGBM model
 #'
-#' Function \code{make_xgboost} automates the process of applying XGBoost model
+#' Function \code{make_lightgbm} automates the process of applying LightGBM model
 #' for a dataset and simutaneously creates explainer from the use of DALEX package.
 #' The created explainer can be further processed by functions for explanations.
 #'
 #'
-#' @param data data.frame, matrix, data.table or dgCMatrix - data will be used to run the XGBoost model. NOTE: data has to contain the target column.
+#' @param data data.frame, matrix, data.table or dgCMatrix - data will be used to run the LightGBM model. NOTE: data has to contain the target column.
 #' @param target character: name of the target column, placed in quotation marks. The input target name is compulsory to be one of column names of input data.
 #' @param type character: defining the task, placed in quotation marks. Two options for type: "regression" and "classification", particularly, binary classification.
 #'
-#' @return An object of the class \code{explainer} for XGBoost model from given data, target and defined type of problem.
+#' @return An object of the class \code{explainer} for LightGBM model with given data, target and defined type of problem.
 #'
 #'
 #' @references Explanatory Model Analysis. Explore, Explain and Examine Predictive Models. \url{https://ema.drwhy.ai/}
 #' @export
 #' @importFrom stats predict
+#' @importFrom utils head tail installed.packages methods
+#'
 #' @examples
 #' # simple explainer for regression problem
 #'
 #' library(datasets)
 #' library(DALEX)
-#'
 #' data("iris")
-#' EXPLAINER <- make_xgboost(iris,"Petal.Length",type="regression")
+#' EXPLAINER <- make_lightgbm(iris,"Petal.Length",type="regression")
 #'
 #' ## Variable importance
-#' variable_importance_xgb <- model_parts(EXPLAINER,type="raw")
-#' plot(variable_importance_xgb)
+#' variable_importance_gbm <- model_parts(EXPLAINER,type="raw")
+#' plot(variable_importance_gbm)
 #'
 #' ## Single variable:
-#' sv_xgb_petal_width <- model_profile(EXPLAINER, variable="Petal.Width",type="partial")
-#' plot(sv_xgb_petal_width)
+#' sv_gbm_petal_width <- model_profile(EXPLAINER, variable="Petal.Width",type="partial")
+#' plot(sv_gbm_petal_width)
+#'
 #'
 #' # simple explainer for classification problem
 #'
 #' library(DALEX)
 #' ## We will predict the survived state: 0 and 1
-#' titanic_explainer <- make_xgboost(titanic_imputed, "survived", "classification")
+#' titanic_explainer <- make_lightgbm(titanic_imputed, "survived", "classification")
 #'
 #' ## Assessment for model performance:
 #' model_performance(titanic_explainer)
@@ -46,9 +48,10 @@
 #'
 #' ## Plot reverse cumulative distribution of module of residual
 #' plot(model_performance(titanic_explainer))
+#'
 ##
 
-make_xgboost <- function(data, target, type = "regression")
+make_lightgbm <- function(data, target, type = "regression")
 {
   ### Conditions:
   # Check data class
@@ -68,11 +71,11 @@ make_xgboost <- function(data, target, type = "regression")
   {
     data <- as.data.frame(as.matrix(data))
   }
-
+  
   ### Data processing level 1/2 (remove NAs, split label and training frame,...)
   # Remove rows with NA values (I will write in the documentation of function):
   data <- na.omit(data)
-  
+
   # Checking if data frame is empty
   if (nrow(data) == 0 | ncol(data) < 2) {
     stop("The data frame is empty or has too little columns.")
@@ -92,6 +95,7 @@ make_xgboost <- function(data, target, type = "regression")
   label_column <- data[[target]]
 
   # Check condition for type between "classification" and "regression":
+  ## Classification type
   if ((type != "classification") & (type != "regression"))
     stop("Type of problem is invalid.")
 
@@ -101,7 +105,6 @@ make_xgboost <- function(data, target, type = "regression")
   # Binary Classification
   if (type == "classification")
   {
-    # Checking number of classes in target column:
     if (length(unique(label_column)) < 2)
     {
       stop("Too few classes for binary classification")
@@ -135,6 +138,7 @@ make_xgboost <- function(data, target, type = "regression")
     }
   }
 
+
   # Regression:
   if (type == "regression")
   {
@@ -154,68 +158,55 @@ make_xgboost <- function(data, target, type = "regression")
   # Data frame without target
   data_info <- data[, !(colnames(data) %in% target), drop = FALSE]
 
-  # One-hot encoding for categorical features in Data frame without target
-  names_factor <-
-    colnames(data_info)[sapply(data_info, is.factor)] # finding names of categorical attributes
-  vector_index <-
-    which(colnames(data_info) %in% names_factor)     # positions of those categorical attributes
-  # in colnames of Data frame without target
-  data_encoded <-
-    model.matrix(
-      ~ . - 1,
-      data = data_info,
-      contrasts.arg = lapply(data_info[, vector_index, drop = FALSE],
-                             contrasts, contrasts =
-                               FALSE)
+  # Using lgb.convert_with_rules. The function transforms the data into a fittable data
+  data_info_rules <- lightgbm::lgb.convert_with_rules(data = data_info)
+  data_encoded <- data_info_rules$data
+
+  # Transform from dataframe to matrix:
+  data_encoded_matrix <- as.matrix(data_encoded)
+
+  # Convert to object used in LightGBM model:
+  names_cat_vars <- names(data_info_rules$rules)
+  dtrain <-
+    lightgbm::lgb.Dataset(
+      data = data_encoded_matrix,
+      label = label_column,
+      categorical_feature = as.vector(which(
+        colnames(data_encoded) %in% names_cat_vars
+      ))
     )
-  # using model.matrix to create one-hot encoded matrix
 
-  # Transform from data frame type to matrix to prepare for XGBboost model:
-  data_encoded_matrix <- data.matrix(data_encoded)
 
-  # Convert to object used in XGBoost model:
-  dtrain <- xgboost::xgb.DMatrix(data = data_encoded_matrix, label = label_column)
 
   ### Creating predict function:
-  xgboost_predict <- function(object, newdata) {
-    names_factor_newdata <- colnames(newdata)[sapply(newdata, is.factor)]
-    vector_index_newdata <-
-      which(colnames(newdata) %in% names_factor_newdata)
-    data_encoded_newdata <-
-      model.matrix(
-        ~ . - 1,
-        data = newdata,
-        contrasts.arg = lapply(newdata[, vector_index_newdata, drop = FALSE],
-                               contrasts, contrasts =
-                                 FALSE)
-      )
-    data_encoded_matrix_newdata <- data.matrix(data_encoded_newdata)
+  lightgbm_predict <- function(object, newdata) {
+    newdata_encoded <-
+      lightgbm::lgb.convert_with_rules(data = newdata, rules = data_info_rules$rules)$data
+    data_encoded_matrix_newdata <- as.matrix(newdata_encoded)
     return (predict(object, data_encoded_matrix_newdata))
   }
-
 
 
   ### XGBoost Model
   # Regression
   if (type == "regression") {
-    model <- xgboost::xgb.train(
+    model <- lightgbm::lightgbm(
       data = dtrain,
-      verbose = 0,
-      max.depth=8, eta=0.3,
-      nrounds=4, nthread=2,
-      objective = "reg:linear"
+      verbose = -1,
+      learning_rate=0.7,
+      nrounds = 10,
+      objective = "regression"
     )
   }
 
   # Binary classification
   if (type == "classification") {
-    model <- xgboost::xgb.train(
+    model <- lightgbm::lightgbm(
       data = dtrain,
-      verbose = 0,
-      max.depth=8, eta=0.3,
-      nrounds=4, nthread=2,
-      eval_metric = "logloss",
-      objective = "binary:logistic"
+      verbose = -1,
+      learning_rate = 0.4,
+      nrounds = 10,
+      objective = "binary"
     )
   }
 
@@ -223,15 +214,13 @@ make_xgboost <- function(data, target, type = "regression")
 
   ### Explainer from DALEX
   # For simplicity, take processed matrix from original data frame for explanation purpose:
-  explainer_automate_xgb <- DALEX::explain(
+  explainer_automate_lightgbm <- DALEX::explain(
     model,
-    data = data[,-which(names(data) == target), drop =
-                  FALSE],
+    data = data[,-which(names(data) == target),
+                drop = FALSE],
     y = label_column,
-    predict_function = xgboost_predict,
-    label = "XGBoost"
+    predict_function = lightgbm_predict,
+    label = "LightGBM"
   )
-  return(explainer_automate_xgb)
+  return(explainer_automate_lightgbm)
 }
-
-
