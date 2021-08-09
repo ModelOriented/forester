@@ -66,14 +66,14 @@ make_ranger <- function(data, target, type) {
     stop("There can't be NaN values in target column!")
   }
   # try to convert column names to names without znaki
-  test_colnames<- lapply(colnames(data),function(x) gsub("_", "", x))
-  test_colnames<- lapply(colnames(data),function(x) gsub("[.]", "", x))
+  test_colnames <- lapply(colnames(data),function(x) gsub("_", "", x))
+  test_colnames <- lapply(colnames(data),function(x) gsub("[.]", "", x))
   if(any(grepl('[[:punct:]]', test_colnames))) {
     colnames(data) <- lapply(colnames(data),function(x) gsub("[[:punct:]]", "_", x))
     target <- gsub("[[:punct:]]", "_", target)
     message("Column names are wrong for creating a formula. Replacing special signs with '_'")
   }
-  form <- stats::as.formula(paste(target , "~."))
+  form <- stats::as.formula(paste(target, "~."))
 
 
   ### Model
@@ -91,7 +91,7 @@ make_ranger <- function(data, target, type) {
       uniq <- unique(data[, target])
       data[, target] <- ifelse(data[, target] == uniq[1], 0, 1)
       message(paste("Wrong type of target column. Changed to numeric: ",
-                    uniq[1], " -> 1 and ", uniq[2], " -> 0 ", sep=""))
+                    uniq[1], " -> 1 and ", uniq[2], " -> 0 ", sep = ""))
     }
 
     # Creating model
