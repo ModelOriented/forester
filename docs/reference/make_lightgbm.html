@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Automated Function for Explaining XGBoost model — make_xgboost • forester</title>
+<title>Automated Function for Explaining LightGBM model — make_lightgbm • forester</title>
 
 
 <!-- jquery -->
@@ -45,8 +45,8 @@
 
 
 
-<meta property="og:title" content="Automated Function for Explaining XGBoost model — make_xgboost" />
-<meta property="og:description" content="Function make_xgboost automates the process of applying XGBoost model
+<meta property="og:title" content="Automated Function for Explaining LightGBM model — make_lightgbm" />
+<meta property="og:description" content="Function make_lightgbm automates the process of applying LightGBM model
 for a dataset and simutaneously creates explainer from the use of DALEX package.
 The created explainer can be further processed by functions for explanations." />
 
@@ -126,25 +126,25 @@ The created explainer can be further processed by functions for explanations." /
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Automated Function for Explaining XGBoost model</h1>
-    <small class="dont-index">Source: <a href='https://github.com/ModelOriented/forester/blob/master/R/make_XGBoost.R'><code>R/make_XGBoost.R</code></a></small>
-    <div class="hidden name"><code>make_xgboost.Rd</code></div>
+    <h1>Automated Function for Explaining LightGBM model</h1>
+    <small class="dont-index">Source: <a href='https://github.com/ModelOriented/forester/blob/master/R/make_lightgbm.R'><code>R/make_lightgbm.R</code></a></small>
+    <div class="hidden name"><code>make_lightgbm.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Function <code>make_xgboost</code> automates the process of applying XGBoost model
+    <p>Function <code>make_lightgbm</code> automates the process of applying LightGBM model
 for a dataset and simutaneously creates explainer from the use of DALEX package.
 The created explainer can be further processed by functions for explanations.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>make_xgboost</span><span class='op'>(</span><span class='va'>data</span>, <span class='va'>target</span>, type <span class='op'>=</span> <span class='st'>"regression"</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>make_lightgbm</span><span class='op'>(</span><span class='va'>data</span>, <span class='va'>target</span>, type <span class='op'>=</span> <span class='st'>"regression"</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>data</th>
-      <td><p>data.frame, matrix, data.table or dgCMatrix - data will be used to run the XGBoost model. NOTE: data has to contain the target column.</p></td>
+      <td><p>data.frame, matrix, data.table or dgCMatrix - data will be used to run the LightGBM model. NOTE: data has to contain the target column.</p></td>
     </tr>
     <tr>
       <th>target</th>
@@ -158,7 +158,7 @@ The created explainer can be further processed by functions for explanations.</p
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of the class <code>explainer</code> for XGBoost model from given data, target and defined type of problem.</p>
+    <p>An object of the class <code>explainer</code> for LightGBM model with given data, target and defined type of problem.</p>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     <p>Explanatory Model Analysis. Explore, Explain and Examine Predictive Models. <a href='https://ema.drwhy.ai/'>https://ema.drwhy.ai/</a></p>
@@ -168,64 +168,64 @@ The created explainer can be further processed by functions for explanations.</p
 
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'>datasets</span><span class='op'>)</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://dalex.drwhy.ai'>DALEX</a></span><span class='op'>)</span>
-
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"iris"</span><span class='op'>)</span>
-<span class='va'>EXPLAINER</span> <span class='op'>&lt;-</span> <span class='fu'>make_xgboost</span><span class='op'>(</span><span class='va'>iris</span>,<span class='st'>"Petal.Length"</span>,type<span class='op'>=</span><span class='st'>"regression"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [13:32:10] WARNING: amalgamation/../src/objective/regression_obj.cu:171: reg:linear is now deprecated in favor of reg:squarederror.
-#&gt; Preparation of a new explainer is initiated
-#&gt;   -&gt; model label       :  XGBoost 
+<span class='va'>EXPLAINER</span> <span class='op'>&lt;-</span> <span class='fu'>make_lightgbm</span><span class='op'>(</span><span class='va'>iris</span>,<span class='st'>"Petal.Length"</span>,type<span class='op'>=</span><span class='st'>"regression"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; Preparation of a new explainer is initiated
+#&gt;   -&gt; model label       :  LightGBM 
 #&gt;   -&gt; data              :  150  rows  4  cols 
 #&gt;   -&gt; target variable   :  150  values 
-#&gt;   -&gt; predict function  :  xgboost_predict 
+#&gt;   -&gt; predict function  :  lightgbm_predict 
 #&gt;   -&gt; predicted values  :  No value for predict function target column. ( <span style='color: #BBBB00;'> default </span> )
-#&gt;   -&gt; model_info        :  package Model of class: xgb.Booster package unrecognized , ver. Unknown , task regression ( <span style='color: #BBBB00;'> default </span> ) 
-#&gt;   -&gt; predicted values  :  numerical, min =  0.9889866 , mean =  2.937974 , max =  4.495906  
+#&gt;   -&gt; model_info        :  package Model of class: lgb.Booster package unrecognized , ver. Unknown , task regression ( <span style='color: #BBBB00;'> default </span> ) 
+#&gt;   -&gt; predicted values  :  numerical, min =  1.348557 , mean =  3.758 , max =  6.262391  
 #&gt;   -&gt; residual function :  difference between y and yhat ( <span style='color: #BBBB00;'> default </span> )
-#&gt;   -&gt; residuals         :  numerical, min =  -0.04472344 , mean =  0.8200258 , max =  2.404094  
+#&gt;   -&gt; residuals         :  numerical, min =  -0.808878 , mean =  1.082082e-08 , max =  0.6376088  
 #&gt;  <span style='color: #00BB00;'> A new explainer has been created! </span> </div><div class='input'>
 <span class='co'>## Variable importance</span>
-<span class='va'>variable_importance_xgb</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://dalex.drwhy.ai/reference/model_parts.html'>model_parts</a></span><span class='op'>(</span><span class='va'>EXPLAINER</span>,type<span class='op'>=</span><span class='st'>"raw"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>variable_importance_xgb</span><span class='op'>)</span>
-</div><div class='img'><img src='make_xgboost-1.png' alt='' width='700' height='433' /></div><div class='input'>
+<span class='va'>variable_importance_gbm</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://dalex.drwhy.ai/reference/model_parts.html'>model_parts</a></span><span class='op'>(</span><span class='va'>EXPLAINER</span>,type<span class='op'>=</span><span class='st'>"raw"</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>variable_importance_gbm</span><span class='op'>)</span>
+</div><div class='img'><img src='make_lightgbm-1.png' alt='' width='700' height='433' /></div><div class='input'>
 <span class='co'>## Single variable:</span>
-<span class='va'>sv_xgb_petal_width</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://dalex.drwhy.ai/reference/model_profile.html'>model_profile</a></span><span class='op'>(</span><span class='va'>EXPLAINER</span>, variable<span class='op'>=</span><span class='st'>"Petal.Width"</span>,type<span class='op'>=</span><span class='st'>"partial"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>sv_xgb_petal_width</span><span class='op'>)</span>
-</div><div class='img'><img src='make_xgboost-2.png' alt='' width='700' height='433' /></div><div class='input'>
+<span class='va'>sv_gbm_petal_width</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://dalex.drwhy.ai/reference/model_profile.html'>model_profile</a></span><span class='op'>(</span><span class='va'>EXPLAINER</span>, variable<span class='op'>=</span><span class='st'>"Petal.Width"</span>,type<span class='op'>=</span><span class='st'>"partial"</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>sv_gbm_petal_width</span><span class='op'>)</span>
+</div><div class='img'><img src='make_lightgbm-2.png' alt='' width='700' height='433' /></div><div class='input'>
+
 <span class='co'># simple explainer for classification problem</span>
 
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://dalex.drwhy.ai'>DALEX</a></span><span class='op'>)</span>
 <span class='co'>## We will predict the survived state: 0 and 1</span>
-<span class='va'>titanic_explainer</span> <span class='op'>&lt;-</span> <span class='fu'>make_xgboost</span><span class='op'>(</span><span class='va'>titanic_imputed</span>, <span class='st'>"survived"</span>, <span class='st'>"classification"</span><span class='op'>)</span>
+<span class='va'>titanic_explainer</span> <span class='op'>&lt;-</span> <span class='fu'>make_lightgbm</span><span class='op'>(</span><span class='va'>titanic_imputed</span>, <span class='st'>"survived"</span>, <span class='st'>"classification"</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; Preparation of a new explainer is initiated
-#&gt;   -&gt; model label       :  XGBoost 
+#&gt;   -&gt; model label       :  LightGBM 
 #&gt;   -&gt; data              :  2207  rows  7  cols 
 #&gt;   -&gt; target variable   :  2207  values 
-#&gt;   -&gt; predict function  :  xgboost_predict 
+#&gt;   -&gt; predict function  :  lightgbm_predict 
 #&gt;   -&gt; predicted values  :  No value for predict function target column. ( <span style='color: #BBBB00;'> default </span> )
-#&gt;   -&gt; model_info        :  package Model of class: xgb.Booster package unrecognized , ver. Unknown , task regression ( <span style='color: #BBBB00;'> default </span> ) 
-#&gt;   -&gt; predicted values  :  numerical, min =  0.1730672 , mean =  0.3674002 , max =  0.8481522  
+#&gt;   -&gt; model_info        :  package Model of class: lgb.Booster package unrecognized , ver. Unknown , task regression ( <span style='color: #BBBB00;'> default </span> ) 
+#&gt;   -&gt; predicted values  :  numerical, min =  0.008397735 , mean =  0.3228128 , max =  0.9888788  
 #&gt;   -&gt; residual function :  difference between y and yhat ( <span style='color: #BBBB00;'> default </span> )
-#&gt;   -&gt; residuals         :  numerical, min =  -0.7893711 , mean =  -0.04524343 , max =  0.8151929  
+#&gt;   -&gt; residuals         :  numerical, min =  -0.8888501 , mean =  -0.0006560506 , max =  0.9520064  
 #&gt;  <span style='color: #00BB00;'> A new explainer has been created! </span> </div><div class='input'>
 <span class='co'>## Assessment for model performance:</span>
 <span class='fu'><a href='https://dalex.drwhy.ai/reference/model_performance.html'>model_performance</a></span><span class='op'>(</span><span class='va'>titanic_explainer</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; Measures for:  regression
-#&gt; mse        : 0.1291345 
-#&gt; rmse       : 0.3593529 
-#&gt; r2         : 0.4086484 
-#&gt; mad        : 0.2406047
+#&gt; mse        : 0.1099119 
+#&gt; rmse       : 0.3315297 
+#&gt; r2         : 0.4966752 
+#&gt; mad        : 0.1522694
 #&gt; 
 #&gt; Residuals:
-#&gt;         0%        10%        20%        30%        40%        50%        60% 
-#&gt; -0.7893711 -0.3281960 -0.2870075 -0.2370923 -0.2236648 -0.2120660 -0.1908185 
-#&gt;        70%        80%        90%       100% 
-#&gt;  0.1518478  0.2648395  0.6358789  0.8151929 </div><div class='input'>
+#&gt;          0%         10%         20%         30%         40%         50% 
+#&gt; -0.88885006 -0.27430564 -0.20266283 -0.15015552 -0.12964052 -0.08227784 
+#&gt;         60%         70%         80%         90%        100% 
+#&gt; -0.04463727  0.01518819  0.16953924  0.60007879  0.95200641 </div><div class='input'>
 <span class='co'>## Finding important features:</span>
 <span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='fu'><a href='https://dalex.drwhy.ai/reference/model_parts.html'>model_parts</a></span><span class='op'>(</span><span class='va'>titanic_explainer</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='img'><img src='make_xgboost-3.png' alt='' width='700' height='433' /></div><div class='input'>
+</div><div class='img'><img src='make_lightgbm-3.png' alt='' width='700' height='433' /></div><div class='input'>
 <span class='co'>## Plot reverse cumulative distribution of module of residual</span>
 <span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='fu'><a href='https://dalex.drwhy.ai/reference/model_performance.html'>model_performance</a></span><span class='op'>(</span><span class='va'>titanic_explainer</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='img'><img src='make_xgboost-4.png' alt='' width='700' height='433' /></div></pre>
+</div><div class='img'><img src='make_lightgbm-4.png' alt='' width='700' height='433' /></div><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
