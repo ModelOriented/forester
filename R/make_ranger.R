@@ -122,5 +122,6 @@ make_ranger <- function(data, target, type) {
                                      y = data[, target],
                                      label = "Ranger")
   
+  class(ranger_explained) <- c("forester_model", "explainer")
   return(ranger_explained)
 }

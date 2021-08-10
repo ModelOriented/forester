@@ -210,8 +210,6 @@ make_lightgbm <- function(data, target, type = "regression")
     )
   }
 
-
-
   ### Explainer from DALEX
   # For simplicity, take processed matrix from original data frame for explanation purpose:
   explainer_automate_lightgbm <- DALEX::explain(
@@ -221,5 +219,8 @@ make_lightgbm <- function(data, target, type = "regression")
     predict_function = lightgbm_predict,
     label = "LightGBM"
   )
+  
+  ### S3 objects 
+  class(explainer_automate_lightgbm) <- c("forester_model", "explainer")
   return(explainer_automate_lightgbm)
 }

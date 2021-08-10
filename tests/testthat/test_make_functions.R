@@ -22,18 +22,18 @@ test_make_functions <- function(make_function) {
   test_that(paste(substitute(make_function), ": A matrix as data"), {
     m <- as.matrix(titanic_imputed[c("age", "fare", "sibsp", "parch", "survived")])
     model <- make_function(m, "survived", "classification")
-    expect_s3_class(model, "explainer")
+    expect_s3_class(model, "forester_model")
   })
   
   test_that(paste(substitute(make_function), ": A data.table as data"), {
     dt <- data.table::as.data.table(apartments)
     model <- make_function(dt, "m2.price", "regression")
-    expect_s3_class(model, "explainer")
+    expect_s3_class(model, "forester_model")
   })
   
   test_that(paste(substitute(make_function), ": A data.table as data"), {
     model <- make_function(agaricus_comb, "label", "classification")
-    expect_s3_class(model, "explainer")
+    expect_s3_class(model, "forester_model")
   })
   
   # Test XGBoost 1 regression:
@@ -70,7 +70,7 @@ test_make_functions <- function(make_function) {
   
   test_that(paste(substitute(make_function), ": Testing model"), {
     model <- make_function(apartments, "m2.price", "regression")
-    expect_s3_class(model, "explainer")
+    expect_s3_class(model, "forester_model")
   })
   
   
@@ -87,7 +87,7 @@ test_make_functions <- function(make_function) {
   ),
   {
     expect_message(model <- make_function(iris_bin, "Species", "classification"))
-    expect_s3_class(model, "explainer")
+    expect_s3_class(model, "forester_model")
   })
   
   
@@ -100,7 +100,7 @@ test_make_functions <- function(make_function) {
   # Test XGBoost 3 classification:
   test_that(paste(substitute(make_function), ": Testing model"), {
     expect_message(model <- make_function(titanic, "survived", "classification"))
-    expect_s3_class(model, "explainer")
+    expect_s3_class(model, "forester_model")
   })
   
   

@@ -231,5 +231,8 @@ make_xgboost <- function(data, target, type = "regression")
     predict_function = xgboost_predict,
     label = "XGBoost"
   )
+  
+  ### S3 objects 
+  class(explainer_automate_xgb) <- c("forester_model", "explainer")
   return(explainer_automate_xgb)
 }

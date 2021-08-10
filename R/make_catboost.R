@@ -147,5 +147,7 @@ make_catboost <-function(data, target, type) {
                                        type = "regression")
   }
   
+  ### S3 objects 
+  class(catboost_explained) <- c("forester_model", "explainer")
   return(catboost_explained)
 }
