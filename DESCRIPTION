@@ -11,7 +11,7 @@ Depends: R (>= 3.6)
 License: GPL-3
 Encoding: UTF-8
 RoxygenNote: 7.1.1
-Imports:  
+Imports: 
     DALEX (>= 2.2.1),
     ingredients (>= 2.2.0),
     iBreakDown (>= 2.0.1),
@@ -22,9 +22,11 @@ Imports:
 Suggests:
     knitr,
     rmarkdown,
-    testthat
+    testthat (>= 3.0.0),
+    data.table
 VignetteBuilder: knitr
 URL: https://github.com/ModelOriented/forester
 BugReports: https://github.com/ModelOriented/forester/issues
 Language: en-US
 LazyData: true
+Config/testthat/edition: 3

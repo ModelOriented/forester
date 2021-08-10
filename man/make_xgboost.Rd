@@ -9,16 +9,16 @@ make_xgboost(data, target, type = "regression")
 \arguments{
 \item{data}{data.frame, matrix, data.table or dgCMatrix - data will be used to run the XGBoost model. NOTE: data has to contain the target column.}
 
-\item{target}{character: name of the target column, placed in quotation marks "...". The input target name is compulsory to be one of column names of input data.}
+\item{target}{character: name of the target column, placed in quotation marks. The input target name is compulsory to be one of column names of input data.}
 
-\item{type}{character: defining the task, placed in quotation marks "...". Two options for type: "regression" and "classification", particularly, binary classification.}
+\item{type}{character: defining the task, placed in quotation marks. Two options for type: "regression" and "classification", particularly, binary classification.}
 }
 \value{
 An object of the class \code{explainer} for XGBoost model from given data, target and defined type of problem.
 }
 \description{
 Function \code{make_xgboost} automates the process of applying XGBoost model
-for a dataset and simutaneously creats explainer from the use of DALEX package.
+for a dataset and simutaneously creates explainer from the use of DALEX package.
 The created explainer can be further processed by functions for explanations.
 }
 \examples{

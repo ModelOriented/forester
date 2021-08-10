@@ -26,13 +26,13 @@ wraps it with the explainer.
 library(DALEX)
 data(apartments, package="DALEX")
 
-exp <- make_ranger(apartments, "m2.price", "regr")
+exp <- make_ranger(apartments, "m2.price", "regression")
 # plot(model_parts(exp))
 
 # binary classification
 library(DALEX)
 data(titanic_imputed, package="DALEX")
-exp <- make_ranger(titanic_imputed, "survived", "classif")
+exp <- make_ranger(titanic_imputed, "survived", "classification")
 # plot(model_parts(exp))
 }
 }
