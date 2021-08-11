@@ -217,7 +217,9 @@ make_lightgbm <- function(data, target, type = "regression")
     data = data[,-which(names(data) == target), drop = FALSE],
     y = label_column,
     predict_function = lightgbm_predict,
-    label = "LightGBM"
+    label = "LightGBM",
+    type = type,
+    verbose = 0
   )
   
   ### S3 objects 

@@ -120,7 +120,8 @@ make_ranger <- function(data, target, type) {
   ranger_explained <- DALEX::explain(rg,
                                      data = df_exp,
                                      y = data[, target],
-                                     label = "Ranger")
+                                     label = "Ranger",
+                                     verbose = 0)
   
   class(ranger_explained) <- c("forester_model", "explainer")
   return(ranger_explained)

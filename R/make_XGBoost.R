@@ -183,8 +183,7 @@ make_xgboost <- function(data, target, type = "regression")
     data_encoded_newdata <-
       model.matrix(~ . - 1, data = newdata,
         contrasts.arg = lapply(newdata[, vector_index_newdata, drop = FALSE],
-                               contrasts, contrasts =
-                                 FALSE)
+                               contrasts, contrasts = FALSE)
       )
     data_encoded_matrix_newdata <- data.matrix(data_encoded_newdata)
     return (predict(object, data_encoded_matrix_newdata))
@@ -229,7 +228,9 @@ make_xgboost <- function(data, target, type = "regression")
     data = data[, -which(names(data) == target), drop = FALSE],
     y = label_column,
     predict_function = xgboost_predict,
-    label = "XGBoost"
+    label = "XGBoost",
+    type = type,
+    verbose = 0
   )
   
   ### S3 objects 
