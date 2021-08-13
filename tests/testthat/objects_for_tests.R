@@ -33,15 +33,15 @@ titanic_test <- titanic_test[rows, ]
 
 ###### Objects for compare function 
 
-ranger <- make_ranger(apartments, "m2.price", "regression")
-xgboost <- make_xgboost(apartments, "m2.price", "regression")
+ranger_regr <- make_ranger(apartments, "m2.price", "regression")
+xgboost_regr <- make_xgboost(apartments, "m2.price", "regression")
 
-models_regr <- list(ranger, xgboost)
+models_regr <- list(ranger_regr, xgboost_regr)
 
-ranger <- make_ranger(iris_bin, "Species", "classification")
-xgboost <- make_xgboost(iris_bin, "Species", "classification")
+ranger_classif <- make_ranger(iris_bin, "Species", "classification")
+xgboost_classif <- make_xgboost(iris_bin, "Species", "classification")
 
-models_classif <- list(ranger, xgboost)
+models_classif <- list(ranger_classif, xgboost_classif)
 
 
 

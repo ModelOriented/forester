@@ -33,6 +33,10 @@
 compare_models <- function(models, data_test, target, metric = NULL){
   
   ### Starting conditions 
+  if (class(models) != "list"){
+    stop("Models should be passed as a list")
+  }
+  
   if (length(models) == 0){
     stop("List of models is empty.")
   }
@@ -91,7 +95,7 @@ compare_models <- function(models, data_test, target, metric = NULL){
   
   ### Choosing the best model 
   chosen_metric <- negative * results[[metric]]
-  best_model <- models[which.max(chosen_metric)]
+  best_model <- models[[which.max(chosen_metric)]]
 
   #### display table function 
   # Changing order of columns so that chosen metric is first
