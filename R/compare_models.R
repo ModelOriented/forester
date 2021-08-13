@@ -5,8 +5,10 @@
 #' and returns the best model 
 #' 
 #' @param models list of models to compare. Models shoud be either \code{forester_model} or \code{explainer} object.
+#' @param data_test data frame for evaluation models
+#' @param target character indicating the target column in data test table
 #' @param metric string containing name of mertic based on which the model will be selected. 
-#' Metric shoud be written in small letters 
+#' Metric shoud be written in small letters. Can be omited.
 #'
 #'
 #' @return An object of the class \code{forester_model}.
@@ -24,11 +26,12 @@
 #' 
 #' models <- list(lightgbm_explained, ranger_explained)
 #' 
-#' best_model <- compare_models(models, "rmse")
+#' best_model <- compare_models(models, apartments, "m2.price", "rmse")
 #'}
 ##
 
-compare_models <- function(models, metric){
+compare_models <- function(models, data_test, target, metric = NULL){
+  
   ### Starting conditions 
   if (length(models) == 0){
     stop("List of models is empty.")
@@ -36,7 +39,6 @@ compare_models <- function(models, metric){
   
   # Variable for checking models type 
   if (!any(class(models[[1]]) %in% c("forester_model", "explainer"))){
-    print("Mamy prblem 1")
     stop("Wrong class of model. Models should have forester_model or explainer class.")
   }
   models_type <- models[[1]]$model_info$type
@@ -47,7 +49,6 @@ compare_models <- function(models, metric){
   ### Creating data frame with all models and metrics 
   for (m in models){
     if (!any(class(m) %in% c("forester_model", "explainer"))){
-      print("Mamy prblem 2")
       stop("Wrong class of model. Models should have forester_model or explainer class.")
     }
     
@@ -56,27 +57,35 @@ compare_models <- function(models, metric){
          Can not compare models with different types")
     }
     
+    ### Transforming target column 
+    
+    # uploading data test
+    update_data(m, data_test[, -which(names(data_test) == target)],
+                             data_test[[target]], verbose = FALSE)
+    
+    # calculating metrics 
     mp <- model_performance(m)
     row <- data.frame(m$label, mp$measures)
     results <- rbind(results, row)
   }
   colnames(results)[1] <- "model"
   
-  #results <- results[order(metric),] 
-  
-  if (models_type == "classification"){
-    if (! metric %in% c("auc", "recall", "precision", "f1", "accuracy")){
-      stop("Wrong metric selected. For classification consider one of those metrics: 
-           auc, recall, precision, f1, accuracy")
-    }
+  if (is.null(metric)){
+    metric <- ifelse(models_type == "classification", "auc", "rmse")
   } else {
-    if (! metric %in% c("mse", "rmse", "mad", "r2")){
-      stop("Wrong metric selected. For classification consider one of those metrics: 
+    if (models_type == "classification"){
+      if (! metric %in% c("auc", "recall", "precision", "f1", "accuracy")){
+        stop("Wrong metric selected. For classification consider one of those metrics: 
+           auc, recall, precision, f1, accuracy")
+      }
+    } else {
+      if (! metric %in% c("mse", "rmse", "mad", "r2")){
+        stop("Wrong metric selected. For classification consider one of those metrics: 
            rmse, mse, mad, r2")
       }
+    }
   }
- 
-  
+
   # Additional variable for metrics which are supposed to be minimalized 
   ifelse(metric %in% c("mse", "rmse", "mad"), negative <- -1, negative  <- 1)
   

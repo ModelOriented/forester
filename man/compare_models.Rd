@@ -4,13 +4,17 @@
 \alias{compare_models}
 \title{Function for comparing models}
 \usage{
-compare_models(models, metric)
+compare_models(models, data_test, target, metric = NULL)
 }
 \arguments{
 \item{models}{list of models to compare. Models shoud be either \code{forester_model} or \code{explainer} object.}
 
+\item{data_test}{data frame for evaluation models}
+
+\item{target}{character indicating the target column in data test table}
+
 \item{metric}{string containing name of mertic based on which the model will be selected. 
-Metric shoud be written in small letters}
+Metric shoud be written in small letters. Can be omited.}
 }
 \value{
 An object of the class \code{forester_model}.
@@ -30,7 +34,7 @@ ranger_explained <- make_ranger(apartments, "m2.price", "regression")
 
 models <- list(lightgbm_explained, ranger_explained)
 
-best_model <- compare_models(models, "rmse")
+best_model <- compare_models(models, apartments, "m2.price", "rmse")
 }
 }
 \references{

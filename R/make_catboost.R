@@ -145,7 +145,8 @@ make_catboost <-function(data, target, type) {
                                        y = data[, target], 
                                        label = "CatBoost",
                                        predict_function = catboost_predict,
-                                       type = "regression")
+                                       type = "regression", 
+                                       verbose = 0)
   }
   
   ### S3 objects 

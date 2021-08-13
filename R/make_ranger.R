@@ -116,11 +116,17 @@ make_ranger <- function(data, target, type) {
   # Deleting target column from data frame
   df_exp <- data[,-which(names(data) == target)]
   
-  # Creating an explainer
+  ### Creating an explainer
+  # Custom predict function for regression
+  ranger_predict <- function(object, newdata) {
+    return( predict(object, na.omit(newdata))$predictions )
+  }
+  
   ranger_explained <- DALEX::explain(rg,
                                      data = df_exp,
                                      y = data[, target],
                                      label = "Ranger",
+                                     predict_function = ranger_predict,
                                      verbose = 0)
   
   class(ranger_explained) <- c("forester_model", "explainer")
