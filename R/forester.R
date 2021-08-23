@@ -84,6 +84,7 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL)
   
   best_model <- compare_models(models, data_test, target, metric)
   
+  return(best_model)
 }
 
 
