@@ -2,6 +2,7 @@ library(DALEX)
 library(xgboost)
 library(lightgbm)
 
+options(mypkg.connection = stdin())
 set.seed(43)
 
 # Data agaricus.train as list object:
@@ -9,6 +10,8 @@ data("agaricus.train",package = 'xgboost')
 label_agaricus <- as.data.frame(agaricus.train$label)
 agaricus_comb <- cbind(agaricus.train$data, agaricus.train$label * 10 + 1)
 colnames(agaricus_comb)[127] <- c("label")
+colnames(agaricus_comb) <- lapply(colnames(agaricus_comb), function(x) gsub("[[:punct:]]", "_", x))
+colnames(agaricus_comb)
 
 # Data apartments for regression:
 data(apartments)
@@ -31,17 +34,18 @@ titanic_test <- titanic[, 1:8]
 rows <- sample(nrow(titanic_test))
 titanic_test <- titanic_test[rows, ]
 
+# Data for testing imbalanced data 
+titanic_imbalanced <- titanic[titanic$survived == "yes",]
+titanic_imbalanced <- rbind(titanic_imbalanced, head(titanic, 10))
+
 ###### Objects for compare function 
 
 ranger_regr <- make_ranger(apartments, "m2.price", "regression")
 xgboost_regr <- make_xgboost(apartments, "m2.price", "regression")
 
-models_regr <- list(ranger_regr, xgboost_regr)
-
 ranger_classif <- make_ranger(iris_bin, "Species", "classification")
 xgboost_classif <- make_xgboost(iris_bin, "Species", "classification")
 
-models_classif <- list(ranger_classif, xgboost_classif)
 
 
 

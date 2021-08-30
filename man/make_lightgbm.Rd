@@ -4,7 +4,16 @@
 \alias{make_lightgbm}
 \title{Automated Function for Explaining LightGBM model}
 \usage{
-make_lightgbm(data, target, type = "regression")
+make_lightgbm(
+  data,
+  target,
+  type,
+  num_features = NULL,
+  fill_na = TRUE,
+  tune = FALSE,
+  metric = NULL,
+  iter = 20
+)
 }
 \arguments{
 \item{data}{data.frame, matrix, data.table or dgCMatrix - data will be used to run the LightGBM model. NOTE: data has to contain the target column.}

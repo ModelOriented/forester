@@ -4,7 +4,16 @@
 \alias{make_ranger}
 \title{Automated function for explaining ranger model}
 \usage{
-make_ranger(data, target, type)
+make_ranger(
+  data,
+  target,
+  type,
+  fill_na = FALSE,
+  num_features = NULL,
+  tune = FALSE,
+  metric = NULL,
+  iter = 20
+)
 }
 \arguments{
 \item{data}{training set for ranger model. It can be data frame, matrix, data.table or dgCMatrix. Note: data should contain target column}

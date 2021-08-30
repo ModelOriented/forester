@@ -31,7 +31,7 @@ test_make_functions <- function(make_function) {
     expect_s3_class(model, "forester_model")
   })
   
-  test_that(paste(substitute(make_function), ": A data.table as data"), {
+  test_that(paste(substitute(make_function), ": A dgCMatrix as data"), {
     model <- make_function(agaricus_comb, "label", "classification")
     expect_s3_class(model, "forester_model")
   })
@@ -111,6 +111,26 @@ test_make_functions <- function(make_function) {
     )
   })
   
+  test_that(paste(substitute(make_function), ": With and without filling NA"), {
+    model <- make_function(titanic, "survived", "classification", fill_na = TRUE)
+    expect_s3_class(model, "forester_model")
+    model <- make_function(titanic, "survived", "classification", fill_na = FALSE)
+    expect_s3_class(model, "forester_model")
+  })
+  
+  test_that(paste(substitute(make_function), ": With feature selection"), {
+    model <- make_function(titanic, "survived", "classification", fill_na = TRUE, num_features = 3)
+    expect_s3_class(model, "forester_model")
+    model <- make_function(titanic, "survived", "classification", num_features = 3)
+    expect_s3_class(model, "forester_model")
+  })
+  
+  test_that(paste(substitute(make_function), ": With tuning"), {
+    model <- make_function(titanic, "survived", "classification", tune = TRUE, iter = 1)
+    expect_s3_class(model, "forester_model")
+    model <- make_function(apartments, "m2.price", "regression", tune = TRUE, iter = 1, metric = "mse")
+    expect_s3_class(model, "forester_model")
+  })
 }
 
 ### Testing all make_*() functions
@@ -119,14 +139,40 @@ test_make_functions(make_xgboost)
 test_make_functions(make_catboost)
 test_make_functions(make_ranger)
 
-### Additional test for ranger function
-test_that("make_ranger : Creating formula with dpecial characters", {
-  expect_message(model <- make_ranger(agaricus.train$data, "cap-shape=bell", "classification"))
+test_that("Column names with special characters ", {
+  apartments_wrong_colnames <- apartments
+  colnames(apartments_wrong_colnames)[2] <- "construction-year"
+  expect_error(make_ranger(apartments_wrong_colnames, "m2.price", "regression"))
+  expect_error(make_xgboost(apartments_wrong_colnames, "m2.price", "regression"))
 })
 
-### Additional test for catboost function
-test_that("make_ranger : Creating formula with dpecial characters", {
-  titanic_strange_numbers <- titanic_imputed
-  titanic_strange_numbers$survived <- ifelse(titanic_imputed$survived == 1, 100, 0)
-  expect_message(model <- make_catboost(titanic_strange_numbers, "survived", "classification"))
+
+### Additional test for prepare data function
+test_that("Testing imputation", {
+  f <- file()
+  lines <- c("3", "0", "1", "2")
+  ans <- paste(lines, collapse = "\n")
+  write(ans, f)
+  
+  options("mypkg.connection" = f)
+  
+  expect_message(model <- make_ranger(titanic_imbalanced, "survived","classification"))
+  expect_message(model <- make_ranger(titanic_imbalanced, "survived", "classification"))
+  expect_message(model <- make_ranger(titanic_imbalanced, "survived", "classification"))
+  options("mypkg.connection" = stdin())
+  close(f)
 })
+
+test_that("Wrong starting arguments for prepare function", {
+  expect_error(make_ranger(apartments, "m2.price", "regression", fill_na = "a"),
+               "Argument fill_na should be a logical variable: TRUE or FALSE")
+  expect_error(make_ranger(apartments, "m2.price", "regression", num_features = "a"),
+               "Argument num_features should be a numerical.")
+})
+
+
+
+
+
+
+
