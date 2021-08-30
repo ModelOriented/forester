@@ -36,13 +36,6 @@ evaluate <- function(..., data_test, target, metric = NULL){
   models <- list(...)
   
   ### Starting conditions 
-<<<<<<< Updated upstream
-  if (class(models) != "list"){
-    stop("Models should be passed as a list")
-  }
-  
-=======
->>>>>>> Stashed changes
   if (length(models) == 0){
     stop("List of models is empty.")
   }
@@ -90,25 +83,7 @@ evaluate <- function(..., data_test, target, metric = NULL){
   }
   colnames(results)[1] <- "model"
   
-<<<<<<< Updated upstream
-  if (is.null(metric)){
-    metric <- ifelse(models_type == "classification", "auc", "rmse")
-  } else {
-    if (models_type == "classification"){
-      if (! metric %in% c("auc", "recall", "precision", "f1", "accuracy")){
-        stop("Wrong metric selected. For classification consider one of those metrics: 
-           auc, recall, precision, f1, accuracy")
-      }
-    } else {
-      if (! metric %in% c("mse", "rmse", "mad", "r2")){
-        stop("Wrong metric selected. For classification consider one of those metrics: 
-           rmse, mse, mad, r2")
-      }
-    }
-  }
-=======
   metric <- check_metric(metric, models_type)
->>>>>>> Stashed changes
 
   class(results) <- c("forester_results", "data.frame")
   
@@ -121,14 +96,10 @@ evaluate <- function(..., data_test, target, metric = NULL){
   chosen_metric <- negative * results[[metric]]
   best_model <- models[[which.max(chosen_metric)]]
   
-<<<<<<< Updated upstream
-  # Printing table
-  print(knitr::kable(final, row.names = F))
-=======
+
   print(results, metric)
 
   message("The best model based on ", metric, " metric is ", best_model$label, ".")
->>>>>>> Stashed changes
   
   return(list(best_model = best_model, results = results))
 }

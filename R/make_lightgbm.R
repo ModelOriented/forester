@@ -51,112 +51,8 @@
 #'
 ##
 
-<<<<<<< Updated upstream
-make_lightgbm <- function(data, target, type = "regression")
-{
-  ### Conditions:
-  # Check data class
-  if (!any(class(data) %in% c("data.frame", "dgCMatrix", "matrix", "data.table")))
-    stop("Object is not one of the types: 'data.frame', 'dgCMatrix', 'matrix', 'data.table")
 
-  # Unify data class to data frame
-  if (any(class(data) == "matrix"))
-  {
-    data <- as.data.frame(data)
-  }
-  if (any(class(data) == "data.table"))
-  {
-    data <- as.data.frame(data)
-  }
-  if (any(class(data) == "dgCMatrix"))
-  {
-    data <- as.data.frame(as.matrix(data))
-  }
-  
-  ### Data processing level 1/2 (remove NAs, split label and training frame,...)
-  # Remove rows with NA values (I will write in the documentation of function):
-  data <- na.omit(data)
-
-  # Checking if data frame is empty
-  if (nrow(data) == 0 | ncol(data) < 2) {
-    stop("The data frame is empty or has too little columns.")
-  }
-
-  # Check if target is one of colnames of data frame
-  if (!is.character(target) | !(target %in% colnames(data)))
-    stop(
-      "Either 'target' input is not a character or data does not have column named similar to 'target'"
-    )
-
-  # Change character columns to factors
-  data[sapply(data, is.character)] <-
-    lapply(data[sapply(data, is.character)], as.factor)
-
-  # Extract the target vector from our dataframe:
-  label_column <- data[[target]]
-
-  # Check condition for type between "classification" and "regression":
-  ## Classification type
-  if ((type != "classification") & (type != "regression"))
-    stop("Type of problem is invalid.")
-
-
-
-  ### Conditions and processing on target column:
-  # Binary Classification
-  if (type == "classification")
-  {
-    if (length(unique(label_column)) < 2)
-    {
-      stop("Too few classes for binary classification")
-    }
-    if (length(unique(label_column)) > 2)
-    {
-      stop("Too many classes for binary classification")
-    }
-
-    # Coercing the target from factor to numeric values:
-    if (class(label_column) == "factor")
-    {
-      label_column <- as.numeric(data[[target]] == data[1, target])
-      message("Program coerces factors into numeric values:")
-      var_true <- as.character(data[1, target])
-      var_all  <- as.character(unique(data[, target]))
-      message(paste("MECHANISM: ", var_true, " -> 1 and ", var_all[!var_all  %in% var_true], " -> 0."))
-    }
-
-    # Rescaling target columns to be in [0,1]
-    uniq_vals <- unique(label_column)
-    if ((min(uniq_vals) != 0) | (max(uniq_vals) != 1))
-    {
-      # Change max -> 1; min -> 0:
-      max <- max(uniq_vals)
-      min <- min(uniq_vals)
-      message("Two values in target column are not in [0,1]")
-      message(paste("MECHANISM: ", min , " -> 0 and", max, "-> 1."))
-      label_column[label_column == max] <- 1
-      label_column[label_column == min] <- 0
-    }
-  }
-
-
-  # Regression:
-  if (type == "regression")
-  {
-    if (class(label_column) == "factor")
-    {
-      stop(
-        "Program is stopped. The class of target column is factor, not appropriate for regression problem"
-      )
-    }
-    # Double-check for numeric type of label column:
-    label_column <- as.numeric(label_column)
-  }
-
-
-=======
 make_lightgbm <- function(data, target, type, num_features = NULL, fill_na = TRUE, tune = FALSE, metric = NULL, iter=20){
->>>>>>> Stashed changes
 
   # Preparing data 
   prepared_data <- prepare_data(data, target, type, fill_na = fill_na,
@@ -175,45 +71,6 @@ make_lightgbm <- function(data, target, type, num_features = NULL, fill_na = TRU
   
   # Transform from dataframe to matrix:
   data_encoded_matrix <- as.matrix(data_encoded)
-<<<<<<< Updated upstream
-
-  # Convert to object used in LightGBM model:
-  names_cat_vars <- names(data_info_rules$rules)
-  dtrain <-
-    lightgbm::lgb.Dataset(
-      data = data_encoded_matrix,
-      label = label_column,
-      categorical_feature = as.vector(which(
-        colnames(data_encoded) %in% names_cat_vars
-      ))
-    )
-
-
-
-  ### Creating predict function:
-  lightgbm_predict <- function(object, newdata) {
-    newdata_encoded <-
-      lightgbm::lgb.convert_with_rules(data = newdata, rules = data_info_rules$rules)$data
-    data_encoded_matrix_newdata <- as.matrix(newdata_encoded)
-    return (predict(object, data_encoded_matrix_newdata))
-  }
-
-
-  ### XGBoost Model
-  # Regression
-  if (type == "regression") {
-    model <- lightgbm::lightgbm(
-      data = dtrain,
-      verbose = -1,
-      learning_rate = 0.7,
-      nrounds = 10,
-      objective = "regression"
-    )
-  }
-
-  # Binary classification
-  if (type == "classification") {
-=======
   
   if (!tune){
     # Convert to object used in LightGBM model:
@@ -226,7 +83,6 @@ make_lightgbm <- function(data, target, type, num_features = NULL, fill_na = TRU
       )
     
   ### Creating Model:
->>>>>>> Stashed changes
     model <- lightgbm::lightgbm(
       data = dtrain,
       verbose = -1,

@@ -4,9 +4,6 @@
 \alias{forester}
 \title{Automated Machine Learning Model Solver}
 \usage{
-<<<<<<< Updated upstream
-forester(data, target, type, metric = NULL, data_test = NULL)
-=======
 forester(
   data,
   target,
@@ -21,7 +18,6 @@ forester(
   iter = 20,
   verbose = 1
 )
->>>>>>> Stashed changes
 }
 \arguments{
 \item{data}{data.frame, matrix, data.table or dgCMatrix - training data set to create model, if data_test = NULL, then data will be

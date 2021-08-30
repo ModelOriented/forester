@@ -30,32 +30,11 @@
 #'}
 ##
 
-<<<<<<< Updated upstream
-make_ranger <- function(data, target, type) {
-  ### Conditions
-  # Checking data class
-  if (!any(class(data) %in% c("data.frame", "dgCMatrix", "matrix", "data.table"))) {
-    stop("Object is not one of the types: 'data.frame', 'dgCMatrix', 'matrix', 'data.table")
-  }
-
-  # Changing data to normal data frame
-  if (any(class(data) != "data.frame")) {
-    if (any(class(data) == 'dgCMatrix')) {
-        data <- as.data.frame(as.matrix(data))
-    } else if (any(class(data) == 'matrix')) {
-        data <- as.data.frame(data)
-    } else if (any(class(data) == 'data.table')) {
-        data <- as.data.frame(data)
-    }
-  }
-  
-=======
 make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, metric = NULL, iter = 20) {
   
   # Preparing data 
   prepared_data <- prepare_data(data, target, type, fill_na = fill_na,
                                 num_features = num_features)
->>>>>>> Stashed changes
   
   data <- prepared_data$data
   modifications <- prepared_data$modifications
@@ -84,39 +63,6 @@ make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL
   }
   form <- stats::as.formula(paste(target , "~."))
   
-<<<<<<< Updated upstream
-  
-  ### Model
-  # First binary classification
-  if (type == "classification") {
-    # Checking if theres right number of classes in target column
-    if (length(unique(data[, target])) < 2) {
-      stop("Too few classes for binary classification")
-    } else if (length(unique(data[, target])) > 2) {
-      stop("Too many classes for binary classification")
-    }
-    
-    if (class(data[[target]]) != "numeric") {
-      # Converting target column to numeric for Dalex
-      uniq <- unique(data[, target])
-      data[, target] <- ifelse(data[, target] == uniq[1], 0, 1)
-      message(paste("Wrong type of target column. Changed to numeric: ",
-          uniq[1], " -> 1 and ", uniq[2], " -> 0 ", sep = "")
-      )
-    }
-    
-    # Creating model
-    rg <- ranger::ranger(form, data = data, classification = TRUE)
-  } else {
-    # Checking if target column is numeric
-    if (class(data[[target]]) != 'numeric' &
-        class(data[[target]]) != 'integer') {
-      stop("Program is stopped. The class of target column is factor, not appropriate for regression problem")
-    }
-    
-    #Creating a model
-    rg <- ranger::ranger(form, data = data)
-=======
   is_classif <- type == "classification"
   
   message("__________________________")
@@ -180,8 +126,6 @@ make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL
                          respect.unordered.factors = as.logical(best_params["respect.unordered.factors"]),
                          replace = as.logical(best_params["replace"]),
                          classification = is_classif)
-    
->>>>>>> Stashed changes
   }
   
   ### Explainer

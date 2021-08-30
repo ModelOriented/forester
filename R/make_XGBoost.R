@@ -48,43 +48,6 @@
 #' plot(model_performance(titanic_explainer))
 ##
 
-<<<<<<< Updated upstream
-make_xgboost <- function(data, target, type = "regression")
-{
-  ### Conditions:
-  # Check data class
-  if (!any(class(data) %in% c("data.frame", "dgCMatrix", "matrix", "data.table")))
-    stop("Object is not one of the types: 'data.frame', 'dgCMatrix', 'matrix', 'data.table")
-  
-  # Unify data class to data frame
-  if (any(class(data) == "matrix"))
-  {
-    data <- as.data.frame(data)
-  }
-  if (any(class(data) == "data.table"))
-  {
-    data <- as.data.frame(data)
-  }
-  if (any(class(data) == "dgCMatrix"))
-  {
-    data <- as.data.frame(as.matrix(data))
-  }
-  
-  ### Data processing level 1/2 (remove NAs, split label and training frame,...)
-  # Remove rows with NA values (I will write in the documentation of function):
-  data <- na.omit(data)
-  
-  # Checking if data frame is empty
-  if (nrow(data) == 0 | ncol(data) < 2) {
-    stop("The data frame is empty or has too little columns.")
-  }
-  
-  # Check if target is one of colnames of data frame
-  if (!is.character(target) | !(target %in% colnames(data)))
-    stop(
-      "Either 'target' input is not a character or data does not have column named similar to 'target'"
-    )
-=======
 make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, metric = NULL, iter = 20){
   
   ### Preparing data 
@@ -93,35 +56,11 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
   
   data <- prepared_data$data
   modifications <- prepared_data$modifications
->>>>>>> Stashed changes
   
   # Change character columns to factors
   data[sapply(data, is.character)] <-
     lapply(data[sapply(data, is.character)], as.factor)
   
-<<<<<<< Updated upstream
-  # Extract the target vector from our dataframe:
-  label_column <- data[[target]]
-  
-  # Check condition for type between "classification" and "regression":
-  if ((type != "classification") & (type != "regression"))
-    stop("Type of problem is invalid.")
-  
-  
-  
-  ### Conditions and processing on target column:
-  # Binary Classification
-  if (type == "classification")
-  {
-    # Checking number of classes in target column:
-    if (length(unique(label_column)) < 2)
-    {
-      stop("Too few classes for binary classification")
-    }
-    if (length(unique(label_column)) > 2)
-    {
-      stop("Too many classes for binary classification")
-=======
   ### Encoding
   if (any(sapply(data, is.factor))){
     # Performing encoding
@@ -131,7 +70,6 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
     test_colnames <- lapply(test_colnames , function(x) gsub("[.]", "", x))
     if (any(grepl('[[:punct:]]', test_colnames))) {
       stop("Column names are wrong for creating a formula. Column names can not contain special characters as '+', '-', '=', '*'. Try substitute special characters with '_' sign.")
->>>>>>> Stashed changes
     }
     form <- stats::as.formula(paste(target , "~."))
     
@@ -169,28 +107,6 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
                                 objective = ifelse(type == "regression","reg:squarederror","binary:logistic"),
                                 eval_metric = ifelse(type == "regression","rmse","logloss")
     )
-<<<<<<< Updated upstream
-  # using model.matrix to create one-hot encoded matrix
-  
-  # Transform from data frame type to matrix to prepare for XGBboost model:
-  data_encoded_matrix <- data.matrix(data_encoded)
-  
-  # Convert to object used in XGBoost model:
-  dtrain <-
-    xgboost::xgb.DMatrix(data = data_encoded_matrix, label = label_column)
-  
-  ### Creating predict function:
-  xgboost_predict <- function(object, newdata) {
-    names_factor_newdata <-
-      colnames(newdata)[sapply(newdata, is.factor)]
-    vector_index_newdata <-
-      which(colnames(newdata) %in% names_factor_newdata)
-    data_encoded_newdata <-
-      model.matrix(~ . - 1, data = newdata,
-        contrasts.arg = lapply(newdata[, vector_index_newdata, drop = FALSE],
-                               contrasts, contrasts = FALSE)
-=======
-    
   } else {
     # Checking the metric 
     metric <- check_metric(metric, type)
@@ -235,7 +151,6 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
                                          alpha = 2^alpha,
                                          objective = ifelse(type == "regression","reg:squarederror","binary:logistic"),
                                          eval_metric = ifelse(type == "regression","rmse","logloss")
->>>>>>> Stashed changes
       )
       if (type == "regression"){
         predicted <- predict(xgboost_tune, data_val)
@@ -290,34 +205,6 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
   model$modifications <- modifications
   model$encoding <- encoding_recipe
   
-<<<<<<< Updated upstream
-  ### XGBoost Model
-  # Regression
-  if (type == "regression") {
-    model <- xgboost::xgb.train(
-      data = dtrain,
-      verbose = 0,
-      max.depth = 8,
-      eta = 0.3,
-      nrounds = 4,
-      nthread = 2,
-      objective = "reg:linear"
-    )
-  }
-  
-  # Binary classification
-  if (type == "classification") {
-    model <- xgboost::xgb.train(
-      data = dtrain,
-      verbose = 0,
-      max.depth = 8,
-      eta = 0.3,
-      nrounds = 4,
-      nthread = 2,
-      eval_metric = "logloss",
-      objective = "binary:logistic"
-    )
-=======
   xgboost_predict <- function(object, newdata) {
     # Changing data type to data frame 
     newdata <- check_conditions(newdata)
@@ -340,7 +227,6 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
     if (type == "classification"){
       return(ifelse(predict(object, data_encoded_matrix_newdata) >= 0.5,1,0))
     }
->>>>>>> Stashed changes
   }
   
   ### Explainer from DALEX

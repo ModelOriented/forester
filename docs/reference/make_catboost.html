@@ -185,22 +185,7 @@ wraps it with the explainer.</p>
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>apartments</span>, package<span class='op'>=</span><span class='st'>"DALEX"</span><span class='op'>)</span>
 
 <span class='va'>exp</span> <span class='op'>&lt;-</span> <span class='fu'>make_catboost</span><span class='op'>(</span><span class='va'>apartments</span>, <span class='st'>"m2.price"</span>, <span class='st'>"regression"</span><span class='op'>)</span>
-<<<<<<< Updated upstream
-</div><div class='output co'>#&gt; Preparation of a new explainer is initiated
-#&gt;   -&gt; model label       :  CatBoost 
-#&gt;   -&gt; data              :  1000  rows  5  cols 
-#&gt;   -&gt; target variable   :  1000  values 
-#&gt;   -&gt; predict function  :  catboost_predict 
-#&gt;   -&gt; predicted values  :  No value for predict function target column. ( <span style='color: #BBBB00;'> default </span> )
-#&gt;   -&gt; model_info        :  package Model of class: catboost.Model package unrecognized , ver. Unknown , task regression ( <span style='color: #BBBB00;'> default </span> ) 
-#&gt;   -&gt; model_info        :  type set to  regression 
-#&gt;   -&gt; predicted values  :  numerical, min =  1615.674 , mean =  3488.662 , max =  6593.961  
-#&gt;   -&gt; residual function :  difference between y and yhat ( <span style='color: #BBBB00;'> default </span> )
-#&gt;   -&gt; residuals         :  numerical, min =  -308.2975 , mean =  -1.643372 , max =  222.5907  
-#&gt;  <span style='color: #00BB00;'> A new explainer has been created! </span> </div><div class='input'><span class='co'># plot(model_parts(exp))</span>
-=======
 </div><div class='output co'>#&gt; <span class='message'>Original shape of train data frame: 1000 rows, 6 columns</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>NA values</span></div><div class='output co'>#&gt; <span class='message'>There is no NA values in your data.</span></div><div class='input'><span class='co'># plot(model_parts(exp))</span>
->>>>>>> Stashed changes
 
 <span class='co'># binary classification</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://dalex.drwhy.ai'>DALEX</a></span><span class='op'>)</span>
