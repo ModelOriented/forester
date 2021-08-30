@@ -119,7 +119,8 @@ make_catboost <-function(data, target, type) {
                                        y = data[, target], 
                                        label = "CatBoost",
                                        predict_function = catboost_predict,
-                                       type = "classification")
+                                       type = "classification",
+                                       verbose = 0)
   } else {
     # Custom predict function for regression
     catboost_predict <- function(object, newdata) {
@@ -144,8 +145,11 @@ make_catboost <-function(data, target, type) {
                                        y = data[, target], 
                                        label = "CatBoost",
                                        predict_function = catboost_predict,
-                                       type = "regression")
+                                       type = "regression", 
+                                       verbose = 0)
   }
   
+  ### S3 objects 
+  class(catboost_explained) <- c("forester_model", "explainer")
   return(catboost_explained)
 }

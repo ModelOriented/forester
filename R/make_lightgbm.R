@@ -134,7 +134,7 @@ make_lightgbm <- function(data, target, type = "regression")
       message("Two values in target column are not in [0,1]")
       message(paste("MECHANISM: ", min , " -> 0 and", max, "-> 1."))
       label_column[label_column == max] <- 1
-      label_column[label_column == min]  <- 0
+      label_column[label_column == min] <- 0
     }
   }
 
@@ -193,7 +193,7 @@ make_lightgbm <- function(data, target, type = "regression")
     model <- lightgbm::lightgbm(
       data = dtrain,
       verbose = -1,
-      learning_rate=0.7,
+      learning_rate = 0.7,
       nrounds = 10,
       objective = "regression"
     )
@@ -210,17 +210,19 @@ make_lightgbm <- function(data, target, type = "regression")
     )
   }
 
-
-
   ### Explainer from DALEX
   # For simplicity, take processed matrix from original data frame for explanation purpose:
   explainer_automate_lightgbm <- DALEX::explain(
     model,
-    data = data[,-which(names(data) == target),
-                drop = FALSE],
+    data = data[,-which(names(data) == target), drop = FALSE],
     y = label_column,
     predict_function = lightgbm_predict,
-    label = "LightGBM"
+    label = "LightGBM",
+    type = type,
+    verbose = 0
   )
+  
+  ### S3 objects 
+  class(explainer_automate_lightgbm) <- c("forester_model", "explainer")
   return(explainer_automate_lightgbm)
 }

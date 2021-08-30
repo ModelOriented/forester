@@ -131,7 +131,7 @@ make_xgboost <- function(data, target, type = "regression")
       message("Two values in target column are not in [0,1]")
       message(paste("MECHANISM: ", min , " -> 0 and", max, "-> 1."))
       label_column[label_column == max] <- 1
-      label_column[label_column == min]  <- 0
+      label_column[label_column == min] <- 0
     }
   }
   
@@ -161,12 +161,9 @@ make_xgboost <- function(data, target, type = "regression")
     which(colnames(data_info) %in% names_factor)     # positions of those categorical attributes
   # in colnames of Data frame without target
   data_encoded <-
-    model.matrix(
-      ~ . - 1,
-      data = data_info,
+    model.matrix(~ . - 1, data = data_info,
       contrasts.arg = lapply(data_info[, vector_index, drop = FALSE],
-                             contrasts, contrasts =
-                               FALSE)
+                             contrasts, contrasts = FALSE)
     )
   # using model.matrix to create one-hot encoded matrix
   
@@ -184,12 +181,9 @@ make_xgboost <- function(data, target, type = "regression")
     vector_index_newdata <-
       which(colnames(newdata) %in% names_factor_newdata)
     data_encoded_newdata <-
-      model.matrix(
-        ~ . - 1,
-        data = newdata,
+      model.matrix(~ . - 1, data = newdata,
         contrasts.arg = lapply(newdata[, vector_index_newdata, drop = FALSE],
-                               contrasts, contrasts =
-                                 FALSE)
+                               contrasts, contrasts = FALSE)
       )
     data_encoded_matrix_newdata <- data.matrix(data_encoded_newdata)
     return (predict(object, data_encoded_matrix_newdata))
@@ -231,11 +225,15 @@ make_xgboost <- function(data, target, type = "regression")
   # For simplicity, take processed matrix from original data frame for explanation purpose:
   explainer_automate_xgb <- DALEX::explain(
     model,
-    data = data[, -which(names(data) == target), drop =
-                  FALSE],
+    data = data[, -which(names(data) == target), drop = FALSE],
     y = label_column,
     predict_function = xgboost_predict,
-    label = "XGBoost"
+    label = "XGBoost",
+    type = type,
+    verbose = 0
   )
+  
+  ### S3 objects 
+  class(explainer_automate_xgb) <- c("forester_model", "explainer")
   return(explainer_automate_xgb)
 }

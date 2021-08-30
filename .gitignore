@@ -1,1 +1,4 @@
 .DS_Store
+catboost_info/
+lightgbm.model
+.Rhistory
