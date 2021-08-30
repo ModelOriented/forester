@@ -18,7 +18,11 @@ Imports:
     ranger,
     xgboost,
     catboost,
-    lightgbm
+    lightgbm,
+    tidymodels,
+    recipes,
+    rBayesianOptimization,
+    Boruta
 Suggests:
     knitr,
     rmarkdown,

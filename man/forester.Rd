@@ -2,28 +2,60 @@
 % Please edit documentation in R/forester.R
 \name{forester}
 \alias{forester}
-\title{Function for training models}
+\title{Automated Machine Learning Model Solver}
 \usage{
-forester(data, target, type, metric = NULL, data_test = NULL)
+forester(
+  data,
+  target,
+  type,
+  metric = NULL,
+  data_test = NULL,
+  remove_outliers = FALSE,
+  fill_na = TRUE,
+  scaling = NULL,
+  num_features = NULL,
+  tune = FALSE,
+  iter = 20,
+  verbose = 1
+)
 }
 \arguments{
-\item{metric}{string containing name of mertic based on which the model will be selected.
-Metric shoud be written in small letters}
+\item{data}{data.frame, matrix, data.table or dgCMatrix - training data set to create model, if data_test = NULL, then data will be
+automatically divided into training and testing dataset. NOTE: data has to contain the target column.}
+
+\item{target}{character: name of the target column, should be character and has to be column name in data.}
+
+\item{type}{character: defining the task. Two options are: "regression" and "classification", particularly, binary classification.}
+
+\item{metric}{character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
+For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".}
+
+\item{data_test}{optional argument, class of data.frame, matrix, data.table or dgCMatrix - test data set used for evaluating model performance.}
+
+\item{remove_outliers}{logical, default is FALSE. If TRUE, all rows containing outliers in numeric columns will be removed, except for target column.}
+
+\item{fill_na}{logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
+missing values in numeric columns are substituted by median of corresponding columns.}
+
+\item{scaling}{character, default is NULL. Parameter is used for scaling features. Options are "standardize", "minmax" and NULL.}
+
+\item{num_features}{numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
+features will be kept in the train and test datasets.}
+
+\item{tune}{logical. If TRUE, function will perform the hyperparameter tuning steps for each model inside.}
+
+\item{iter}{number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.}
+
+\item{verbose}{(default: 1) - verbosity of priting messages. Options are 0 (silent), 1 (warning), 2 (info), 3 (debug).}
 }
 \value{
-An object of the class \code{forester_model}.
+An object of the class \code{forester_model} which is the best model with respect to the
+chosen matrix. It's also an object of the class \code{explainer} from DALEX family inherited the
+explanation for the best chosen model.
 }
 \description{
-Function \code{train} automates the whole ML pipelines ....
-}
-\examples{
-\donttest{
-library(DALEX)
-data(apartments, package="DALEX")
-
-best_model <- forester(apartments, "m2.price", "regression")
-}
-}
-\references{
-Explanatory Model Analysis. Explore, Explain, and Examine Predictive Models. \url{https://ema.drwhy.ai/}
+Different tree-based models such as: XGBoost, ranger, CatBoost, LightGBM, etc. require different syntaxes and
+different specific data objects. This function provides a simple and unified formula to create those models
+with options to automatically cover the whole process of creating Machine Learning Model: Preprocessing Data,
+Feature Engineering, Creating Models, Optimizing Hyperparameters, Model Explanation and Evaluating Models.
 }

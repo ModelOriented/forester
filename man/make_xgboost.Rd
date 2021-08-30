@@ -4,7 +4,16 @@
 \alias{make_xgboost}
 \title{Automated Function for Explaining XGBoost model}
 \usage{
-make_xgboost(data, target, type = "regression")
+make_xgboost(
+  data,
+  target,
+  type,
+  fill_na = FALSE,
+  num_features = NULL,
+  tune = FALSE,
+  metric = NULL,
+  iter = 20
+)
 }
 \arguments{
 \item{data}{data.frame, matrix, data.table or dgCMatrix - data will be used to run the XGBoost model. NOTE: data has to contain the target column.}

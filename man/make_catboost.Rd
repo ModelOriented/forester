@@ -4,7 +4,16 @@
 \alias{make_catboost}
 \title{Automated function for explaining catboost models}
 \usage{
-make_catboost(data, target, type)
+make_catboost(
+  data,
+  target,
+  type,
+  fill_na = TRUE,
+  num_features = NULL,
+  tune = FALSE,
+  metric = NULL,
+  iter = 20
+)
 }
 \arguments{
 \item{data}{training set for ranger model. It can be data frame, matrix, data.table or dgCMatrix. Note: data should contain target column}
