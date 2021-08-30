@@ -16,20 +16,18 @@
 #' @param remove_outliers logical, default is FALSE. If TRUE, all rows containing outliers in numeric columns will be removed, except for target column.
 #' @param fill_na logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
 #' missing values in numeric columns are substituted by median of corresponding columns.
-#' @param scaling character, default is NULL. Parameter is used for scaling features. Options are "standardize", "minmax" and NULL.
 #' @param num_features numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
 #' features will be kept in the train and test datasets.
 #' @param tune logical. If TRUE, function will perform the hyperparameter tuning steps for each model inside.
 #' @param iter number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.
-#' @param verbose (default: 1) - verbosity of priting messages. Options are 0 (silent), 1 (warning), 2 (info), 3 (debug).
 #'
 #'
 #' @return An object of the class \code{forester_model} which is the best model with respect to the
-#' chosen matrix. It's also an object of the class \code{explainer} from DALEX family inherited the
+#' chosen metric. It's also an object of the class \code{explainer} from DALEX family inherited the
 #' explanation for the best chosen model.
 
 
-forester <- function(data, target, type, metric = NULL, data_test = NULL, remove_outliers = FALSE, fill_na = TRUE, scaling = NULL, num_features = NULL, tune = FALSE, iter = 20, verbose = 1){
+forester <- function(data, target, type, metric = NULL, data_test = NULL, fill_na = TRUE, num_features = NULL, tune = FALSE, iter = 20){
 
   message("__________________________")
   message("FORESTER")

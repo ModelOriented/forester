@@ -87,21 +87,25 @@
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#automated-machine-learning-model-solver-" class="anchor"></a>Automated Machine Learning Model Solver <img src="reference/figures/logo.png" align="right" width="150">
 </h1></div>
+<p>​ ​ ​ ​</p>
 <div id="overview" class="section level2">
 <h2 class="hasAnchor">
 <a href="#overview" class="anchor"></a>Overview</h2>
-<p><code>forester</code> is an R package designed to be intuive, brief in formula, and easy to use. It covers the whole process of creating Machine Learning Models with different known models, such as XGBoost, ranger, LightGBM, CatBoost, etc. in an unified formula which let users to control how core steps work.</p>
-<p><img src="reference/figures/graph.png" align="center" width="600"></p>
+<p>​ <code>forester</code> is an R package designed to be intuive, brief in formula, and easy to use. It covers the whole process of creating Machine Learning Models with different known models, such as XGBoost, ranger, LightGBM, CatBoost, etc. in an unified formula which let users to control how core steps work. ​ <img src="reference/figures/graph.png" align="center" width="600"> ​ ​ ​</p>
 </div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
-<p>From CRAN</p>
-<pre class="{r}"><code><a href="https://rdrr.io/r/utils/install.packages.html">install.packages("forester")</a></code></pre>
-<p>From GitHub</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span>
-<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"ModelOriented/forester"</span><span class="op">)</span></code></pre></div>
+<p>​ (From CRAN - not yet available ​</p>
+<pre class="{r}"><code>install.packages("forester")
+```)
+​
+From GitHub
+​
+``` r
+install.packages("devtools")
+devtools::install_github("ModelOriented/forester")</code></pre>
+<p>​</p>
 </div>
 <div id="usage" class="section level2">
 <h2 class="hasAnchor">
@@ -109,34 +113,36 @@
 <p>Core functions in <code>forester</code> package are:</p>
 <ul>
 <li>
-<code><a href="reference/forester.html">forester()</a></code>, for automatically creating the whole ML process and returning optimal model.</li>
+<code><a href="reference/forester.html">forester()</a></code>, for automatically creating the whole ML process and returning optimal model. ​</li>
 </ul>
 <pre class="{r}"><code><a href="https://rdrr.io/r/utils/data.html">data("titanic", package = 'DALEX') 
 best_model &lt;- forester(data = titanic, target = "survived", type = "regression",
                metric = "precision", tune = FALSE)
+​
 # Print ranking table for models:
 print(best_model)
-
+​
 # The best_model object can be used for giving explanation:
 modelStudio::modelStudio(best_model)</a></code></pre>
+<p>​ ​</p>
 <ul>
 <li>
-<code>make_...()</code>, for independently creating model with explanations.</li>
+<code>make_...()</code>, for independently creating model with explanations. ​</li>
 </ul>
 <pre class="{r}"><code>data("apartments", package = 'DALEX') 
 data("apartments_test", package = 'DALEX')
 catboost &lt;- make_catboost(apartments, "m2.price", "regression", tune = TRUE, 
                      metric = "rmse") 
-
+​
 # prediction:
 apartments_test &lt;- apartments_test[ ,!(colnames(apartments_test) %in% "m2.price"]
 predict(catboost, apartments_test)
-
+​
 # explanation:
 model_performance(catboost)
 plot(model_performance(catboost))
 modelStudio::modelStudio(catboost)</code></pre>
-<p><img src="reference/figures/forester_diagram.png" align="center" width="600"></p>
+<p>​ <img src="reference/figures/forester_diagram.png" align="center" width="600"> ​ ​</p>
 </div>
 <div id="references" class="section level2">
 <h2 class="hasAnchor">
@@ -144,11 +150,12 @@ modelStudio::modelStudio(catboost)</code></pre>
 <ul>
 <li>Other functionalities for explanation:
 <ul>
-<li>[Explainer] (<a href="https://rdrr.io/cran/DALEX/man/explain.html" class="uri">https://rdrr.io/cran/DALEX/man/explain.html</a>)</li>
-<li>[Connection with DALEX family] (<a href="https://github.com/ModelOriented/DALEX" class="uri">https://github.com/ModelOriented/DALEX</a>)</li>
+<li><a href="https://rdrr.io/cran/DALEX/man/explain.html">Explainer</a></li>
+<li><a href="https://github.com/ModelOriented/DALEX">Connection with DALEX family</a></li>
 </ul>
 </li>
 </ul>
+<p>​ This project was implemented by Szymon Szmajdziński and Hoang Thien Ly under the supervision of Anna Kozak and Przemysław Biecek at MI^2 DataLab.</p>
 </div>
 </div>
   </div>
@@ -173,8 +180,8 @@ modelStudio::modelStudio(catboost)</code></pre>
 <h2>Developers</h2>
 <ul class="list-unstyled">
 <li>Hoang Thien Ly <br><small class="roles"> Author </small>  </li>
-<li>Szymon Szmajdzinski <br><small class="roles"> Author </small>  </li>
-<li>Anna Kozak <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Szymon Szmajdzinski <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Anna Kozak <br><small class="roles"> Author </small>  </li>
 </ul>
 </div>
 
