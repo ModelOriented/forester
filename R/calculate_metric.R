@@ -1,8 +1,8 @@
-#' Metrices for evaluating model's performance.
+#' Metrics for Evaluating Model's Performance.
 #'
 #' Function \code{calculate_metric} returns the value model's performance for classification and regression type measured by a specified metric.
-#' For classification models following metrices can be calculated: F1, accuracy, recall, precision and AUC.
-#' For regression models following metrices can be calculated: mean squared error, R squared, median absolute deviation.
+#' For classification models available metrics are: F1, accuracy, recall, precision and AUC.
+#' For regression models available metrics are: mean squared error, R squared, median absolute deviation.
 #'
 #' @param metric character, name of metric. For regression, options are: "mse", "rmse", "mad" and "r2".
 #' For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".

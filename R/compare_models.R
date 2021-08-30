@@ -1,14 +1,14 @@
 #' Function for evaluating and comparing models 
 #' 
-#' Function \code{evaluate} enables user to compare various model with
+#' Function \code{evaluate} enables user to compare one or several models with
 #' the same type of task. Function compares them based on metric which can be chosen by the user 
 #' and returns the best model 
 #' 
-#' @param ... models to compare. Models shoud be either \code{forester_model} or \code{explainer} object.
-#' @param data_test data frame for evaluation models
-#' @param target character indicating the target column in data test table
-#' @param metric string containing name of mertic based on which the model will be selected. 
-#' Metric shoud be written in small letters. Can be omited.
+#' @param ... models to compare. Models should be either \code{forester_model} or \code{explainer} object.
+#' @param data_test data frame for evaluation models.
+#' @param target character indicating the target column in data test table.
+#' @param metric string containing name of metric based on which the model will be selected. 
+#' Metric should be written in lowercase letters. Can be omitted.
 #'
 #'
 #' @return A list containing an object of the class \code{forester_model} and data frame with results.

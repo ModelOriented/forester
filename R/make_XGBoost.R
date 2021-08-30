@@ -1,14 +1,22 @@
 #' Automated Function for Explaining XGBoost model
 #'
 #' Function \code{make_xgboost} automates the process of applying XGBoost model
-#' for a dataset and simutaneously creates explainer from the use of DALEX package.
+#' for a data set and simultaneously creates an explainer from the use of DALEX package.
 #' The created explainer can be further processed by functions for explanations.
 #'
 #'
 #' @param data data.frame, matrix, data.table or dgCMatrix - data will be used to run the XGBoost model. NOTE: data has to contain the target column.
-#' @param target character: name of the target column, placed in quotation marks. The input target name is compulsory to be one of column names of input data.
-#' @param type character: defining the task, placed in quotation marks. Two options for type: "regression" and "classification", particularly, binary classification.
-#'
+#' @param target character: name of the target column, should be character and has to be a column name in data.
+#' @param type character: defining the task. Two options are: "regression" and "classification", particularly, binary classification.
+#' @param fill_na logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
+#' missing values in numeric columns are substituted by median of corresponding columns.
+#' @param num_features numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
+#' features will be kept in the train and test datasets.
+#' @param tune logical. If TRUE, function will perform the hyperparameter tuning steps for each model inside.
+#' @param tune_metric character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
+#' For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".
+#' @param tune_iter number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.
+#' 
 #' @return An object of the class \code{explainer} for XGBoost model from given data, target and defined type of problem.
 #'
 #'

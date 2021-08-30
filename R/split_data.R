@@ -1,3 +1,17 @@
+#' Splitting Data Into Train And Test Set
+#'
+#' \code{split_data} divide the data frame with given target and type into 
+#' data train and data test set with adjustable ratio.
+#'
+#' @param data data.frame, matrix, data.table or dgCMatrix - training data set to create model, if data_test = NULL, then data will be
+#' automatically divided into training and testing dataset. NOTE: data has to contain the target column.
+#' @param target character: name of the target column, should be character and has to be column name in data.
+#' @param type character: defining the task. Two options are: "regression" and "classification", particularly, binary classification.
+#' @param ratio numeric, ranged from between 0 and 1, indicating the proportion of data train over original data set.
+#'
+#' @return A list of data train and data test.
+#'
+
 
 
 split_data <- function(data, target, type, ratio = 0.8){
