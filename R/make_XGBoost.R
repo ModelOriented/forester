@@ -56,7 +56,7 @@
 #' plot(model_performance(titanic_explainer))
 ##
 
-make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, metric = NULL, iter = 20){
+make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20){
   
   ### Preparing data 
   prepared_data <- prepare_data(data, target, type, fill_na = fill_na,
@@ -117,7 +117,7 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
     )
   } else {
     # Checking the metric 
-    metric <- check_metric(metric, type)
+    tune_metric <- check_metric(tune_metric, type)
     
     # Spliting data_train and data_validation:
     data_splitted <- split_data(data_encoded, target, type)
@@ -143,7 +143,7 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
     
     
     # Argument for metrics which should be minimized
-    desc <- ifelse(metric %in% c("mse", "rmse", "mad"), -1, 1)
+    desc <- ifelse(tune_metric %in% c("mse", "rmse", "mad"), -1, 1)
     
     xgboost_tune_fun <- function(nrounds, eta, subsample, max_depth, min_child_weight, colsample_bytree,
                                  colsample_bylevel, lambda, alpha){
@@ -167,7 +167,7 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
       if (type == "classification"){
         predicted <- ifelse(predict(xgboost_tune, data_val)>=0.5,1,0)
       }
-      score <- desc * calculate_metric(metric, predicted, y_val)
+      score <- desc * calculate_metric(tune_metric, predicted, y_val)
       
       list(Score = score, Pred = predicted)
     }
@@ -186,7 +186,7 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
                                                                                alpha = c(-10,10)),
                                                                  init_grid_dt = NULL,
                                                                  init_points = 5,
-                                                                 n_iter = iter,
+                                                                 n_iter = tune_iter,
                                                                  acq = "ucb",
                                                                  kappa = 2.576,
                                                                  eps = 0.0,

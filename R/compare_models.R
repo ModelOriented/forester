@@ -20,11 +20,17 @@
 #' \donttest{
 #' library(DALEX)
 #' data(apartments, package="DALEX")
+#' lightgbm_model <- make_lightgbm(apartments, "m2.price", "regression")
+#' ranger_model <- make_ranger(apartments, "m2.price", "regression")
 #' 
-#' lightgbm_explained <- make_lightgbm(apartments, "m2.price", "regression")
-#' ranger_explained <- make_ranger(apartments, "m2.price", "regression")
+#' # Evaluating single model
+#' model_evaluated <- evaluate(ranger_model, 
+#'                              data_test = apartments, 
+#'                              target = "m2.price",
+#'                              metric = "mse")
 #' 
-#' best_model <- evaluate(lightgbm_explained, ranger_explained, 
+#' 
+#' best_model <- evaluate(lightgbm_model, ranger_model, 
 #'                              data_test = apartments, 
 #'                              target = "m2.price",
 #'                              metric = "rmse")

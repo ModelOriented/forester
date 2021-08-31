@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepare_data.R
 \name{prepare_data}
 \alias{prepare_data}
-\title{Automatic Function for preparing data}
+\title{Automatic Function For Preparing Data}
 \usage{
 prepare_data(data_train, target, type, fill_na = TRUE, num_features = NULL)
 }
@@ -20,16 +20,27 @@ missing values in numeric columns are substituted by median of corresponding col
 features will be kept in the train and test datasets.}
 }
 \value{
-processed data as data frame
+\code{forester_prepared_data} object which stores data as a data frame and recipe with performed modifications
 }
 \description{
 Function \code{prepare_data} covers fundamental techniques in ML Feature Engineering process.
 }
 \details{
-With adjustable arguments, users can independently decide how function deals with outliers, NAs value,
-feature scaling and important features selection. Furthermore, options for sampling methods will pop up in
+With adjustable arguments, users can independently decide how function deals with NAs value
+and important features selection. Furthermore, options for sampling methods will pop up in
 case of classification problem.
 }
 \references{
 forester library \url{https://modeloriented.github.io/forester/}
+\donttest{
+library(DALEX)
+data(apartments, package="DALEX")
+
+# Preparing data
+prepared_data <- prepare_data(apartments,
+                             target = "m2.price",
+                             type = "regression",
+                             fill_na = TRUE,
+                              num_features = 3)
+}
 }

@@ -3,10 +3,18 @@
 #' Function \code{make_catboost} creates catboost model with default parameters using ranger library and
 #' wraps it with the explainer.
 #' 
-#' @param data training set for ranger model. It can be data frame, matrix, data.table or dgCMatrix. Note: data should contain target column
-#' @param target name of a target value. Should be character. Has to be in data frame
-#' @param type specify weather it is classification task or regression. Should be one of these characters: "classif", "regr"
-#'
+#' @param data data.frame, matrix, data.table or dgCMatrix - data will be used to run the XGBoost model. NOTE: data has to contain the target column.
+#' @param target character: name of the target column, should be character and has to be a column name in data.
+#' @param type character: defining the task. Two options are: "regression" and "classification", particularly, binary classification.
+#' @param fill_na logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
+#' missing values in numeric columns are substituted by median of corresponding columns.
+#' @param num_features numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
+#' features will be kept in the train and test datasets.
+#' @param tune logical. If TRUE, function will perform the hyperparameter tuning steps for each model inside.
+#' @param tune_metric character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
+#' For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".
+#' @param tune_iter number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.
+#' 
 #'
 #' @return An object of the class \code{explainer}.
 #'
@@ -30,7 +38,7 @@
 #'}
 ##
 
-make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL, tune = FALSE, metric = NULL, iter = 20) {
+make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20) {
 
   # Preparing data 
   prepared_data <- prepare_data(data, target, type, fill_na = fill_na,
@@ -49,10 +57,10 @@ make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL
     
   } else {
     # Checking the metric 
-    metric <- check_metric(metric, type)
+    tune_metric <- check_metric(tune_metric, type)
     
     # Argument for metrics which should be minimized 
-    desc <- ifelse(metric %in% c("mse", "rmse", "mad"), -1, 1)
+    desc <- ifelse(tune_metric %in% c("mse", "rmse", "mad"), -1, 1)
     
     # Creating validation set in ratio 4:1
     splited_data <- split_data(data, target, type)
@@ -85,7 +93,7 @@ make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL
       if (type == "classification"){
         predicted <- ifelse(predicted >= 0.5, 1, 0)
       }
-      score <- desc * calculate_metric(metric, predicted, data_val[[target]])
+      score <- desc * calculate_metric(tune_metric, predicted, data_val[[target]])
       
       list(Score = score, Pred = predicted)
     }
@@ -101,7 +109,7 @@ make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL
                                                          l2_leaf_reg = c(2L, 30L)),
                                            init_grid_dt = NULL,
                                            init_points = 10,
-                                           n_iter = iter,
+                                           n_iter = tune_iter,
                                            acq = "ucb",
                                            kappa = 2.576,
                                            eps = 0.0,

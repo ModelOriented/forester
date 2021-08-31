@@ -11,16 +11,29 @@ make_lightgbm(
   num_features = NULL,
   fill_na = TRUE,
   tune = FALSE,
-  metric = NULL,
-  iter = 20
+  tune_metric = NULL,
+  tune_iter = 20
 )
 }
 \arguments{
-\item{data}{data.frame, matrix, data.table or dgCMatrix - data will be used to run the LightGBM model. NOTE: data has to contain the target column.}
+\item{data}{data.frame, matrix, data.table or dgCMatrix - data will be used to run the XGBoost model. NOTE: data has to contain the target column.}
 
-\item{target}{character: name of the target column, placed in quotation marks. The input target name is compulsory to be one of column names of input data.}
+\item{target}{character: name of the target column, should be character and has to be a column name in data.}
 
-\item{type}{character: defining the task, placed in quotation marks. Two options for type: "regression" and "classification", particularly, binary classification.}
+\item{type}{character: defining the task. Two options are: "regression" and "classification", particularly, binary classification.}
+
+\item{num_features}{numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
+features will be kept in the train and test datasets.}
+
+\item{fill_na}{logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
+missing values in numeric columns are substituted by median of corresponding columns.}
+
+\item{tune}{logical. If TRUE, function will perform the hyperparameter tuning steps for each model inside.}
+
+\item{tune_metric}{character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
+For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".}
+
+\item{tune_iter}{number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.}
 }
 \value{
 An object of the class \code{explainer} for LightGBM model with given data, target and defined type of problem.

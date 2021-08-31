@@ -14,10 +14,22 @@
 #' @param num_features numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
 #' features will be kept in the train and test datasets.
 #'
-#' @return processed data as data frame 
+#' @return \code{forester_prepared_data} object which stores data as a data frame and recipe with performed modifications
 #'
 #'
 #' @references forester library \url{https://modeloriented.github.io/forester/}
+#' \donttest{
+#' library(DALEX)
+#' data(apartments, package="DALEX")
+#' 
+#' # Preparing data
+#' prepared_data <- prepare_data(apartments,
+#'                              target = "m2.price",
+#'                              type = "regression",
+#'                              fill_na = TRUE,
+#'                               num_features = 3)
+#'}
+##
 
 
 prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features = NULL){
