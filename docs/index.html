@@ -50,7 +50,7 @@
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/">MI^2 DataLab</a> </span>
-          <span class="version version-default">0.1.0</span>
+          <span class="version version-default">1.0.0</span>
         </div>
       </div>
     </div>
@@ -87,21 +87,23 @@
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#automated-machine-learning-model-solver-" class="anchor"></a>Automated Machine Learning Model Solver <img src="reference/figures/logo.png" align="right" width="150">
 </h1></div>
+<p>​ ​ ​ ​</p>
 <div id="overview" class="section level2">
 <h2 class="hasAnchor">
 <a href="#overview" class="anchor"></a>Overview</h2>
-<p><code>forester</code> is an R package designed to be intuive, brief in formula, and easy to use. It covers the whole process of creating Machine Learning Models with different known models, such as XGBoost, ranger, LightGBM, CatBoost, etc. in an unified formula which let users to control how core steps work.</p>
-<p><img src="reference/figures/graph.png" align="center" width="600"></p>
+<p>​ <code>forester</code> is an R package designed to be intuive, brief in formula, and easy to use. It covers the whole process of creating Machine Learning Models with different known models, such as XGBoost, ranger, LightGBM, CatBoost, etc. in an unified formula which let users to control how core steps work. ​ <img src="reference/figures/graph.png" align="center" width="600"> ​ ​ ​</p>
 </div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
-<p>From CRAN</p>
-<pre class="{r}"><code><a href="https://rdrr.io/r/utils/install.packages.html">install.packages("forester")</a></code></pre>
-<p>From GitHub</p>
+<p>​ (From CRAN - not yet available) ​</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"forester"</span><span class="op">)</span></code></pre></div>
+<p>​ From GitHub ​</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"ModelOriented/forester"</span><span class="op">)</span></code></pre></div>
+<p>​</p>
 </div>
 <div id="usage" class="section level2">
 <h2 class="hasAnchor">
@@ -109,34 +111,37 @@
 <p>Core functions in <code>forester</code> package are:</p>
 <ul>
 <li>
-<code><a href="reference/forester.html">forester()</a></code>, for automatically creating the whole ML process and returning optimal model.</li>
+<code><a href="reference/forester.html">forester()</a></code>, for automatically creating the whole ML process and returning optimal model. ​</li>
 </ul>
-<pre class="{r}"><code><a href="https://rdrr.io/r/utils/data.html">data("titanic", package = 'DALEX') 
-best_model &lt;- forester(data = titanic, target = "survived", type = "regression",
-               metric = "precision", tune = FALSE)
-# Print ranking table for models:
-print(best_model)
-
-# The best_model object can be used for giving explanation:
-modelStudio::modelStudio(best_model)</a></code></pre>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"titanic"</span>, package <span class="op">=</span> <span class="st">'DALEX'</span><span class="op">)</span> 
+<span class="va">best_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/forester.html">forester</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">titanic</span>, target <span class="op">=</span> <span class="st">"survived"</span>, type <span class="op">=</span> <span class="st">"regression"</span>,
+               metric <span class="op">=</span> <span class="st">"precision"</span>, tune <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
+​
+<span class="co"># Print ranking table for models:</span>
+<span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">best_model</span><span class="op">)</span>
+​
+<span class="co"># The best_model object can be used for giving explanation:</span>
+<span class="fu">modelStudio</span><span class="fu">::</span><span class="fu"><a href="https://modelstudio.drwhy.ai/reference/modelStudio.html">modelStudio</a></span><span class="op">(</span><span class="va">best_model</span><span class="op">)</span></code></pre></div>
+<p>​ ​</p>
 <ul>
 <li>
-<code>make_...()</code>, for independently creating model with explanations.</li>
+<code>make_...()</code>, for independently creating model with explanations. ​</li>
 </ul>
-<pre class="{r}"><code>data("apartments", package = 'DALEX') 
-data("apartments_test", package = 'DALEX')
-catboost &lt;- make_catboost(apartments, "m2.price", "regression", tune = TRUE, 
-                     metric = "rmse") 
-
-# prediction:
-apartments_test &lt;- apartments_test[ ,!(colnames(apartments_test) %in% "m2.price"]
-predict(catboost, apartments_test)
-
-# explanation:
-model_performance(catboost)
-plot(model_performance(catboost))
-modelStudio::modelStudio(catboost)</code></pre>
-<p><img src="reference/figures/forester_diagram.png" align="center" width="600"></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"apartments"</span>, <span class="at">package =</span> <span class="st">'DALEX'</span>) </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"apartments_test"</span>, <span class="at">package =</span> <span class="st">'DALEX'</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>catboost <span class="ot">&lt;-</span> <span class="fu">make_catboost</span>(apartments, <span class="st">"m2.price"</span>, <span class="st">"regression"</span>, <span class="at">tune =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">metric =</span> <span class="st">"rmse"</span>) </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>​</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># prediction:</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>apartments_test <span class="ot">&lt;-</span> apartments_test[ ,<span class="sc">!</span>(<span class="fu">colnames</span>(apartments_test) <span class="sc">%in%</span> <span class="st">"m2.price"</span>]</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(catboost, apartments_test)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>​</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># explanation:</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">model_performance</span>(catboost)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">model_performance</span>(catboost))</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>modelStudio<span class="sc">::</span><span class="fu">modelStudio</span>(catboost)</span></code></pre></div>
+<p>​ <img src="reference/figures/forester_diagram.png" align="center" width="600"> ​ ​</p>
 </div>
 <div id="references" class="section level2">
 <h2 class="hasAnchor">
@@ -144,8 +149,9 @@ modelStudio::modelStudio(catboost)</code></pre>
 <ul>
 <li>Other functionalities for explanation:
 <ul>
-<li>[Explainer] (<a href="https://rdrr.io/cran/DALEX/man/explain.html" class="uri">https://rdrr.io/cran/DALEX/man/explain.html</a>)</li>
-<li>[Connection with DALEX family] (<a href="https://github.com/ModelOriented/DALEX" class="uri">https://github.com/ModelOriented/DALEX</a>)</li>
+<li><a href="https://rdrr.io/cran/DALEX/man/explain.html">Explainer</a></li>
+<li>
+<a href="https://github.com/ModelOriented/DALEX">Connection with DALEX family</a> ​ This project was implemented by Szymon Szmajdziński and Hoang Thien Ly under the supervision of Anna Kozak and Przemysław Biecek at MI^2 DataLab.</li>
 </ul>
 </li>
 </ul>
@@ -173,8 +179,8 @@ modelStudio::modelStudio(catboost)</code></pre>
 <h2>Developers</h2>
 <ul class="list-unstyled">
 <li>Hoang Thien Ly <br><small class="roles"> Author </small>  </li>
-<li>Szymon Szmajdzinski <br><small class="roles"> Author </small>  </li>
-<li>Anna Kozak <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Szymon Szmajdzinski <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Anna Kozak <br><small class="roles"> Author </small>  </li>
 </ul>
 </div>
 

@@ -2,10 +2,12 @@
 
 export(calculate_metric)
 export(evaluate)
+export(forester)
 export(make_catboost)
 export(make_lightgbm)
 export(make_ranger)
 export(make_xgboost)
+export(prepare_data)
 importFrom(stats,median)
 importFrom(stats,predict)
 importFrom(stats,weighted.mean)

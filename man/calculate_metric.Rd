@@ -2,7 +2,7 @@
 % Please edit documentation in R/calculate_metric.R
 \name{calculate_metric}
 \alias{calculate_metric}
-\title{Metrices for evaluating model's performance.}
+\title{Metrics for Evaluating Model's Performance.}
 \usage{
 calculate_metric(metric, predicted, observed, cutoff = 0.5)
 }
@@ -21,8 +21,8 @@ The real value of measured metric between predicted and observed vectors.
 }
 \description{
 Function \code{calculate_metric} returns the value model's performance for classification and regression type measured by a specified metric.
-For classification models following metrices can be calculated: F1, accuracy, recall, precision and AUC.
-For regression models following metrices can be calculated: mean squared error, R squared, median absolute deviation.
+For classification models available metrics are: F1, accuracy, recall, precision and AUC.
+For regression models available metrics are: mean squared error, R squared, median absolute deviation.
 }
 \references{
 \code{model_performance} from DALEX library. \url{https://github.com/ModelOriented/DALEX/blob/master/R/model_performance.R}

@@ -7,20 +7,20 @@
 evaluate(..., data_test, target, metric = NULL)
 }
 \arguments{
-\item{...}{models to compare. Models shoud be either \code{forester_model} or \code{explainer} object.}
+\item{...}{models to compare. Models should be either \code{forester_model} or \code{explainer} object.}
 
-\item{data_test}{data frame for evaluation models}
+\item{data_test}{data frame for evaluation models.}
 
-\item{target}{character indicating the target column in data test table}
+\item{target}{character indicating the target column in data test table.}
 
-\item{metric}{string containing name of mertic based on which the model will be selected. 
-Metric shoud be written in small letters. Can be omited.}
+\item{metric}{string containing name of metric based on which the model will be selected. 
+Metric should be written in lowercase letters. Can be omitted.}
 }
 \value{
 A list containing an object of the class \code{forester_model} and data frame with results.
 }
 \description{
-Function \code{evaluate} enables user to compare various model with
+Function \code{evaluate} enables user to compare one or several models with
 the same type of task. Function compares them based on metric which can be chosen by the user 
 and returns the best model
 }
@@ -28,11 +28,17 @@ and returns the best model
 \donttest{
 library(DALEX)
 data(apartments, package="DALEX")
+lightgbm_model <- make_lightgbm(apartments, "m2.price", "regression")
+ranger_model <- make_ranger(apartments, "m2.price", "regression")
 
-lightgbm_explained <- make_lightgbm(apartments, "m2.price", "regression")
-ranger_explained <- make_ranger(apartments, "m2.price", "regression")
+# Evaluating single model
+model_evaluated <- evaluate(ranger_model, 
+                             data_test = apartments, 
+                             target = "m2.price",
+                             metric = "mse")
 
-best_model <- evaluate(lightgbm_explained, ranger_explained, 
+
+best_model <- evaluate(lightgbm_model, ranger_model, 
                              data_test = apartments, 
                              target = "m2.price",
                              metric = "rmse")

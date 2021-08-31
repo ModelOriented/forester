@@ -126,9 +126,9 @@ test_make_functions <- function(make_function) {
   })
   
   test_that(paste(substitute(make_function), ": With tuning"), {
-    model <- make_function(titanic, "survived", "classification", tune = TRUE, iter = 1)
+    model <- make_function(titanic, "survived", "classification", tune = TRUE, tune_iter = 1)
     expect_s3_class(model, "forester_model")
-    model <- make_function(apartments, "m2.price", "regression", tune = TRUE, iter = 1, metric = "mse")
+    model <- make_function(apartments, "m2.price", "regression", tune = TRUE, tune_iter = 1, tune_metric = "mse")
     expect_s3_class(model, "forester_model")
   })
 }

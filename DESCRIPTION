@@ -1,11 +1,11 @@
 Package: forester
 Title: Automated tree boosting models
-Version: 0.1.0
+Version: 1.0.0
 Authors@R:
     c(person("Hoang Thien", "Ly", role = c("aut")),
-    person("Szymon", "Szmajdzinski", role = c("aut")),
-      person("Anna", "Kozak", role = c("aut", "cre"),
-      email = "anna1993kozak@gmail.com"))
+    person("Szymon", "Szmajdzinski", role = c("aut", "cre"),
+      email = "szymon.szmajdzinski.stud@pw.edu.pl"),
+      person("Anna", "Kozak", role = c("aut")))
 Description: The forester package automates the process of applying different well-known models, such as: ranger, XGBoost, LightGBM and catboost to various forms of input data. In addition, the forester appends the explainer for each model, which can be further processed by functions to create explanations.
 Depends: R (>= 3.6)
 License: GPL-3

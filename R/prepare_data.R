@@ -1,12 +1,10 @@
-#' Automatic Function for preparing data
+#' Automatic Function For Preparing Data
 #'
 #' Function \code{prepare_data} covers fundamental techniques in ML Feature Engineering process.
 #'
-#' With adjustable arguments, users can independently decide how function deals with outliers, NAs value,
-#' feature scaling and important features selection. Furthermore, options for sampling methods will pop up in
+#' With adjustable arguments, users can independently decide how function deals with NAs value
+#' and important features selection. Furthermore, options for sampling methods will pop up in
 #' case of classification problem.
-#'
-#'
 #'
 #' @param data_train dataset, used for training models. Class of data_train is one of those classes: data.frame, matrix, data.table or dgCMatrix. NOTE: data_train includes target column.
 #' @param target character, indicating name of the target column in data_train.
@@ -16,10 +14,25 @@
 #' @param num_features numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
 #' features will be kept in the train and test datasets.
 #'
-#' @return processed data as data frame 
-#'
+#' @return \code{forester_prepared_data} object which stores data as a data frame and recipe with performed modifications
 #'
 #' @references forester library \url{https://modeloriented.github.io/forester/}
+#'
+#' @export
+#' @importFrom stats predict
+#' @examples
+#' \donttest{
+#' library(DALEX)
+#' data(apartments, package="DALEX")
+#' 
+#' # Preparing data
+#' prepared_data <- prepare_data(apartments,
+#'                              target = "m2.price",
+#'                              type = "regression",
+#'                              fill_na = TRUE,
+#'                               num_features = 3)
+#'}
+##
 
 
 prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features = NULL){

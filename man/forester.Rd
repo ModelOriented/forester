@@ -10,13 +10,10 @@ forester(
   type,
   metric = NULL,
   data_test = NULL,
-  remove_outliers = FALSE,
   fill_na = TRUE,
-  scaling = NULL,
   num_features = NULL,
   tune = FALSE,
-  iter = 20,
-  verbose = 1
+  tune_iter = 20
 )
 }
 \arguments{
@@ -32,25 +29,19 @@ For classification, options are: "auc", "recall", "precision", "f1" and "accurac
 
 \item{data_test}{optional argument, class of data.frame, matrix, data.table or dgCMatrix - test data set used for evaluating model performance.}
 
-\item{remove_outliers}{logical, default is FALSE. If TRUE, all rows containing outliers in numeric columns will be removed, except for target column.}
-
 \item{fill_na}{logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
 missing values in numeric columns are substituted by median of corresponding columns.}
-
-\item{scaling}{character, default is NULL. Parameter is used for scaling features. Options are "standardize", "minmax" and NULL.}
 
 \item{num_features}{numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
 features will be kept in the train and test datasets.}
 
 \item{tune}{logical. If TRUE, function will perform the hyperparameter tuning steps for each model inside.}
 
-\item{iter}{number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.}
-
-\item{verbose}{(default: 1) - verbosity of priting messages. Options are 0 (silent), 1 (warning), 2 (info), 3 (debug).}
+\item{tune_iter}{number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.}
 }
 \value{
 An object of the class \code{forester_model} which is the best model with respect to the
-chosen matrix. It's also an object of the class \code{explainer} from DALEX family inherited the
+chosen metric. It's also an object of the class \code{explainer} from DALEX family inherited the
 explanation for the best chosen model.
 }
 \description{
@@ -58,4 +49,21 @@ Different tree-based models such as: XGBoost, ranger, CatBoost, LightGBM, etc. r
 different specific data objects. This function provides a simple and unified formula to create those models
 with options to automatically cover the whole process of creating Machine Learning Model: Preprocessing Data,
 Feature Engineering, Creating Models, Optimizing Hyperparameters, Model Explanation and Evaluating Models.
+}
+\examples{
+\donttest{
+# regression
+library(DALEX)
+data(apartments, package="DALEX")
+
+exp <- forester(apartments, "m2.price", "regression")
+# plot(model_parts(exp))
+
+# binary classification
+library(DALEX)
+data(titanic_imputed, package="DALEX")
+
+exp <- forester(titanic_imputed, "survived", "classification")
+# plot(model_parts(exp))
+}
 }

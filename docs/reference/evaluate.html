@@ -53,7 +53,7 @@
 
 
 <meta property="og:title" content="Function for evaluating and comparing models — evaluate" />
-<meta property="og:description" content="Function evaluate enables user to compare various model with
+<meta property="og:description" content="Function evaluate enables user to compare one or several models with
 the same type of task. Function compares them based on metric which can be chosen by the user 
 and returns the best model" />
 <meta property="og:image" content="/logo.png" />
@@ -100,7 +100,7 @@ and returns the best model" />
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/">MI^2 DataLab</a> </span>
-          <span class="version version-default">0.1.0</span>
+          <span class="version version-default">1.0.0</span>
         </div>
       </div>
     </div>
@@ -140,7 +140,7 @@ and returns the best model" />
     </div>
 
     <div class="ref-description">
-    <p>Function <code>evaluate</code> enables user to compare various model with
+    <p>Function <code>evaluate</code> enables user to compare one or several models with
 the same type of task. Function compares them based on metric which can be chosen by the user 
 and returns the best model</p>
     </div>
@@ -152,20 +152,20 @@ and returns the best model</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>...</th>
-      <td><p>models to compare. Models shoud be either <code>forester_model</code> or <code>explainer</code> object.</p></td>
+      <td><p>models to compare. Models should be either <code>forester_model</code> or <code>explainer</code> object.</p></td>
     </tr>
     <tr>
       <th>data_test</th>
-      <td><p>data frame for evaluation models</p></td>
+      <td><p>data frame for evaluation models.</p></td>
     </tr>
     <tr>
       <th>target</th>
-      <td><p>character indicating the target column in data test table</p></td>
+      <td><p>character indicating the target column in data test table.</p></td>
     </tr>
     <tr>
       <th>metric</th>
-      <td><p>string containing name of mertic based on which the model will be selected. 
-Metric shoud be written in small letters. Can be omited.</p></td>
+      <td><p>string containing name of metric based on which the model will be selected. 
+Metric should be written in lowercase letters. Can be omitted.</p></td>
     </tr>
     </table>
 
@@ -183,11 +183,21 @@ Metric shoud be written in small letters. Can be omited.</p></td>
 #&gt; <span class='message'>Find examples and detailed introduction at: http://ema.drwhy.ai/</span>
 #&gt; <span class='message'>Additional features will be available after installation of: ggpubr.</span>
 #&gt; <span class='message'>Use 'install_dependencies()' to get all suggested dependencies</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>apartments</span>, package<span class='op'>=</span><span class='st'>"DALEX"</span><span class='op'>)</span>
+<span class='va'>lightgbm_model</span> <span class='op'>&lt;-</span> <span class='fu'><a href='make_lightgbm.html'>make_lightgbm</a></span><span class='op'>(</span><span class='va'>apartments</span>, <span class='st'>"m2.price"</span>, <span class='st'>"regression"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>--- Creating LightGBM model ---</span></div><div class='output co'>#&gt; <span class='message'>Original shape of train data frame: 1000 rows, 6 columns</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>NA values</span></div><div class='output co'>#&gt; <span class='message'>There is no NA values in your data.</span></div><div class='input'><span class='va'>ranger_model</span> <span class='op'>&lt;-</span> <span class='fu'><a href='make_ranger.html'>make_ranger</a></span><span class='op'>(</span><span class='va'>apartments</span>, <span class='st'>"m2.price"</span>, <span class='st'>"regression"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>--- Creating Ranger model ---</span></div><div class='output co'>#&gt; <span class='message'>Original shape of train data frame: 1000 rows, 6 columns</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>NA values</span></div><div class='output co'>#&gt; <span class='message'>There is no NA values in your data.</span></div><div class='input'>
+<span class='co'># Evaluating single model</span>
+<span class='va'>model_evaluated</span> <span class='op'>&lt;-</span> <span class='fu'>evaluate</span><span class='op'>(</span><span class='va'>ranger_model</span>, 
+                             data_test <span class='op'>=</span> <span class='va'>apartments</span>, 
+                             target <span class='op'>=</span> <span class='st'>"m2.price"</span>,
+                             metric <span class='op'>=</span> <span class='st'>"mse"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Results of compared models:</span></div><div class='output co'>#&gt; 
+#&gt; 
+#&gt; model          mse      rmse          r2        mad
+#&gt; -------  ---------  --------  ----------  ---------
+#&gt; Ranger    21896.01   147.973   0.9733388   85.22582</div><div class='output co'>#&gt; <span class='message'>The best model based on mse metric is Ranger.</span></div><div class='input'>
 
-<span class='va'>lightgbm_explained</span> <span class='op'>&lt;-</span> <span class='fu'><a href='make_lightgbm.html'>make_lightgbm</a></span><span class='op'>(</span><span class='va'>apartments</span>, <span class='st'>"m2.price"</span>, <span class='st'>"regression"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Original shape of train data frame: 1000 rows, 6 columns</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>NA values</span></div><div class='output co'>#&gt; <span class='message'>There is no NA values in your data.</span></div><div class='input'><span class='va'>ranger_explained</span> <span class='op'>&lt;-</span> <span class='fu'><a href='make_ranger.html'>make_ranger</a></span><span class='op'>(</span><span class='va'>apartments</span>, <span class='st'>"m2.price"</span>, <span class='st'>"regression"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Original shape of train data frame: 1000 rows, 6 columns</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>NA values</span></div><div class='output co'>#&gt; <span class='message'>There is no NA values in your data.</span></div><div class='output co'>#&gt; <span class='message'>__________________________</span></div><div class='output co'>#&gt; <span class='message'>CREATING MODEL</span></div><div class='input'>
-<span class='va'>best_model</span> <span class='op'>&lt;-</span> <span class='fu'>evaluate</span><span class='op'>(</span><span class='va'>lightgbm_explained</span>, <span class='va'>ranger_explained</span>, 
+<span class='va'>best_model</span> <span class='op'>&lt;-</span> <span class='fu'>evaluate</span><span class='op'>(</span><span class='va'>lightgbm_model</span>, <span class='va'>ranger_model</span>, 
                              data_test <span class='op'>=</span> <span class='va'>apartments</span>, 
                              target <span class='op'>=</span> <span class='st'>"m2.price"</span>,
                              metric <span class='op'>=</span> <span class='st'>"rmse"</span><span class='op'>)</span>
