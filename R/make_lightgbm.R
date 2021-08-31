@@ -63,6 +63,7 @@
 
 make_lightgbm <- function(data, target, type, num_features = NULL, fill_na = TRUE, tune = FALSE, tune_metric = NULL, tune_iter=20){
 
+  message("--- Creating LightGBM model ---")
   # Preparing data 
   prepared_data <- prepare_data(data, target, type, fill_na = fill_na,
                                 num_features = num_features)
@@ -100,6 +101,7 @@ make_lightgbm <- function(data, target, type, num_features = NULL, fill_na = TRU
       objective = ifelse(type == "regression", "regression", "binary"))
   } else {
     # Checking the metric 
+    message('--- Starting tuning process')
     tune_metric <- check_metric(tune_metric, type)
     
     data_tune <- data

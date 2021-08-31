@@ -40,6 +40,7 @@
 
 make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20) {
   
+  message("--- Creating Ranger model ---")
   # Preparing data 
   prepared_data <- prepare_data(data, target, type, fill_na = fill_na,
                                 num_features = num_features)
@@ -73,11 +74,10 @@ make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL
   
   is_classif <- type == "classification"
   
-  message("__________________________")
-  message("CREATING MODEL")
   if (!tune){
     rg <- ranger::ranger(form, data = data, classification = is_classif)
   } else {
+    message('--- Starting tuning process')
     # Checking the metric 
     tune_metric <- check_metric(tune_metric, type)
 

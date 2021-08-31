@@ -13,11 +13,11 @@
 ​
 ## Installation
 ​
-(From CRAN - not yet available
+(From CRAN - not yet available)
 ​
-```{r}
+``` r
 install.packages("forester")
-```)
+```
 ​
 From GitHub
 ​
@@ -31,7 +31,7 @@ devtools::install_github("ModelOriented/forester")
 Core functions in `forester` package are:
 - `forester()`, for automatically creating the whole ML process and returning optimal model.
 ​
-```{r}
+``` r
 data("titanic", package = 'DALEX') 
 best_model <- forester(data = titanic, target = "survived", type = "regression",
 		       metric = "precision", tune = FALSE)
@@ -46,7 +46,7 @@ modelStudio::modelStudio(best_model)
 ​
 - `make_...()`, for independently creating model with explanations.
 ​
-```{r}
+``` r
 data("apartments", package = 'DALEX') 
 data("apartments_test", package = 'DALEX')
 catboost <- make_catboost(apartments, "m2.price", "regression", tune = TRUE, 
@@ -69,7 +69,5 @@ modelStudio::modelStudio(catboost)
 - Other functionalities for explanation:
    - [Explainer](https://rdrr.io/cran/DALEX/man/explain.html)
    - [Connection with DALEX family](https://github.com/ModelOriented/DALEX)
-   
-   
 ​
 This project was implemented by Szymon Szmajdziński and Hoang Thien Ly under the supervision of Anna Kozak and Przemysław Biecek at MI^2 DataLab.

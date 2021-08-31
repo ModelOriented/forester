@@ -16,8 +16,11 @@
 #'
 #' @return \code{forester_prepared_data} object which stores data as a data frame and recipe with performed modifications
 #'
-#'
 #' @references forester library \url{https://modeloriented.github.io/forester/}
+#'
+#' @export
+#' @importFrom stats predict
+#' @examples
 #' \donttest{
 #' library(DALEX)
 #' data(apartments, package="DALEX")

@@ -58,6 +58,7 @@
 
 make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20){
   
+  message("--- Creating XGboost model ---")
   ### Preparing data 
   prepared_data <- prepare_data(data, target, type, fill_na = fill_na,
                                 num_features = num_features)
@@ -116,6 +117,7 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
                                 eval_metric = ifelse(type == "regression","rmse","logloss")
     )
   } else {
+    message('--- Starting tuning process')
     # Checking the metric 
     tune_metric <- check_metric(tune_metric, type)
     

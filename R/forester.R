@@ -68,22 +68,32 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, fill_n
     }
   }
   
+  data_for_messages <- prepare_data(data = data_train, target = target, type = type,
+                                    fill_na = fill_na, num_features = num_features)
+  
+  message("__________________________")
+  message("CREATING MODELS")
+  
   ### Creating models:
-  ranger_exp <- make_ranger(data = data_train, target = target, type = type,
-                              tune = tune, tune_metric = metric,
-                            tune_iter = tune_iter, fill_na = fill_na)
+  suppressMessages(ranger_exp <- make_ranger(data = data_train, target = target, type = type,
+                                             tune = tune, tune_metric = metric,
+                                             tune_iter = tune_iter, fill_na = fill_na,
+                                             num_features = num_features))
   message("--- Ranger model has been created ---")
   suppressMessages(catboost_exp <- make_catboost(data = data_train, target = target, type = type,
                                                  tune = tune, tune_metric = metric,
-                                                 tune_iter = tune_iter, fill_na = fill_na))
+                                                 tune_iter = tune_iter, fill_na = fill_na,
+                                                 num_features = num_features))
   message("--- Catboost model has been created ---")
   suppressMessages(xgboost_exp  <- make_xgboost(data = data_train, target = target, type = type,
                                                 tune = tune, tune_metric = metric,
-                                                tune_iter = tune_iter, fill_na = fill_na))
+                                                tune_iter = tune_iter, fill_na = fill_na,
+                                                num_features = num_features))
   message("--- Xgboost model has been created ---")
   suppressMessages(lightgbm_exp <- make_lightgbm(data = data_train, target = target, type = type,
                                                  tune = tune, tune_metric = metric,
-                                                 tune_iter = tune_iter, fill_na = fill_na))
+                                                 tune_iter = tune_iter, fill_na = fill_na,
+                                                 num_features = num_features))
   message("--- LightGBM model has been created ---")
   
   message("__________________________")

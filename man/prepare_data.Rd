@@ -30,8 +30,7 @@ With adjustable arguments, users can independently decide how function deals wit
 and important features selection. Furthermore, options for sampling methods will pop up in
 case of classification problem.
 }
-\references{
-forester library \url{https://modeloriented.github.io/forester/}
+\examples{
 \donttest{
 library(DALEX)
 data(apartments, package="DALEX")
@@ -43,4 +42,7 @@ prepared_data <- prepare_data(apartments,
                              fill_na = TRUE,
                               num_features = 3)
 }
+}
+\references{
+forester library \url{https://modeloriented.github.io/forester/}
 }

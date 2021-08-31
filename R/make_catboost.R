@@ -39,7 +39,8 @@
 ##
 
 make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20) {
-
+  
+  message("--- Creating Catboost model ---")
   # Preparing data 
   prepared_data <- prepare_data(data, target, type, fill_na = fill_na,
                                 num_features = num_features)
@@ -99,6 +100,7 @@ make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL
     }
     
     ### Tuning process
+    message("--- Starting tuning process")
     tuned_catboost <- rBayesianOptimization::BayesianOptimization(catboost_tune_fun,
                                            bounds = list(iterations = c(10L, 1000L),
                                                          depth = c(1L, 8L),
