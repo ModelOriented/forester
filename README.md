@@ -1,7 +1,7 @@
 # Automated Machine Learning Model Solver <img src="man/figures/logo.png" align="right" width="150"/>
 ​
 ​
-​
+_Trees are all you need_
 ​
 ## Overview
 ​
