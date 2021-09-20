@@ -131,13 +131,13 @@ prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features
       message("What is your choice?")
       
       con <- getOption("mypkg.connection")
-      choice <- readLines(con = con, n = 1)
-      #choice <- readline()
+      #choice <- readLines(con = con, n = 1)
+      choice <- readline()
       
       while (choice != 0 & choice != 1 & choice != 2){
         message("Wrong option. Choose option: ")
-        choice <- readLines(con = con, n = 1)
-        #choice <- readline()
+        #choice <- readLines(con = con, n = 1)
+        choice <- readline()
       }
       
       # Starting sampling method:
