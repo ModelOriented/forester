@@ -51,7 +51,7 @@ make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL
   ### Tuning step 
   if (!tune){
     # Creating model 
-    categorical <- which(sapply(apartments, is.factor))
+    categorical <- which(sapply(data, is.factor))
     cat_data <- catboost::catboost.load_pool(data[, -which(names(data) == target),drop = FALSE],
                                              data[, target], cat_features = categorical)
     cat_model <- catboost::catboost.train(cat_data, params = list(verbose = 0))
@@ -69,7 +69,7 @@ make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL
     data_val <- splited_data[[2]]
     
     # Creating pool objects for catboost 
-    categorical <- which(sapply(apartments, is.factor))
+    categorical <- which(sapply(data, is.factor))
     cat_data <- catboost::catboost.load_pool(data[, -which(names(data) == target), drop = FALSE],
                                              data[, target], cat_features = categorical)
     
