@@ -33,7 +33,7 @@ Core functions in `forester` package are:
 
 ``` r
 data("titanic", package = 'DALEX') 
-best_model <- forester(data = titanic, target = "survived", type = "regression",
+best_model <- forester(data = titanic, target = "survived", type = "classification",
 		       metric = "precision", tune = FALSE)
 
 # Print ranking table for models:
