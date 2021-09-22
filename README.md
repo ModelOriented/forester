@@ -19,6 +19,8 @@ _Trees are all you need_
 install.packages("forester")
 ```
 
+Installation of catboost library:  https://catboost.ai/docs/concepts/r-installation.html
+
 From GitHub
 
 ``` r
