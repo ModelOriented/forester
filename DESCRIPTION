@@ -27,7 +27,8 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    data.table
+    data.table,
+    modelStudio
 VignetteBuilder: knitr
 URL: https://github.com/ModelOriented/forester
 BugReports: https://github.com/ModelOriented/forester/issues
