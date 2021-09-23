@@ -19,6 +19,8 @@ _Trees are all you need_
 install.packages("forester")
 ```
 
+Installation of catboost library:  https://catboost.ai/docs/concepts/r-installation.html
+
 From GitHub
 
 ``` r
@@ -33,7 +35,7 @@ Core functions in `forester` package are:
 
 ``` r
 data("titanic", package = 'DALEX') 
-best_model <- forester(data = titanic, target = "survived", type = "regression",
+best_model <- forester(data = titanic, target = "survived", type = "classification",
 		       metric = "precision", tune = FALSE)
 
 # Print ranking table for models:
