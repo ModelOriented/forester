@@ -76,7 +76,7 @@ prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features
     
     # Message for the user about imputation
     if (any(is.na(data_train))){
-      message("NA values has been filled.")
+      message("NA values have been filled.")
     }
     
     #### Imputation with tidyvers 

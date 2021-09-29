@@ -15,6 +15,7 @@
 #'
 #' @references Explanatory Model Analysis. Explore, Explain, and Examine Predictive Models. \url{https://ema.drwhy.ai/}
 #' @importFrom stats median weighted.mean
+#' @importFrom DALEX update_data
 #' @export
 #' @examples
 #' \donttest{
