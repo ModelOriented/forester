@@ -124,7 +124,7 @@ prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features
       message("Your training set has: ",nrow(data_train),"rows in total.")
       message("Class ", uniq[1], " accounts for ", percent_class_1, "%")
       message("Class ", uniq[2], " accounts for ", percent_class_2, "%")
-      message("Your data might be umbalanced. Do you want to use oversampling or undersampling method?. Press 0, 1 or 2 to decide.")
+      message("Your data might be imbalanced. Do you want to use oversampling or undersampling method?. Press 0, 1 or 2 to decide.")
       message("0 - nothing")
       message("1 - undersampling")
       message("2 - oversampling")
@@ -187,7 +187,7 @@ prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features
       },
       warning = function(cond) {
         if(cond$message == "getImp result contains NA(s) or NaN(s); replacing with 0(s), yet this is suspicious."){
-          message("Data set is probably to small for feature selection. If you're using undersampling try oversampling instead.")
+          message("Data set is probably too small for feature selection. If you're using undersampling try oversampling instead.")
         } else {
           message(cond$message)
         }
