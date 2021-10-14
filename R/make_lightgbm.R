@@ -16,6 +16,7 @@
 #' @param tune_metric character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
 #' For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".
 #' @param tune_iter number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.
+#' @param label string indicating the name of the model. Might be usefull while comparing different models of the same type.
 #' 
 #' 
 #' @return An object of the class \code{explainer} for LightGBM model with given data, target and defined type of problem.
@@ -61,7 +62,7 @@
 ##
 
 
-make_lightgbm <- function(data, target, type, num_features = NULL, fill_na = TRUE, tune = FALSE, tune_metric = NULL, tune_iter=20){
+make_lightgbm <- function(data, target, type, num_features = NULL, fill_na = TRUE, tune = FALSE, tune_metric = NULL, tune_iter=20, label = "LightGBM"){
 
   message("--- Creating LightGBM model ---")
   # Preparing data 
@@ -247,7 +248,7 @@ make_lightgbm <- function(data, target, type, num_features = NULL, fill_na = TRU
     data = data[, which(colnames(data) != target), drop = FALSE],
     y = data[, target],
     predict_function = lightgbm_predict,
-    label = "LightGBM",
+    label = label,
     type = type,
     verbose = 0
   )

@@ -14,7 +14,7 @@
 #' @param tune_metric character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
 #' For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".
 #' @param tune_iter number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.
-#' 
+#' @param label string indicating the name of the model. Might be usefull while comparing different models of the same type.
 #'
 #' @return An object of the class \code{explainer}.
 #'
@@ -38,7 +38,7 @@
 #'}
 ##
 
-make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20) {
+make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20, label = "Ranger") {
   
   message("--- Creating Ranger model ---")
   # Preparing data 
@@ -157,7 +157,7 @@ make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL
   ranger_explained <- DALEX::explain(rg,
                                      data = df_exp,
                                      y = data[, target],
-                                     label = "Ranger",
+                                     label = label,
                                      predict_function = ranger_predict,
                                      verbose = 0)
   ranger_explained$modifications <- modifications
