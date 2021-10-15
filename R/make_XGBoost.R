@@ -16,6 +16,7 @@
 #' @param tune_metric character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
 #' For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".
 #' @param tune_iter number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.
+#' @param label string indicating the name of the model. Might be usefull while comparing different models of the same type.
 #' 
 #' @return An object of the class \code{explainer} for XGBoost model from given data, target and defined type of problem.
 #'
@@ -56,7 +57,7 @@
 #' plot(model_performance(titanic_explainer))
 ##
 
-make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20){
+make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20, label = "XGboost"){
   
   message("--- Creating XGboost model ---")
   ### Preparing data 
@@ -246,7 +247,7 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
     data = data[, !(colnames(data) %in% target), drop = FALSE],
     y = data[, target],
     predict_function = xgboost_predict,
-    label = "XGBoost",
+    label = label,
     type = type,
     verbose = 0
   )

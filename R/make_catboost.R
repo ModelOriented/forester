@@ -14,7 +14,7 @@
 #' @param tune_metric character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
 #' For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".
 #' @param tune_iter number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.
-#' 
+#' @param label string indicating the name of the model. Might be usefull while comparing different models of the same type.
 #'
 #' @return An object of the class \code{explainer}.
 #'
@@ -38,7 +38,7 @@
 #'}
 ##
 
-make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20) {
+make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL, tune = FALSE, tune_metric = NULL, tune_iter = 20, label = "Catboost") {
   
   message("--- Creating Catboost model ---")
   # Preparing data 
@@ -151,7 +151,7 @@ make_catboost <-function(data, target, type, fill_na = TRUE, num_features = NULL
   catboost_explained <- DALEX::explain(cat_model,
                                        data = data[, -which(names(data) == target),drop=FALSE],
                                        y = data[, target], 
-                                       label = "CatBoost",
+                                       label = label,
                                        predict_function = catboost_predict,
                                        type = type,
                                        verbose = 0)

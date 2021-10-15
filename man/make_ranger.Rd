@@ -12,7 +12,8 @@ make_ranger(
   num_features = NULL,
   tune = FALSE,
   tune_metric = NULL,
-  tune_iter = 20
+  tune_iter = 20,
+  label = "Ranger"
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ features will be kept in the train and test datasets.}
 For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".}
 
 \item{tune_iter}{number (default: 20) - total number of times the optimization step is to repeated. This argument is used when tune = TRUE.}
+
+\item{label}{string indicating the name of the model. Might be usefull while comparing different models of the same type.}
 }
 \value{
 An object of the class \code{explainer}.
