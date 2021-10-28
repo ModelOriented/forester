@@ -52,7 +52,7 @@ modelStudio::modelStudio(best_model)
 data("apartments", package = 'DALEX') 
 data("apartments_test", package = 'DALEX')
 catboost <- make_catboost(apartments, "m2.price", "regression", tune = TRUE, 
-		             metric = "rmse") 
+		             tune_metric = "rmse") 
 
 # prediction:
 apartments_test <- apartments_test[ ,!(colnames(apartments_test) %in% "m2.price"]
