@@ -1,6 +1,6 @@
 Package: forester
 Title: Automated tree boosting models
-Version: 1.0.0
+Version: 1.0.1
 Authors@R:
     c(person("Hoang Thien", "Ly", role = c("aut")),
     person("Szymon", "Szmajdzinski", role = c("aut", "cre"),
@@ -10,7 +10,7 @@ Description: The forester package automates the process of applying different we
 Depends: R (>= 3.6)
 License: GPL-3
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Imports: 
     DALEX (>= 2.2.1),
     ingredients (>= 2.2.0),

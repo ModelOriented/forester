@@ -2,3 +2,4 @@
 catboost_info/
 lightgbm.model
 .Rhistory
+.Rproj.user

@@ -13,7 +13,7 @@ evaluate(..., data_test, target, metric = NULL)
 
 \item{target}{character indicating the target column in data test table.}
 
-\item{metric}{string containing name of metric based on which the model will be selected. 
+\item{metric}{string containing name of metric based on which the model will be selected.
 Metric should be written in lowercase letters. Can be omitted.}
 }
 \value{
@@ -21,7 +21,7 @@ A list containing an object of the class \code{forester_model} and data frame wi
 }
 \description{
 Function \code{evaluate} enables user to compare one or several models with
-the same type of task. Function compares them based on metric which can be chosen by the user 
+the same type of task. Function compares them based on metric which can be chosen by the user
 and returns the best model
 }
 \examples{
@@ -32,14 +32,14 @@ lightgbm_model <- make_lightgbm(apartments, "m2.price", "regression")
 ranger_model <- make_ranger(apartments, "m2.price", "regression")
 
 # Evaluating single model
-model_evaluated <- evaluate(ranger_model, 
-                             data_test = apartments, 
+model_evaluated <- evaluate(ranger_model,
+                             data_test = apartments,
                              target = "m2.price",
                              metric = "mse")
 
 
-best_model <- evaluate(lightgbm_model, ranger_model, 
-                             data_test = apartments, 
+best_model <- evaluate(lightgbm_model, ranger_model,
+                             data_test = apartments,
                              target = "m2.price",
                              metric = "rmse")
 }
