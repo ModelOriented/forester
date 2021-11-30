@@ -68,6 +68,9 @@ modelStudio::modelStudio(catboost)
 
 
 ## References:
+- forester's guideline:
+   - [Part 1- package structure](https://medium.com/responsibleml/forester-an-automl-r-package-for-tree-based-models-7065fd025af4)
+   - [Part 2- forester in action](https://medium.com/responsibleml/guide-through-jungle-of-models-whats-more-about-the-forester-r-package-a135d1882676)
 - Other functionalities for explanation:
    - [Explainer](https://rdrr.io/cran/DALEX/man/explain.html)
    - [Connection with DALEX family](https://github.com/ModelOriented/DALEX)
