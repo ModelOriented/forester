@@ -28,6 +28,7 @@ devtools::install_github("ModelOriented/forester")
 ```
 
 Installation of catboost library:  https://catboost.ai/docs/concepts/r-installation.html
+
 Installation of catboost on MacOS: devtools::install_url('https://github.com/catboost/catboost/releases/download/v0.26.1/catboost-R-Darwin-0.26.1.tgz', INSTALL_opts = c("--no-multiarch", "--no-test-load")) 
 
 ## Usage
