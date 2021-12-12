@@ -57,7 +57,7 @@ catboost <- make_catboost(apartments, "m2.price", "regression", tune = TRUE,
 		             tune_metric = "rmse") 
 
 # prediction:
-apartments_test <- apartments_test[ ,!(colnames(apartments_test) %in% "m2.price"]
+apartments_test <- apartments_test[ ,!(colnames(apartments_test) %in% "m2.price")]
 predict(catboost, apartments_test)
 
 # explanation:
