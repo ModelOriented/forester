@@ -69,7 +69,7 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, train_
     }
   }
   
-  data_for_messages <- prepare_data(data = data_train, target = target, type = type,
+  data_for_messages <- prepare_data(data_train = data_train, target = target, type = type,
                                     fill_na = fill_na, num_features = num_features)
   
   message("__________________________")
