@@ -84,7 +84,7 @@ evaluate <- function(..., data_test, target, metric = NULL){
                              data_test[[target]], verbose = FALSE)
     
     # calculating metrics 
-    mp <- model_performance(m)
+    mp <- DALEX::model_performance(m)
     row <- data.frame(m$label, mp$measures)
     results <- rbind(results, row)
   }
