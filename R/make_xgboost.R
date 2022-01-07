@@ -143,8 +143,11 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
     dtrain <-
       xgboost::xgb.DMatrix(data = data_encoded_matrix, label = label_column)
     
+    ## Convert to object used in xgboost model with full data
+    dtrain_full <- 
+      xgboost::xgb.DMatrix(data = data.matrix(rbind(data_train, data_val)), label =  c(label_column,y_val))
     
-    
+        
     # Argument for metrics which should be minimized
     desc <- ifelse(tune_metric %in% c("mse", "rmse", "mad"), -1, 1)
     
@@ -197,7 +200,8 @@ make_xgboost <- function(data, target, type, fill_na = FALSE, num_features = NUL
     
     best_params <- tuned_xgboost$Best_Par
     
-    model <- xgboost::xgb.train(data = dtrain,
+    # Using whole data_train with found tuple of Hyperparameters to train model xgboost
+    model <- xgboost::xgb.train(data = dtrain_full,
                                 nrounds = best_params["nrounds"],
                                 eta = 2^best_params["eta"],
                                 subsample = best_params["subsample"],
