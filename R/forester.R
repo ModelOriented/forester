@@ -25,7 +25,7 @@
 #' @return An object of the class \code{forester_model} which is the best model with respect to the
 #' chosen metric. It's also an object of the class \code{explainer} from DALEX family inherited the
 #' explanation for the best chosen model.
-#' 
+#'
 #' @export
 #' @importFrom stats predict
 #' @examples
@@ -40,7 +40,7 @@
 #' # binary classification
 #' library(DALEX)
 #' data(titanic_imputed, package="DALEX")
-#' 
+#'
 #' exp <- forester(titanic_imputed, "survived", "classification")
 #' # plot(model_parts(exp))
 #'}
@@ -58,11 +58,11 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, train_
     splited_data <- split_data(data, target, type, ratio = train_ratio)
     data_train <- splited_data[[1]]
     data_test <- splited_data[[2]]
-    
+
   } else {
     data_test <- check_conditions(data_test, target, type)
     data_train <- data
-    
+
     # Check structure of data_test:
     if (!(setequal(colnames(data_train),colnames(data_test)))){
       stop("Column names in train data set and test data set are not identical.")
@@ -71,43 +71,80 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, train_
   
   data_for_messages <- prepare_data(data_train = data_train, target = target, type = type,
                                     fill_na = fill_na, num_features = num_features)
-  
+
   message("__________________________")
   message("CREATING MODELS")
-  
-  ### Creating models:
-  suppressMessages(ranger_exp <- make_ranger(data = data_train, target = target, type = type,
-                                             tune = tune, tune_metric = metric,
-                                             tune_iter = tune_iter, fill_na = fill_na,
-                                             num_features = num_features))
-  message("--- Ranger model has been created ---")
-  suppressMessages(catboost_exp <- make_catboost(data = data_train, target = target, type = type,
-                                                 tune = tune, tune_metric = metric,
-                                                 tune_iter = tune_iter, fill_na = fill_na,
-                                                 num_features = num_features))
-  message("--- Catboost model has been created ---")
-  suppressMessages(xgboost_exp  <- make_xgboost(data = data_train, target = target, type = type,
-                                                tune = tune, tune_metric = metric,
-                                                tune_iter = tune_iter, fill_na = fill_na,
-                                                num_features = num_features))
-  message("--- Xgboost model has been created ---")
-  suppressMessages(lightgbm_exp <- make_lightgbm(data = data_train, target = target, type = type,
-                                                 tune = tune, tune_metric = metric,
-                                                 tune_iter = tune_iter, fill_na = fill_na,
-                                                 num_features = num_features))
-  message("--- LightGBM model has been created ---")
-  
+
+  ### Creating models, checking for the installed packages
+
+  is_available_ranger <- try(
+    suppressMessages(ranger_exp <- make_ranger(data = data_train, target = target, type = type,
+                                               tune = tune, tune_metric = metric,
+                                               tune_iter = tune_iter, fill_na = fill_na,
+                                               num_features = num_features)),
+    silent = TRUE
+  )
+  if (class(is_available_ranger) == "try-error") {
+    ranger_exp <- NULL
+    message("--- Omitting `make_ranger()` because the `ranger` package is not available ---")
+  } else {
+    message("--- Ranger model has been created ---")
+  }
+
+  is_available_catboost <- try(
+    suppressMessages(catboost_exp <- make_catboost(data = data_train, target = target, type = type,
+                                                   tune = tune, tune_metric = metric,
+                                                   tune_iter = tune_iter, fill_na = fill_na,
+                                                   num_features = num_features)),
+    silent = TRUE
+  )
+  if (class(is_available_catboost) == "try-error") {
+    catboost_exp <- NULL
+    message("--- Omitting `make_catboost()` because the `catboost` package is not available ---")
+  } else {
+    message("--- Catboost model has been created ---")
+  }
+
+  is_available_xgboost <- try(
+    suppressMessages(xgboost_exp  <- make_xgboost(data = data_train, target = target, type = type,
+                                                  tune = tune, tune_metric = metric,
+                                                  tune_iter = tune_iter, fill_na = fill_na,
+                                                  num_features = num_features)),
+    silent = TRUE
+  )
+  if (class(is_available_xgboost) == "try-error") {
+    xgboost_exp <- NULL
+    message("--- Omitting `make_xgboost()` because the `xgboost` package is not available ---")
+  } else {
+    message("--- Xgboost model has been created ---")
+  }
+
+  is_available_lightgbm <- try(
+    suppressMessages(lightgbm_exp <- make_lightgbm(data = data_train, target = target, type = type,
+                                                   tune = tune, tune_metric = metric,
+                                                   tune_iter = tune_iter, fill_na = fill_na,
+                                                   num_features = num_features)),
+    silent = TRUE
+  )
+  if (class(is_available_lightgbm) == "try-error") {
+    lightgbm_exp <- NULL
+    message("--- Omitting `make_lightgbm()` because the `lightgbm` package is not available ---")
+  } else {
+    message("--- LightGBM model has been created ---")
+  }
+
   message("__________________________")
   message("COMPARISON")
-  
-  best_model <- evaluate(catboost_exp, xgboost_exp, ranger_exp, lightgbm_exp,
-                               data_test = data_test, 
-                               target = target,
-                               metric = metric)
-  
-  return(best_model$best_model)
-  
-  return(best_model)
+
+  result <- evaluate(
+    catboost_exp,
+    xgboost_exp,
+    ranger_exp,
+    lightgbm_exp,
+    data_test = data_test,
+    target = target,
+    metric = metric
+  )
+
+  return(result$best_model)
 }
-
-

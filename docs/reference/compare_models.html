@@ -145,27 +145,14 @@ the same type of task. Function compares them based on metric which can be chose
 and returns the best model</p>
     </div>
 
-<<<<<<< Updated upstream
-    <pre class="usage"><span class='fu'>compare_models</span><span class='op'>(</span><span class='va'>models</span>, <span class='va'>metric</span><span class='op'>)</span></pre>
-=======
     <pre class="usage"><span class='fu'>compare_models</span><span class='op'>(</span><span class='va'>...</span>, <span class='va'>data_test</span>, <span class='va'>target</span>, metric <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
->>>>>>> Stashed changes
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-<<<<<<< Updated upstream
       <th>models</th>
       <td><p>list of models to compare. Models shoud be either <code>forester_model</code> or <code>explainer</code> object.</p></td>
-=======
-      <th>data_test</th>
-      <td><p>data frame for evaluation models</p></td>
-    </tr>
-    <tr>
-      <th>target</th>
-      <td><p>character indicating the target column in data test table</p></td>
->>>>>>> Stashed changes
     </tr>
     <tr>
       <th>metric</th>
@@ -194,7 +181,6 @@ Metric shoud be written in small letters</p></td>
 #&gt; <span class='message'>Use 'install_dependencies()' to get all suggested dependencies</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>apartments</span>, package<span class='op'>=</span><span class='st'>"DALEX"</span><span class='op'>)</span>
 
 <span class='va'>lightgbm_explained</span> <span class='op'>&lt;-</span> <span class='fu'><a href='make_lightgbm.html'>make_lightgbm</a></span><span class='op'>(</span><span class='va'>apartments</span>, <span class='st'>"m2.price"</span>, <span class='st'>"regression"</span><span class='op'>)</span>
-<<<<<<< Updated upstream
 <span class='va'>ranger_explained</span> <span class='op'>&lt;-</span> <span class='fu'><a href='make_ranger.html'>make_ranger</a></span><span class='op'>(</span><span class='va'>apartments</span>, <span class='st'>"m2.price"</span>, <span class='st'>"regression"</span><span class='op'>)</span>
 
 <span class='va'>models</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>lightgbm_explained</span>, <span class='va'>ranger_explained</span><span class='op'>)</span>
@@ -213,21 +199,6 @@ Metric shoud be written in small letters</p></td>
 #&gt; 1              1953      25     3        1 Srodmiescie
 #&gt; 2              1992     143     9        5     Bielany
 #&gt; </div><div class='input'><span class='co'># }</span>
-=======
-</div><div class='output co'>#&gt; <span class='message'>Original shape of train data frame: 1000 rows, 6 columns</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>NA values</span></div><div class='output co'>#&gt; <span class='message'>There is no NA values in your data.</span></div><div class='input'><span class='va'>ranger_explained</span> <span class='op'>&lt;-</span> <span class='fu'><a href='make_ranger.html'>make_ranger</a></span><span class='op'>(</span><span class='va'>apartments</span>, <span class='st'>"m2.price"</span>, <span class='st'>"regression"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Original shape of train data frame: 1000 rows, 6 columns</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>NA values</span></div><div class='output co'>#&gt; <span class='message'>There is no NA values in your data.</span></div><div class='output co'>#&gt; <span class='message'>__________________________</span></div><div class='output co'>#&gt; <span class='message'>CREATING MODEL</span></div><div class='input'>
-<span class='va'>best_model</span> <span class='op'>&lt;-</span> <span class='fu'>compare_models</span><span class='op'>(</span><span class='va'>lightgbm_explained</span>, <span class='va'>ranger_explained</span>, 
-                             data_test <span class='op'>=</span> <span class='va'>apartments</span>, 
-                             target <span class='op'>=</span> <span class='st'>"m2.price"</span>,
-                             metric <span class='op'>=</span> <span class='st'>"rmse"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1] "done"
-#&gt; [1] "done"</div><div class='output co'>#&gt; <span class='message'>Results of compared models:</span></div><div class='output co'>#&gt; 
-#&gt; 
-#&gt; model            rmse         mse          r2        mad
-#&gt; ---------  ----------  ----------  ----------  ---------
-#&gt; LightGBM     83.89545    7038.447   0.9914298   46.31874
-#&gt; Ranger      147.97299   21896.006   0.9733388   85.22582</div><div class='output co'>#&gt; <span class='message'>The best model based on rmse metric is LightGBM.</span></div><div class='input'><span class='co'># }</span>
->>>>>>> Stashed changes
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
