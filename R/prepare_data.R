@@ -64,7 +64,7 @@ prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features
 
   #### Filling NAs:
   # Creating formula
-  # try to convert column names to names without znaki
+  # try to convert column names to names without special signs ("-", "." and request users to change columns containing "+" or "-" or "=" or "*")
   test_colnames <- lapply(colnames(data_train), function(x) gsub("_", "", x))
   test_colnames <- lapply(test_colnames, function(x) gsub("[.]", "", x))
   if (any(grepl('[[:punct:]]', test_colnames))) {
@@ -74,7 +74,7 @@ prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features
 
   if (fill_na){
     
-    # Message for the user about imputation
+    # Message for the user about imputation (actually, with the sense of prior informing that program will perform NA imputation).
     if (any(is.na(data_train))){
       message("NA values have been filled.")
     }
