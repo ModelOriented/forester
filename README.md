@@ -19,7 +19,6 @@ _Trees are all you need_
 install.packages("forester")
 ```
 
-Installation of catboost library:  https://catboost.ai/docs/concepts/r-installation.html
 
 From GitHub
 
@@ -27,7 +26,10 @@ From GitHub
 install.packages("devtools")
 devtools::install_github("ModelOriented/forester")
 ```
- 
+
+Installation of catboost library:  https://catboost.ai/docs/concepts/r-installation.html
+
+Installation of catboost on MacOS: devtools::install_url('https://github.com/catboost/catboost/releases/download/v0.26.1/catboost-R-Darwin-0.26.1.tgz', INSTALL_opts = c("--no-multiarch", "--no-test-load")) 
 
 ## Usage
 Core functions in `forester` package are:
@@ -55,7 +57,7 @@ catboost <- make_catboost(apartments, "m2.price", "regression", tune = TRUE,
 		             tune_metric = "rmse") 
 
 # prediction:
-apartments_test <- apartments_test[ ,!(colnames(apartments_test) %in% "m2.price"]
+apartments_test <- apartments_test[ ,!(colnames(apartments_test) %in% "m2.price")]
 predict(catboost, apartments_test)
 
 # explanation:
@@ -68,6 +70,9 @@ modelStudio::modelStudio(catboost)
 
 
 ## References:
+- forester's guideline:
+   - [Part 1- package structure](https://medium.com/responsibleml/forester-an-automl-r-package-for-tree-based-models-7065fd025af4)
+   - [Part 2- forester in action](https://medium.com/responsibleml/guide-through-jungle-of-models-whats-more-about-the-forester-r-package-a135d1882676)
 - Other functionalities for explanation:
    - [Explainer](https://rdrr.io/cran/DALEX/man/explain.html)
    - [Connection with DALEX family](https://github.com/ModelOriented/DALEX)

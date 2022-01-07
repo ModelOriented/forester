@@ -61,11 +61,11 @@ check_conditions <- function(data, target = NULL, type = NULL){
     if (type == "classification")
     {
       # Checking number of classes in target column:
-      if (length(unique(data[, target])) < 2)
+      if (length(unique(data[[target]])) < 2)
       {
         stop("Too few classes for binary classification")
       }
-      if (length(unique(data[, target])) > 2)
+      if (length(unique(data[[target]])) > 2)
       {
         stop("Too many classes for binary classification")
       }

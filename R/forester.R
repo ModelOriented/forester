@@ -13,6 +13,7 @@
 #' @param metric character, name of metric used for evaluating best model. For regression, options are: "mse", "rmse", "mad" and "r2".
 #' For classification, options are: "auc", "recall", "precision", "f1" and "accuracy".
 #' @param data_test optional argument, class of data.frame, matrix, data.table or dgCMatrix - test data set used for evaluating model performance.
+#' @param train_ratio numeric, ranged from between 0 and 1, indicating the proportion of splitting data train over original dataset, the remained data as data test would be used for measuring model-performance.
 #' @param fill_na logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
 #' missing values in numeric columns are substituted by median of corresponding columns.
 #' @param num_features numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
@@ -46,15 +47,15 @@
 ##
 
 
-forester <- function(data, target, type, metric = NULL, data_test = NULL, fill_na = TRUE, num_features = NULL, tune = FALSE, tune_iter = 20){
+forester <- function(data, target, type, metric = NULL, data_test = NULL, train_ratio = 0.8, fill_na = TRUE, num_features = NULL, tune = FALSE, tune_iter = 20){
 
   message("__________________________")
   message("FORESTER")
   data <- check_conditions(data, target, type)
-
-  ### If data_test is blank, it is needed to split data into data_train and data_test
+  
+  ### If data_test is blank, it is needed to split data into data_train and data_test by the train_ratio
   if (is.null(data_test)){
-    splited_data <- split_data(data, target, type)
+    splited_data <- split_data(data, target, type, ratio = train_ratio)
     data_train <- splited_data[[1]]
     data_test <- splited_data[[2]]
 
@@ -67,8 +68,8 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, fill_n
       stop("Column names in train data set and test data set are not identical.")
     }
   }
-
-  data_for_messages <- prepare_data(data = data_train, target = target, type = type,
+  
+  data_for_messages <- prepare_data(data_train = data_train, target = target, type = type,
                                     fill_na = fill_na, num_features = num_features)
 
   message("__________________________")

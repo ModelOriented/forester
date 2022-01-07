@@ -126,7 +126,9 @@ make_ranger <- function(data, target, type, fill_na = FALSE, num_features = NULL
     
     best_params <- tuned_ranger$Best_Par
     
-    rg <- ranger::ranger(form, data = data,
+    # After choosing best parameters from BayesianOptimization method, data loss prevention by using the original data_train
+    # to train the model, which is in this case, data + data_val, since on the line 89, data was modified.
+    rg <- ranger::ranger(form, data = rbind(data,data_val),
                          num.trees = best_params["num.trees"],
                          mtry = ceiling(best_params["mtry"] * (ncol(data) - 1)),
                          min.node.size = ceiling(nrow(data) ^ best_params["min.node.size"]),
