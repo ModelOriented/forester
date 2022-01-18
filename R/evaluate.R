@@ -81,7 +81,7 @@ evaluate <- function(..., data_test, target, metric = NULL){
     }
 
     # uploading data test
-    DALEX::update_data(m,
+    m <- DALEX::update_data(m,
                        data_test[, -which(names(data_test) == target)],
                        data_test[[target]],
                        verbose = FALSE)
