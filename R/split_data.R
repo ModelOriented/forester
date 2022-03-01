@@ -16,7 +16,7 @@
 
 split_data <- function(data, target, type, ratio = 0.8){
   if (type == "regression"){
-    # Split data in ratio 4:1
+    # Split data by defined ratio
     sample_size <- floor(ratio * nrow(data))
     train_index <- sample(seq_len(nrow(data)), size = sample_size)
     
@@ -25,7 +25,7 @@ split_data <- function(data, target, type, ratio = 0.8){
   }
   
   if (type=="classification"){
-    # Split data by ratio 4:1, while stratification is needed.
+    # Split data by defined ratio, while stratification is needed.
     uniq <- unique(data[[target]])
     data_negative <- data[data[[target]] == uniq[1],]
     data_positive <- data[data[[target]] == uniq[2],]
