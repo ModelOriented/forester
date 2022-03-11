@@ -3,7 +3,7 @@
 #' Function \code{make_catboost} creates catboost model with default parameters using ranger library and
 #' wraps it with the explainer.
 #' 
-#' @param data data.frame, matrix, data.table or dgCMatrix - data will be used to run the XGBoost model. NOTE: data has to contain the target column.
+#' @param data data.frame, matrix, data.table or dgCMatrix - data will be used to run the catboost model. NOTE: data has to contain the target column.
 #' @param target character: name of the target column, should be character and has to be a column name in data.
 #' @param type character: defining the task. Two options are: "regression" and "classification", particularly, binary classification.
 #' @param fill_na logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
