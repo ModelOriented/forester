@@ -84,7 +84,7 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, train_
                                                num_features = num_features)),
     silent = TRUE
   )
-  if (class(is_available_ranger) == "try-error") {
+  if (class(is_available_ranger)[1] == "try-error") {
     ranger_exp <- NULL
     message("--- Omitting `make_ranger()` because the `ranger` package is not available ---")
   } else {
@@ -98,7 +98,7 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, train_
                                                    num_features = num_features)),
     silent = TRUE
   )
-  if (class(is_available_catboost) == "try-error") {
+  if (class(is_available_catboost)[1] == "try-error") {
     catboost_exp <- NULL
     message("--- Omitting `make_catboost()` because the `catboost` package is not available ---")
   } else {
@@ -112,7 +112,7 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, train_
                                                   num_features = num_features)),
     silent = TRUE
   )
-  if (class(is_available_xgboost) == "try-error") {
+  if (class(is_available_xgboost)[1] == "try-error") {
     xgboost_exp <- NULL
     message("--- Omitting `make_xgboost()` because the `xgboost` package is not available ---")
   } else {
@@ -126,7 +126,7 @@ forester <- function(data, target, type, metric = NULL, data_test = NULL, train_
                                                    num_features = num_features)),
     silent = TRUE
   )
-  if (class(is_available_lightgbm) == "try-error") {
+  if (class(is_available_lightgbm)[1] == "try-error") {
     lightgbm_exp <- NULL
     message("--- Omitting `make_lightgbm()` because the `lightgbm` package is not available ---")
   } else {
