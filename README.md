@@ -72,7 +72,7 @@ The first and probably most important step in the forester pipeline is preproces
 - Preparation for different models
 
 
-<img src="man/figures/Forester.png" align="center" width="600"/>
+<img src="misc/Forester.png" align="center" width="600"/>
 
 
 ### Guessing type of ml task
