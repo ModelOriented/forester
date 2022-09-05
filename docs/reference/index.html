@@ -8,13 +8,6 @@
 
 <title>Function reference • forester</title>
 
-<!-- favicons -->
-<link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png" />
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
@@ -53,9 +46,8 @@
 
 
 <meta property="og:title" content="Function reference" />
-<meta property="og:image" content="/logo.png" />
 
-
+<meta name="robots" content="noindex" />
 
 
 <!-- mathjax -->
@@ -97,7 +89,7 @@
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/">MI^2 DataLab</a> </span>
-          <span class="version version-default">1.0.0</span>
+          <span class="version version-default">0.1.0</span>
         </div>
       </div>
     </div>
@@ -157,69 +149,105 @@
       <tr>
         
         <td>
-          <p><code><a href="calculate_metric.html">calculate_metric()</a></code> </p>
+          <p><code><a href="adult.html">adult</a></code> </p>
         </td>
-        <td><p>Metrics for Evaluating Model's Performance.</p></td>
+        <td><p>Adult dataset</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="check_conditions.html">check_conditions()</a></code> </p>
+          <p><code><a href="compas.html">compas</a></code> </p>
         </td>
-        <td><p>Checking conditions for dataset</p></td>
+        <td><p>Modified COMPAS dataset</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="check_metric.html">check_metric()</a></code> </p>
+          <p><code><a href="explain.html">explain()</a></code> </p>
         </td>
-        <td><p>Checking conditions for metrics</p></td>
+        <td><p>Explain forester model</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="evaluate.html">evaluate()</a></code> </p>
+          <p><code><a href="extract.html">extract()</a></code> </p>
         </td>
-        <td><p>Function for evaluating and comparing models</p></td>
+        <td><p>Extract knowledge from forester models</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="forester.html">forester()</a></code> </p>
+          <p><code><a href="fertility.html">fertility</a></code> </p>
         </td>
-        <td><p>Automated Machine Learning Model Solver</p></td>
+        <td><p>Fertility dataset</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="make_catboost.html">make_catboost()</a></code> </p>
+          <p><code><a href="guess_type.html">guess_type()</a></code> </p>
         </td>
-        <td><p>Automated function for explaining catboost models</p></td>
+        <td><p>Guess task type by the target value from dataset</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="make_lightgbm.html">make_lightgbm()</a></code> </p>
+          <p><code><a href="lisbon.html">lisbon</a></code> </p>
         </td>
-        <td><p>Automated Function for Explaining LightGBM model</p></td>
+        <td><p>Lisbon dataset</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="make_ranger.html">make_ranger()</a></code> </p>
+          <p><code><a href="lymph.html">lymph</a></code> </p>
         </td>
-        <td><p>Automated function for explaining ranger model</p></td>
+        <td><p>Lymph dataset</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="make_xgboost.html">make_xgboost()</a></code> </p>
+          <p><code><a href="plot.html">plot()</a></code> </p>
         </td>
-        <td><p>Automated Function for Explaining XGBoost model</p></td>
+        <td><p>Plot forester models</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="predict_models.html">predict_models()</a></code> </p>
+        </td>
+        <td><p>Predicts models depending on the engine</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="prepare_data.html">prepare_data()</a></code> </p>
         </td>
-        <td><p>Automatic Function For Preparing Data</p></td>
+        <td><p>Prepares data into format correct for the selected model engine</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="split_data.html">split_data()</a></code> </p>
+          <p><code><a href="preprocessing.html">preprocessing()</a></code> </p>
         </td>
-        <td><p>Splitting Data Into Train And Test Set</p></td>
+        <td><p>Conducts preprocessing processes</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="pre_rm_static_cols.html">pre_rm_static_cols()</a></code> </p>
+        </td>
+        <td><p>Removes columns with one value for all rows</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="print.forest_model.html">print(<i>&lt;forest_model&gt;</i>)</a></code> </p>
+        </td>
+        <td><p>Print forester models</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="train.html">train()</a></code> </p>
+        </td>
+        <td><p>Train models with forester</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="train_models.html">train_models()</a></code> </p>
+        </td>
+        <td><p>Trains models from given engines</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="train_test_balance.html">train_test_balance()</a></code> </p>
+        </td>
+        <td><p>Balancess and splits dataset</p></td>
       </tr>
     </tbody>
     </table>
@@ -235,7 +263,7 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by Hoang Thien Ly, Szymon Szmajdzinski, Anna Kozak.</p>
+  <p>Developed by Anna Kozak, Hubert Ruczyński, Patryk Słowakiewicz, Adrianna Grudzień, Przemysław Biecek.</p>
 </div>
 
 <div class="pkgdown">

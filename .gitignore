@@ -1,5 +1,12 @@
-.DS_Store
-catboost_info/
-lightgbm.model
-.Rhistory
 .Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+R/not_to_run.R
+*.json
+*.json
+*.json
+*.tfevents
+*.tfevents
+*.tsv
+*.tsv

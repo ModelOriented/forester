@@ -6,15 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Automatic Function For Preparing Data — prepare_data • forester</title>
+<title>Prepares data into format correct for the selected model engine — prepare_data • forester</title>
 
-<!-- favicons -->
-<link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png" />
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
@@ -52,11 +45,10 @@
 
 
 
-<meta property="og:title" content="Automatic Function For Preparing Data — prepare_data" />
-<meta property="og:description" content="Function prepare_data covers fundamental techniques in ML Feature Engineering process." />
-<meta property="og:image" content="/logo.png" />
+<meta property="og:title" content="Prepares data into format correct for the selected model engine — prepare_data" />
+<meta property="og:description" content="Prepares data into format correct for the selected model engine" />
 
-
+<meta name="robots" content="noindex" />
 
 
 <!-- mathjax -->
@@ -98,7 +90,7 @@
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/">MI^2 DataLab</a> </span>
-          <span class="version version-default">1.0.0</span>
+          <span class="version version-default">0.1.0</span>
         </div>
       </div>
     </div>
@@ -132,68 +124,54 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Automatic Function For Preparing Data</h1>
+    <h1>Prepares data into format correct for the selected model engine</h1>
     <small class="dont-index">Source: <a href='https://github.com/ModelOriented/forester/blob/master/R/prepare_data.R'><code>R/prepare_data.R</code></a></small>
     <div class="hidden name"><code>prepare_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Function <code>prepare_data</code> covers fundamental techniques in ML Feature Engineering process.</p>
+    <p>Prepares data into format correct for the selected model engine</p>
     </div>
 
-    <pre class="usage"><span class='fu'>prepare_data</span><span class='op'>(</span><span class='va'>data_train</span>, <span class='va'>target</span>, <span class='va'>type</span>, fill_na <span class='op'>=</span> <span class='cn'>TRUE</span>, num_features <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>prepare_data</span><span class='op'>(</span>
+  <span class='va'>data</span>,
+  <span class='va'>y</span>,
+  engine <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"ranger"</span>, <span class='st'>"xgboost"</span>, <span class='st'>"decision_tree"</span>, <span class='st'>"lightgbm"</span>, <span class='st'>"catboost"</span><span class='op'>)</span>,
+  predict <span class='op'>=</span> <span class='cn'>FALSE</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>data_train</th>
-      <td><p>dataset, used for training models. Class of data_train is one of those classes: data.frame, matrix, data.table or dgCMatrix. NOTE: data_train includes target column.</p></td>
+      <th>data</th>
+      <td><p>data source, it can be of every format</p></td>
     </tr>
     <tr>
-      <th>target</th>
-      <td><p>character, indicating name of the target column in data_train.</p></td>
+      <th>y</th>
+      <td><p>string, target column</p></td>
     </tr>
     <tr>
-      <th>type</th>
-      <td><p>character, defining the task. Option is "regression" or "classification", namely binary classification.</p></td>
+      <th>engine</th>
+      <td><p>a vector of tree-based models that shall be testes.
+Possible values are: `ranger`, `xgboost`, `lightgbm`, `catboost`, `decision_tree`.
+Determines which models will be later learnt</p></td>
     </tr>
     <tr>
-      <th>fill_na</th>
-      <td><p>logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
-missing values in numeric columns are substituted by median of corresponding columns.</p></td>
-    </tr>
-    <tr>
-      <th>num_features</th>
-      <td><p>numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
-features will be kept in the train and test datasets.</p></td>
+      <th>predict</th>
+      <td><p>logical, determines whether the data set will be used for prediction
+or training. It is necessary, because lightgbm can't predict on training dataset.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><code>forester_prepared_data</code> object which stores data as a data frame and recipe with performed modifications</p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>With adjustable arguments, users can independently decide how function deals with NAs value
-and important features selection. Furthermore, options for sampling methods will pop up in
-case of classification problem.</p>
-    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
-
-    <p>forester library <a href='https://modeloriented.github.io/forester/'>https://modeloriented.github.io/forester/</a></p>
+    <p>dataset in format proper for selected engine</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># \donttest{</span>
-<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://dalex.drwhy.ai'>DALEX</a></span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>apartments</span>, package<span class='op'>=</span><span class='st'>"DALEX"</span><span class='op'>)</span>
-
-<span class='co'># Preparing data</span>
-<span class='va'>prepared_data</span> <span class='op'>&lt;-</span> <span class='fu'>prepare_data</span><span class='op'>(</span><span class='va'>apartments</span>,
-                             target <span class='op'>=</span> <span class='st'>"m2.price"</span>,
-                             type <span class='op'>=</span> <span class='st'>"regression"</span>,
-                             fill_na <span class='op'>=</span> <span class='cn'>TRUE</span>,
-                              num_features <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Original shape of train data frame: 1000 rows, 6 columns</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>NA values</span></div><div class='output co'>#&gt; <span class='message'>There is no NA values in your data.</span></div><div class='output co'>#&gt; <span class='message'>_____________</span></div><div class='output co'>#&gt; <span class='message'>Feature selection</span></div><div class='input'><span class='co'># }</span>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>iris</span><span class='op'>)</span>
+<span class='fu'>prepare_data</span><span class='op'>(</span><span class='va'>iris</span>,<span class='st'>'Species'</span>,<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"ranger"</span>,<span class='st'>"xgboost"</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='warning'>Warning: warunek posiada długość &gt; 1 i tylko pierwszy element będzie użyty</span></div><div class='output co'>#&gt; <span class='error'>Error in check_conditions(data_train, target, type): Type of problem is invalid.</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -206,7 +184,7 @@ case of classification problem.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Hoang Thien Ly, Szymon Szmajdzinski, Anna Kozak.</p>
+  <p>Developed by Anna Kozak, Hubert Ruczyński, Patryk Słowakiewicz, Adrianna Grudzień, Przemysław Biecek.</p>
 </div>
 
 <div class="pkgdown">

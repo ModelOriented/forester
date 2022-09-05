@@ -10,12 +10,15 @@
     <loc>/index.html</loc>
   </url>
   <url>
+    <loc>/reference/explain.html</loc>
+  </url>
+  <url>
+    <loc>/reference/hello.html</loc>
+  </url>
+  <url>
     <loc>/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/make_catboost.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make_ranger.html</loc>
+    <loc>/reference/train.html</loc>
   </url>
 </urlset>

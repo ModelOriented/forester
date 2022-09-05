@@ -1,203 +1,193 @@
-#' Automatic Function For Preparing Data
+#' Prepares data into format correct for the selected model engine
 #'
-#' Function \code{prepare_data} covers fundamental techniques in ML Feature Engineering process.
+#' @param data A data source, that is one of major R formats: data.table, data.frame,
+#' matrix and so on.
+#' @param y A string which indicates a target column name.
+#' @param engine A vector of tree-based models that shall be created. Possible
+#' values are: `ranger`, `xgboost`, `lightgbm`, `catboost`, `decision_tree`.
+#' Determines which models will be later learnt.
+#' @param predict A logical value, determines whether the data set will be used
+#' for prediction or training. It is necessary, because lightgbm can't predict
+#' on training dataset.
+#' @param train A train data, if predict is TRUE you have to provide training
+#' dataset from split data here.
 #'
-#' With adjustable arguments, users can independently decide how function deals with NAs value
-#' and important features selection. Furthermore, options for sampling methods will pop up in
-#' case of classification problem.
-#'
-#' @param data_train dataset, used for training models. Class of data_train is one of those classes: data.frame, matrix, data.table or dgCMatrix. NOTE: data_train includes target column.
-#' @param target character, indicating name of the target column in data_train.
-#' @param type character, defining the task. Option is "regression" or "classification", namely binary classification.
-#' @param fill_na logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
-#' missing values in numeric columns are substituted by median of corresponding columns.
-#' @param num_features numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
-#' features will be kept in the train and test datasets.
-#'
-#' @return \code{forester_prepared_data} object which stores data as a data frame and recipe with performed modifications
-#'
-#' @references forester library \url{https://modeloriented.github.io/forester/}
-#'
+#' @return A dataset in format proper for the selected engines.
 #' @export
-#' @importFrom stats predict
+#'
 #' @examples
-#' \donttest{
-#' library(DALEX)
-#' data(apartments, package="DALEX")
-#' 
-#' # Preparing data
-#' prepared_data <- prepare_data(apartments,
-#'                              target = "m2.price",
-#'                              type = "regression",
-#'                              fill_na = TRUE,
-#'                               num_features = 3)
-#'}
-##
+#' data(iris)
+#'
+#' type <- guess_type(lisbon, 'Price')
+#' preprocessed_data <- preprocessing(lisbon, 'Price')
+#' preprocessed_data <- preprocessed_data$data
+#' split_data <-
+#'   train_test_balance(preprocessed_data,
+#'                      'Price',
+#'                      type = type,
+#'                      balance = FALSE)
+#' set.seed(123)
+#' train_data <-
+#'   prepare_data(split_data$train,
+#'                'Price',
+#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
+#' set.seed(123)
+#' test_data <-
+#'   prepare_data(split_data$test,
+#'                'Price',
+#'                engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
+#'                predict = TRUE,
+#'                train = split_data$train)
+prepare_data <- function(data,
+                         y,
+                         engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                         predict = FALSE,
+                         train = NULL)
+{
+  ranger_data        <- NULL
+  xgboost_data       <- NULL
+  decision_tree_data <- NULL
+  lightgbm_data      <- NULL
+  catboost_data      <- NULL
 
 
-prepare_data  <- function(data_train, target, type, fill_na = TRUE, num_features = NULL){
-  
-  ### Conditions 
-  data_train <- check_conditions(data_train, target, type)
-  
-  if (fill_na != TRUE & fill_na != FALSE){
-    stop("Argument fill_na should be a logical variable: TRUE or FALSE")
-  }
-  
-  if (!is.null(num_features) && !is.numeric(num_features)){
-    stop("Argument num_features should be a numerical.")
-  }
-  
-  num_rows <- nrow(data_train)
-  num_cols <- ncol(data_train)
-  message("Original shape of train data frame: ", num_rows, " rows, ", num_cols, " columns")
+  data <- as.data.frame(unclass(data), stringsAsFactors = TRUE) # important part
+  # is conversion strings to factors because we are able to work on them and
+  # add category `other` for predictions
 
-  message("_____________")
-  message("NA values")
-  ### Imputation:
-  # Messages informing percentage of NAs in data_train and data_test:
-  if (any(is.na(data_train))){
-    message("percentage of NAs in data_train: ",sum(is.na(data_train))/prod(dim(data_train)) * 100, "%")
-  } else {
-    message("There is no NA values in your data.")
-  }
-
-  #### Filling NAs:
-  # Creating formula
-  # try to convert column names to names without special signs ("-", "." and request users to change columns containing "+" or "-" or "=" or "*")
-  test_colnames <- lapply(colnames(data_train), function(x) gsub("_", "", x))
-  test_colnames <- lapply(test_colnames, function(x) gsub("[.]", "", x))
-  if (any(grepl('[[:punct:]]', test_colnames))) {
-    stop("Column names are wrong for creating a formula. Column names can not contain special characters as '+', '-', '=', '*'. Try substitute special characters with '_' sign.")
-  }
-  form <- stats::as.formula(paste(target , "~."))
-
-  if (fill_na){
-    
-    # Message for the user about imputation (actually, with the sense of prior informing that program will perform NA imputation).
-    if (any(is.na(data_train))){
-      message("NA values have been filled.")
-    }
-    
-    #### Imputation with tidyvers 
-    # deleting na values from target column 
-    data_train <- data_train[!is.na(data_train[[target]]),]
-    
-    rec <- recipes::recipe(form, data = data_train)
-    impute_step <- recipes::step_impute_knn(rec, recipes::all_predictors())
-    impute_step_trained <- recipes::prep(impute_step, training = data_train)
-    
-    data_train <- as.data.frame(recipes::bake(impute_step_trained, data_train))
-
-    model_recipe <- impute_step_trained
-    
-  } else {
-    if (any(is.na(data_train))){
-      message("Deleting rows with NA values in train set. If you want to fill NA values use fill_na = TRUE")
-      data_train <- na.omit(data_train)
-      message("Shape of data train frame after deleting NA values: ",
-              nrow(data_train), " rows, ", ncol(data_train), " columns")
-    }
-
-    rec <- recipes::recipe(form, data = data_train)
-    naomit_step <- recipes::step_naomit(rec, recipes::all_predictors())
-    naomit_step_trained <- recipes::prep(naomit_step, training = data_train)
-    
-    data_train <- as.data.frame(recipes::bake(naomit_step_trained, data_train))
-
-    model_recipe <- naomit_step_trained
-  }
-  
-  
-  
-  ### Over or under sampling 
-  if (type == "classification"){
-    uniq <- unique(data_train[[target]])
-    nrow_class_1 <- nrow(data_train[data_train[[target]] == uniq[1] , , drop = FALSE])
-    nrow_class_2 <- nrow(data_train) - nrow_class_1
-    percent_class_1 <- round(nrow_class_1/nrow(data_train) * 100, 4) 
-    percent_class_2 <- round((100 - percent_class_1), 4)
-    
-    if (percent_class_1 < 10 | percent_class_1 > 90){
-      message("_____________")
-      message("Imbalanced data")
-      message("Your training set has: ",nrow(data_train),"rows in total.")
-      message("Class ", uniq[1], " accounts for ", percent_class_1, "%")
-      message("Class ", uniq[2], " accounts for ", percent_class_2, "%")
-      message("Your data might be imbalanced. Do you want to use oversampling or undersampling method?. Press 0, 1 or 2 to decide.")
-      message("0 - nothing")
-      message("1 - undersampling")
-      message("2 - oversampling")
-      message("What is your choice?")
-      
-      con <- getOption("mypkg.connection")
-      #choice <- readLines(con = con, n = 1)
-      choice <- readline()
-      
-      while (choice != 0 & choice != 1 & choice != 2){
-        message("Wrong option. Choose option: ")
-        #choice <- readLines(con = con, n = 1)
-        choice <- readline()
-      }
-      
-      # Starting sampling method:
-      class_1_ind <- which(data_train[[target]] == uniq[1])
-      class_2_ind <- which(data_train[[target]] == uniq[2])
-      
-      # Undersampling:
-      if (choice == 1){
-        n_samp <- min(length(class_1_ind), length(class_2_ind))
-        ind1   <- sample(class_1_ind, n_samp)
-        ind2   <- sample(class_2_ind, n_samp)
-        data_train <- data_train[c(ind1,ind2),]
-        message("Performing undersampling")
-        message("Shape of data train frame after undersampling: ",
-                nrow(data_train), " rows, ", ncol(data_train), " columns")
-        
-      } else if (choice == 2){
-        # Oversampling
-        n_samp <- max(length(class_1_ind), length(class_2_ind))
-        ind1 <- sample(class_1_ind, n_samp, replace = !(length(class_1_ind) == n_samp))
-        ind2 <- sample(class_2_ind, n_samp, replace = !(length(class_2_ind) == n_samp))
-        data_train <- data_train[c(ind1,ind2), ]
-        message("Performing oversampling")
-        message("Shape of data train frame after oversampling: ",
-                nrow(data_train), " rows, ", ncol(data_train), " columns")
+  if (!predict) {
+    # if it is a training dataset we add the level other and in first
+    # observation of the dataset we change all factor values to other, so that
+    # we will have other value in training dataset and model can recognize that
+    for (i in 1:ncol(data)) {
+      if ('factor' %in% class(data[, i]) && names(data[i]) != y) {
+        levels(data[, i]) <- c(levels(data[, i]), 'other')
+        data[1, i] <- 'other'
       }
     }
-  }
-
-  ### Feature selection 
-  if (!is.null(num_features)){
-    message("_____________")
-    message("Feature selection")
-    tryCatch(
-      {
-        feat_imp <- Boruta::Boruta(data_train[,-which(names(data_train) == target)], data_train[[target]])
-        imps <- Boruta::attStats(feat_imp)
-        imps2 = imps[, c('meanImp'), drop = FALSE]
-        top_features <- row.names(head(imps2, num_features))
-        
-        select_step <- recipes::step_select(model_recipe, all_of(c(top_features)))
-        select_step_trained <- recipes::prep(select_step, training = data_train)
-        model_recipe <- select_step_trained
-        
-        data_train <- data_train[, which(colnames(data_train) %in% c(top_features, target))]
-
-      },
-      warning = function(cond) {
-        if(cond$message == "getImp result contains NA(s) or NaN(s); replacing with 0(s), yet this is suspicious."){
-          message("Data set is probably too small for feature selection. If you're using undersampling try oversampling instead.")
-        } else {
-          message(cond$message)
+  } else{
+    # if it is a test dataset we perform otherisation of levels for train again
+    train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
+    for (i in 1:ncol(train)) {
+      if ('factor' %in% class(train[, i]) && names(data[i]) != y) {
+        levels(train[, i]) <- c(levels(train[, i]), 'other')
+      }
+    }
+    # then change all factors unseen in train to category other
+    for (i in 1:ncol(data)) {
+      if ('factor' %in% class(data[, i]) && names(data[i]) != y) {
+        levels(data[, i]) <- c(levels(data[, i]), 'other')
+        for (j in 1:nrow(data)) {
+          if (!(data[j, i] %in% levels(train[, i]))) {
+            data[j, i] <- 'other'
+          }
         }
       }
-    )
-  }
-  
-  prepared_data <- list(data = data_train, modifications = model_recipe)
-  class(prepared_data) <- "forester_prepared_data"
-  
-  return(prepared_data)
-}
+    }
+    data <- droplevels(data) # the we have to drop levels which were changed to other
+    # and insert all levels from train (for ohe in xgboost)
+    for (i in 1:ncol(data)) {
+      if ('factor' %in% class(data[, i])) {
+        levels(data[, i]) <- c(levels(data[, i]), levels(train[, i]))
+      }
+    }
 
+  }
+
+
+
+
+  if ('ranger' %in% engine) {
+    ranger_data <- data.frame(data)
+  }
+  if ('xgboost' %in% engine) {
+    # xgboost works on numerical data only, so we have to perform OHE - OHE NOT WORKING
+    ohe_feats = c()
+    xgboost_data <- data
+    for (i in 1:ncol(data)) {
+      if ('factor' %in% class(data[, i])) {
+        condition <- !is.numeric(varhandle::unfactor(data[, i]))
+      } else{
+        condition <- !is.numeric(data[, i])
+      }
+      if (condition) {
+        # we need to unfactor the data
+        if (colnames(data)[i] == y) {
+          # integer encoding if the column is the target
+          xgboost_data[y] <- as.numeric(unlist(data[y]))
+        } else{
+          # OHE for rest of the variables
+          ohe_feats <- c(ohe_feats, colnames(data)[i])
+        }
+      }
+    }
+
+    label = xgboost_data[, y]
+    xgboost_table <- data.table::as.data.table(data[, -which(names(xgboost_data) == y)])
+    xgboost_data  <- mltools::one_hot(xgboost_table)
+    xgboost_data  <- apply(xgboost_data, 2, as.numeric)
+    xgboost_data  <- as.data.frame(xgboost_data) # couldn't figure out how to do
+    # the next step on data.table
+    xgboost_data  <- xgboost_data[, order(names(xgboost_data))] # for proper
+    # work. without this, the ohe cols in train and test are not in the same order
+    # and xgboost can't work properly
+    xgboost_data <- as.matrix(xgboost_data)
+    #xgboost_data  <- xgboost::xgb.DMatrix(data = as.matrix(xgboost_data), label = label)
+
+  }
+  if ('decision_tree' %in% engine) {
+    decision_tree_data <- data
+    for (i in 1:ncol(decision_tree_data)) {
+      if (is.character(decision_tree_data[, i])) {
+        decision_tree_data[, i] <- factor(decision_tree_data[, i])
+      }
+    }
+    if (guess_type(data, y) == 'binary_clf') {
+      decision_tree_data[[y]] <- as.factor(decision_tree_data[[y]])
+    }
+
+    decision_tree_data <- data.frame(decision_tree_data)
+  }
+  if ('lightgbm' %in% engine) {
+    if (predict == FALSE) {
+      y_true <- data[, which(names(data) == y)]
+
+      if (guess_type(data, y) != 'regression') {
+        label <- as.matrix(as.numeric(y_true) - 1)
+      } else{
+        label <- as.matrix(y_true)
+      }
+
+      X <- data[, -which(names(data) == y)]
+      dat <- as.matrix(X)
+
+      lightgbm_data <- lightgbm::lgb.Dataset(data = dat,
+                                             label = label)
+      # -1, because lgb enumarates classees from 0
+    } else{
+      #lgbm can't predict on lgb.Dataset
+      X <- data[, -which(names(data) == y)]
+      lightgbm_data <- as.matrix(X)
+    }
+  }
+  if ('catboost' %in% engine) {
+    y_true <- data[, which(names(data) == y)]
+
+    X <- data[, -which(names(data) == y)]
+    X <- data.matrix(X)
+    X <- apply(X, 2, as.numeric)
+
+    catboost_data <- catboost::catboost.load_pool(data.matrix(X),
+                                                  as.numeric(y_true))
+  }
+
+  return(
+    list(
+      ranger_data        = ranger_data,
+      xgboost_data       = xgboost_data,
+      decision_tree_data = decision_tree_data,
+      lightgbm_data      = lightgbm_data,
+      catboost_data      = catboost_data
+    )
+  )
+}

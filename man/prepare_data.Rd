@@ -2,47 +2,60 @@
 % Please edit documentation in R/prepare_data.R
 \name{prepare_data}
 \alias{prepare_data}
-\title{Automatic Function For Preparing Data}
+\title{Prepares data into format correct for the selected model engine}
 \usage{
-prepare_data(data_train, target, type, fill_na = TRUE, num_features = NULL)
+prepare_data(
+  data,
+  y,
+  engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
+  predict = FALSE,
+  train = NULL
+)
 }
 \arguments{
-\item{data_train}{dataset, used for training models. Class of data_train is one of those classes: data.frame, matrix, data.table or dgCMatrix. NOTE: data_train includes target column.}
+\item{data}{A data source, that is one of major R formats: data.table, data.frame,
+matrix and so on.}
 
-\item{target}{character, indicating name of the target column in data_train.}
+\item{y}{A string which indicates a target column name.}
 
-\item{type}{character, defining the task. Option is "regression" or "classification", namely binary classification.}
+\item{engine}{A vector of tree-based models that shall be created. Possible
+values are: `ranger`, `xgboost`, `lightgbm`, `catboost`, `decision_tree`.
+Determines which models will be later learnt.}
 
-\item{fill_na}{logical, default is FALSE. If TRUE, missing values in target column are removed, missing values in categorical columns are replaced by mode and
-missing values in numeric columns are substituted by median of corresponding columns.}
+\item{predict}{A logical value, determines whether the data set will be used
+for prediction or training. It is necessary, because lightgbm can't predict
+on training dataset.}
 
-\item{num_features}{numeric, default is NULL. Parameter indicates number of most important features, which are chosen from the train dataset. Automatically, those important
-features will be kept in the train and test datasets.}
+\item{train}{A train data, if predict is TRUE you have to provide training
+dataset from split data here.}
 }
 \value{
-\code{forester_prepared_data} object which stores data as a data frame and recipe with performed modifications
+A dataset in format proper for the selected engines.
 }
 \description{
-Function \code{prepare_data} covers fundamental techniques in ML Feature Engineering process.
-}
-\details{
-With adjustable arguments, users can independently decide how function deals with NAs value
-and important features selection. Furthermore, options for sampling methods will pop up in
-case of classification problem.
+Prepares data into format correct for the selected model engine
 }
 \examples{
-\donttest{
-library(DALEX)
-data(apartments, package="DALEX")
+data(iris)
 
-# Preparing data
-prepared_data <- prepare_data(apartments,
-                             target = "m2.price",
-                             type = "regression",
-                             fill_na = TRUE,
-                              num_features = 3)
-}
-}
-\references{
-forester library \url{https://modeloriented.github.io/forester/}
+type <- guess_type(lisbon, 'Price')
+preprocessed_data <- preprocessing(lisbon, 'Price')
+preprocessed_data <- preprocessed_data$data
+split_data <-
+  train_test_balance(preprocessed_data,
+                     'Price',
+                     type = type,
+                     balance = FALSE)
+set.seed(123)
+train_data <-
+  prepare_data(split_data$train,
+               'Price',
+               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
+set.seed(123)
+test_data <-
+  prepare_data(split_data$test,
+               'Price',
+               engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
+               predict = TRUE,
+               train = split_data$train)
 }

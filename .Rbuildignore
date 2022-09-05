@@ -1,2 +1,8 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\docs$
+^docs$
+^_pkgdown\.yml$
+_pkgdown.yaml
+^pkgdown
+^catboost_info$
