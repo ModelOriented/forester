@@ -1,7 +1,7 @@
 test_that('test-explain', {
-  iris_bin <- iris[1:100, ]
+  iris_bin          <- iris[1:100, ]
   target = 'Species'
-  type <- guess_type(iris_bin, target)
+  type              <- guess_type(iris_bin, target)
   set.seed(123)
   preprocessed_data <- preprocessing(iris_bin, target)
   preprocessed_data <- preprocessed_data$data
@@ -47,8 +47,7 @@ test_that('test-explain', {
     explainer <-
       explain(model,
               test_data,
-              y = target,
-              engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
+              y = target
       )
   )
 
@@ -96,8 +95,8 @@ test_that('test-explain', {
   # #expect_equal(round(head(FI_catboost$dropout_loss), 4), round(c(0.03019464, 0.03019464, 0.03630526, 0.04119495, 0.32254080, 0.37347181), 4))
   # #expect_equal(head(FI_catboost$variable), c('_full_model_', 'Species', 'Sepal.Width', 'Sepal.Length', 'Petal.Width', 'Petal.Length'))
 
-  target <- 'Two_yr_Recidivism'
-  type <- guess_type(compas, target)
+  target            <- 'Two_yr_Recidivism'
+  type              <- guess_type(compas, target)
   set.seed(123)
   preprocessed_data <- preprocessing(compas, target)
   preprocessed_data <- preprocessed_data$data
@@ -143,8 +142,7 @@ test_that('test-explain', {
     explainer <-
       explain(model,
               test_data,
-              y = target,
-              engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
+              y = target
       )
   )
 
@@ -193,11 +191,13 @@ test_that('test-explain', {
   # #expect_equal(head(FI_catboost$variable), c('_full_model_', 'Species', 'Sepal.Width', 'Sepal.Length', 'Petal.Width', 'Petal.Length'))
 
 
-  target <- 'Price'
-  type <- guess_type(lisbon, target)
+  target              <- 'Price'
+  type                <- guess_type(lisbon, target)
   set.seed(123)
-  suppressWarnings(preprocessed_data <- preprocessing(lisbon, target))
-  preprocessed_data <- preprocessed_data$data
+  suppressWarnings(
+    preprocessed_data <- preprocessing(lisbon, target)
+  )
+  preprocessed_data   <- preprocessed_data$data
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
@@ -239,9 +239,7 @@ test_that('test-explain', {
     explainer <-
       explain(model,
               test_data,
-              y = target,
-              engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
-      )
+              y = target)
   )
 
   suppressWarnings(FI_ranger        <- DALEX::model_parts(explainer$ranger))
@@ -294,46 +292,41 @@ test_that('test-explain', {
     exp_ranger <-
       explain(model$ranger_model,
               test_data,
-              y = target,
-              engine = c('ranger')
+              y = target
       )
   )
   suppressWarnings(
     exp_xgboost <-
       explain(model$xgboost_model,
               test_data,
-              y = target,
-              engine = c('xgboost')
+              y = target
       )
   )
   suppressWarnings(
     exp_desicion_tree <-
       explain(model$decision_tree_model,
               test_data,
-              y = target,
-              engine = c('decision_tree')
+              y = target
       )
   )
   suppressWarnings(
     exp_lightgbm <-
       explain(model$lightgbm_model,
               test_data,
-              y = target,
-              engine = c('lightgbm')
+              y = target
       )
   )
   suppressWarnings(
     exp_catboost <-
       explain(model$catboost_model,
               test_data,
-              y = target,
-              engine = c('catboost')
+              y = target
       )
   )
-  suppressWarnings(FI_ranger        <- DALEX::model_parts(exp_ranger$ranger_explainer))
-  suppressWarnings(FI_xgboost       <- DALEX::model_parts(exp_xgboost$xgboost_explainer))
-  suppressWarnings(FI_decision_tree <- DALEX::model_parts(exp_desicion_tree$decision_tree_explainer))
-  suppressWarnings(FI_lightgbm      <- DALEX::model_parts(exp_lightgbm$lightgbm_explainer))
+  suppressWarnings(FI_ranger        <- DALEX::model_parts(exp_ranger))
+  suppressWarnings(FI_xgboost       <- DALEX::model_parts(exp_xgboost))
+  suppressWarnings(FI_decision_tree <- DALEX::model_parts(exp_desicion_tree))
+  suppressWarnings(FI_lightgbm      <- DALEX::model_parts(exp_lightgbm))
   #suppressWarnings(FI_catboost      <- DALEX::model_parts(exp_catboost$catboost_explainer))
 
   expect_true(length(FI_ranger$permutation) == 176)
@@ -341,5 +334,4 @@ test_that('test-explain', {
   expect_true(length(FI_decision_tree$permutation) == 176)
   expect_true(length(FI_lightgbm$permutation) == 165)
   #expect_true(length(FI_catboost$permutation) == 176)
-
   })

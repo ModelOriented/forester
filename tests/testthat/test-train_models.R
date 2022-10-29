@@ -1,7 +1,7 @@
 test_that('test-train_models', {
-  # iris - classification
-  iris_bin <- iris[1:100, ]
-  type <- guess_type(iris_bin, 'Species')
+  # Iris dataset for classification.
+  iris_bin          <- iris[1:100, ]
+  type              <- guess_type(iris_bin, 'Species')
   preprocessed_data <- preprocessing(iris_bin, 'Species')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -29,8 +29,8 @@ test_that('test-train_models', {
   expect_true(class(model$lightgbm_model)[1] == 'lgb.Booster')
   expect_true(class(model$catboost_model) == 'catboost.Model')
 
-  # compas - classification
-  type <- guess_type(compas, 'Two_yr_Recidivism')
+  # Compas dataset for classification.
+  type              <- guess_type(compas, 'Two_yr_Recidivism')
   preprocessed_data <- preprocessing(compas, 'Two_yr_Recidivism')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -52,7 +52,6 @@ test_that('test-train_models', {
                    type)
   )
 
-
   expect_true(length(model) == 5)
   expect_true(class(model$ranger_model) == 'ranger')
   expect_true(class(model$xgboost) == 'xgb.Booster')
@@ -60,10 +59,13 @@ test_that('test-train_models', {
   expect_true(class(model$lightgbm_model)[1] == 'lgb.Booster')
   expect_true(class(model$catboost_model) == 'catboost.Model')
 
-  # lisbon - regression
-  type <- guess_type(lisbon, 'Price')
-  suppressWarnings(preprocessed_data <- preprocessing(lisbon, 'Price'))
-  preprocessed_data <- preprocessed_data$data
+
+  # Lisbon dataset for regression.
+  type                <- guess_type(lisbon, 'Price')
+  suppressWarnings(
+    preprocessed_data <- preprocessing(lisbon, 'Price')
+  )
+  preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Price',
@@ -89,8 +91,9 @@ test_that('test-train_models', {
   expect_true(class(model$lightgbm_model)[1] == 'lgb.Booster')
   expect_true(class(model$catboost_model) == 'catboost.Model')
 
-  # test - regression
-  type <- guess_type(testing_data, 'y')
+
+  # Test for regression.
+  type              <- guess_type(testing_data, 'y')
   preprocessed_data <- preprocessing(testing_data, 'y')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -110,12 +113,10 @@ test_that('test-train_models', {
                           type)
   )
 
-
   expect_true(length(model) == 5)
   expect_true(class(model$ranger_model) == 'ranger')
   expect_true(class(model$xgboost) == 'xgb.Booster')
   expect_true(identical(class(model$decision_tree), c('constparty', 'party')))
   expect_true(class(model$lightgbm_model)[1] == 'lgb.Booster')
   expect_true(class(model$catboost_model) == 'catboost.Model')
-
 })

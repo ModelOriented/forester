@@ -1,6 +1,5 @@
 test_that('test-train_test_balance', {
-
-  # tests for train test valid split
+  # Tests for train test valid split.
   set.seed(123)
   b_lisbon <-
     train_test_balance(
@@ -128,8 +127,8 @@ test_that('test-train_test_balance', {
   expect_true(nrow(b_test$valid) + nrow(b_test$test) + nrow(b_test$train) ==
                 nrow(testing_data))
 
-  # tests for balancing
 
+  # Tests for balancing.
   set.seed(123)
   b_lisbon <-
     train_test_balance(

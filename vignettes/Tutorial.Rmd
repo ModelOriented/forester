@@ -2,14 +2,17 @@
 title: "forester tutorial"
 author: "Hubert Ruczyński"
 output:
-  html_document: null
+  pdf_document: default
   df_print: paged
   word_document: default
-  pdf_document: default
+  html_document: null
 toc: yes
 toc_float: yes
 number_sections: yes
-vignette: "%\\VignetteIndexEntry{tutorial} %\\VignetteEngine{knitr::rmarkdown} %\\VignetteEncoding{UTF-8}\n"
+vignette: >
+  %\VignetteIndexEntry{tutorial} 
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown} 
 ---
 # forester
 
@@ -40,39 +43,64 @@ knitr::kable(head(lisbon, 10), format = "markdown", digits = 3, align = 'c')
 
 The main function inside the package is `train()` function. It needs only two
 parameters to work: `data` and `y`, which are the data set and target column name.
-This method automatically checks data set for possible issues, fixes the ones
-that are needed for models to be built in preprocessing process, trains the models
-with basic parameters, random searched parameters and the ones chosen by Bayesian
-optimization. It returns an advanced objects, but the most important for the casual
-users are the ranked list of all trained models sorted from the best one to the
-worst. Moreover it prints out what is currently happening during the whole process.
+This method automatically checks the data set for possible issues, fixes the ones
+that are needed for models to be built in preprocessing process and trains the models
+with basic parameters, randomly searched parameters, and the ones chosen by Bayesian
+optimization. It returns an advanced object, but the most important for casual
+users is the ranked list of all trained models sorted from the best one to the
+worst. Moreover, it prints out what is currently happening during the whole process.
 
 ```{r eval = TRUE, warning = FALSE, train}
-train_output <- train(lisbon, 'Price')
+train_output <- train(lisbon, 
+                      'Price', 
+                      engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'), 
+                      bayes_iter = 1, 
+                      random_iter = 2, 
+                      advanced_preprocessing = TRUE)
 ```
 
 ```{r eval = TRUE, ranked_list}
-knitr::kable(train_output$ranked_list, format = "markdown", digits = 3, format.args = list(big.mark = ",", scientific = FALSE), align = 'c')
+knitr::kable(train_output$ranked_list, format = 'markdown', digits = 3, format.args = list(big.mark = ',', scientific = FALSE), align = 'c')
 ```
 ## Explanations
 
-To access a single model the user has to get to the models_list and then choose
-exact models that interests him. As we want to create a `DALEX explainer` and 
-Feature Importance plot, as an example we will use the third model `ranger_RS_1`,
-because unfortunately we are unable to create this visualization for catboost models
+To access a single model the user has to get to the models_list and then choose the
+exact models that interest him. As we want to create a `DALEX explainer` and 
+Feature Importance plot, as an example we will use the first model `xgboost`,
+because unfortunately, we are unable to create this visualization for catboost models
 yet.
 
 ```{r eval = TRUE, explainer}
-explainer <- explain(model = train_output$models_list$ranger_RS_2, data = train_output$test_data, y = 'Price', engine = c('ranger'))
-explainer$ranger_explainer
+explainer <- forester::explain(models = train_output$best_models$xgboost_model, 
+                               test_data = train_output$test_data, 
+                               y = train_output$y, 
+                               verbose = TRUE)
 ```
 
 ```{r eval = TRUE, FI}
-FI <- DALEX::model_parts(explainer$ranger_explainer)
+FI <- DALEX::model_parts(explainer)
 FI
 ```
-```{r eval = TRUE, FI_plot}
-graphics::plot(FI)
+```{r eval = TRUE, FI_plot_basic}
+plot(FI)
 ```
-From the above visualization we can see that the most important variables for
-`ranger` model were `AreaNet`, `AreaGross` and number of `Bathrooms`.
+
+However, this visualization is barely a basic one. To get the FI plot for the best 
+model trained, one can use the `draw_feature_importance` function.
+
+```{r eval = TRUE, FI_plot}
+draw_feature_importance(train_output$best_models, train_output$train_data, train_output$y)
+```
+
+From the above visualization, we can see that the most important variables for the
+`xgboost` model were `Bathrooms`, `Latitude`, and `Longitude`.
+
+## Report
+
+The aforementioned visualizations, like many others, are also available in ready-to-go
+reports implemented in the `report` function.
+
+```{r eval = TRUE, report}
+report(train_output, 'regression.pdf')
+```
+

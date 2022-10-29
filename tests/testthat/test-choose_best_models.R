@@ -1,8 +1,8 @@
 test_that('choose_best_models', {
   data(iris)
-  iris_bin <- iris[1:100,]
-  iris_bin$Species <- factor(iris_bin$Species)
-  type <- guess_type(iris_bin, 'Species')
+  iris_bin          <- iris[1:100, ]
+  iris_bin$Species  <- factor(iris_bin$Species)
+  type              <- guess_type(iris_bin, 'Species')
   preprocessed_data <- preprocessing(iris_bin, 'Species')
   preprocessed_data <- preprocessed_data$data
   split_data <-

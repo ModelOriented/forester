@@ -1,67 +1,80 @@
-#' Runs data check pipeline to seek for potential problems with the data
+#' Run data check pipeline to seek for potential problems with the data
 #'
-#' @param data A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
-#' @param y A string which indicates a target column name.
+#' @param data A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param y A string that indicates a target column name.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the report.
 #' @export
 #'
 #' @examples
-#' check_data(iris[1:100,], 'Species')
+#' check_data(iris[1:100, ], 'Species')
 #' check_data(lisbon, 'Price')
 #' check_data(compas, 'Two_yr_Recidivism')
 #' check_data(iris, 'Species')
 #' check_data(lymph, 'class')
 #' @importFrom stats IQR cor median sd
 #' @importFrom utils capture.output
-check_data <- function(data, y) {
+check_data <- function(data, y, verbose = TRUE) {
+  if (!y %in% colnames(data)) {
+    stop('Target column name not found!')
+  }
+
   df <- as.data.frame(data)
-  str <- capture.output(cat(' -------------------- CHECK DATA REPORT END -------------------- \n \n'))
-  cat(' ---------------------- CHECK DATA REPORT ---------------------- \n \n')
-  str <- c(str, basic_info(df, y))
-  str <- c(str, check_static(df))
-  str <- c(str, check_duplicate_col(df))
-  str <- c(str, check_missing(df, y))
+  str <- capture.output(cat(' -------------------- **CHECK DATA REPORT** -------------------- \n \n'))
+  verbose_cat(' -------------------- CHECK DATA REPORT -------------------- \n \n', verbose = verbose)
+  str <- c(str, basic_info(df, y, verbose))
+  str <- c(str, check_static(df, verbose))
+  str <- c(str, check_duplicate_col(df, verbose))
+  str <- c(str, check_missing(df, y, verbose))
   df  <- manage_missing(df, y)
-  str <- c(str, check_dim(df))
-  str <- c(str, check_cor(df, y))
-  str <- c(str, check_outliers(df))
-  str <- c(str, check_y_balance(df, y))
-  cat(' -------------------- CHECK DATA REPORT END -------------------- \n \n')
+  str <- c(str, check_dim(df, verbose))
+  str <- c(str, check_cor(df, y, verbose)$str)
+  str <- c(str, check_outliers(df, verbose))
+  str <- c(str, check_y_balance(df, y, verbose))
+  str <- c(str, detect_id_columns(df, verbose))
+  verbose_cat(' -------------------- CHECK DATA REPORT END -------------------- \n \n', verbose = verbose)
   str <- c(str,
-           capture.output(cat(' -------------------- CHECK DATA REPORT END -------------------- \n \n')))
+           capture.output(cat(' -------------------- **CHECK DATA REPORT END** -------------------- \n \n')))
   return(str)
 }
 
-#' Provides basic dataset information
+
+#' Provide basic dataset information
 #'
-#' @param df A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
-#' @param y A string which indicates a target column name.
+#' @param df A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param y A string that indicates a target column name.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-basic_info <- function(df, y) {
-  cat('The dataset has ', nrow(df), ' observations and ', ncol(df),
+basic_info <- function(df, y, verbose = TRUE) {
+  verbose_cat('The dataset has ', nrow(df), ' observations and ', ncol(df),
       ' columns, which names are: \n', paste0(colnames(df), sep='; '),
-      '\nWith the target value described by column ', y, '.', '\n \n', sep = '')
-  str <- capture.output(cat('The dataset has ', nrow(df), ' observations and ', ncol(df),
-                            ' columns which names are: \n', paste0(colnames(df), sep='; '),
-                            '\nWith the target value described by column ', y, '.', '\n \n', sep = ''))
+      '\n\nWith the target value described by a column ', y, '.', '\n\n', sep = '', verbose = verbose)
+  str <- capture.output(cat('**The dataset has ', nrow(df), ' observations and ', ncol(df),
+                            ' columns which names are: **\n\n', paste0(colnames(df), sep='; '),
+                            '\n\n**With the target value described by a column:** ', y, '.', '\n \n', sep = ''))
   return(str)
 }
 
-#' Searches for columns dominated by a single value
+
+#' Search for columns dominated by a single value
 #'
-#' @param df A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
+#' @param df A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_static <- function(df) {
+check_static <- function(df, verbose = TRUE) {
   dominator      <- FALSE
   dominator_vals <- c()
   dominator_cols <- c()
@@ -79,31 +92,34 @@ check_static <- function(df) {
     }
   }
   if (!dominator) {
-    cat('No static columns. \n')
-    str <- capture.output(cat('No static columns. \n'))
+    verbose_cat('No static columns. \n', verbose = verbose)
+    str <- capture.output(cat('**No static columns. **\n\n'))
 
-  } else{
-    cat('Static columns are: ', dominator_cols, '\n', sep = '')
-    cat('With dominating values: ', dominator_vals, '\n', sep = '')
-    str <- capture.output(cat('Static columns are: ', dominator_cols, '\n', sep = ''))
-    str <- c(str, capture.output(cat('With dominating values: ', dominator_vals,
-                                     '\n', sep = '')))
+  } else {
+    verbose_cat('Static columns are: \n', dominator_cols, '\n\n', sep = '', verbose = verbose)
+    verbose_cat('With dominating values: \n', dominator_vals, '\n', sep = '', verbose = verbose)
+    str <- capture.output(cat('**Static columns are: **', dominator_cols, '\n\n', sep = ''))
+    str <- c(str, capture.output(cat('**With dominating values: **', dominator_vals,
+                                     '\n\n', sep = '')))
   }
-  cat('\n')
+  verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
 
   return(str)
 }
-#' Searches for duplicates between columns
+
+
+#' Search for duplicates between columns
 #'
-#' @param df A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
+#' @param df A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_duplicate_col <- function(df) {
-
+check_duplicate_col <- function(df, verbose = TRUE) {
   pairs <- c()
 
   for (i in 1:ncol(df)) {
@@ -114,113 +130,121 @@ check_duplicate_col <- function(df) {
     }
   }
   if (length(pairs) == 0) {
-    cat('No duplicate columns.')
-    str <- capture.output(cat('No duplicate columns.'))
+    verbose_cat('No duplicate columns.\n', verbose = verbose)
+    str <- capture.output(cat('**No duplicate columns.**\n'))
 
-  } else{
-    cat('These column pairs are duplicate: ', pairs, '\n', sep = '')
-    str <- capture.output(cat('These column pairs are duplicate: ', pairs, '\n',
+  } else {
+    verbose_cat('These column pairs are duplicate:\n ', pairs, '\n', sep = '', verbose = verbose)
+    str <- capture.output(cat('**These column pairs are duplicate: **\n', pairs, '\n\n',
                               sep = ''))
   }
-  cat('\n')
+  verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
 
   return(str)
 }
 
-#' Searches for missing values in target column and predictors
+
+#' Search for missing values in the target column and predictors
 #'
-#' @param df A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
-#' @param y A string which indicates a target column name.
+#' @param df A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param y A string that indicates a target column name.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_missing <- function(df, y) {
+check_missing <- function(df, y, verbose = TRUE) {
 
   df_sm     <- df[, !names(df) %in% y]
   missing_y <- length(df[[y]][df[[y]] == ''])
   missing_x <- 0
 
   for (i in 1:nrow(df_sm)) {
-    if (length(df[i,][df[i,] == '']) != 0) {
+    if (length(df[i, ][df[i, ] == '']) != 0) {
       missing_x = missing_x + 1
     }
   }
 
   if (missing_y == 0) {
-    cat('No target values are missing. \n')
-    str <- capture.output(cat('No target values are missing. \n'))
+    verbose_cat('No target values are missing. \n\n', verbose = verbose)
+    str <- capture.output(cat('**No target values are missing. **\n\n'))
 
-  } else{
-    cat(missing_y, ' target values are missing.', sep = '')
-    str <- capture.output(cat(missing_y, ' target values are missing.', sep = ''))
+  } else {
+    verbose_cat(missing_y, ' Target values are missing. \n', sep = '', verbose = verbose)
+    str <- capture.output(cat(missing_y, ' **Target values are missing.**\n\n', sep = ''))
 
   }
 
   if (missing_x == 0) {
-    cat('No predictor values are missing. \n')
-    str <- c(str, capture.output(cat('No predictor values are missing. \n')))
+    verbose_cat('No predictor values are missing. \n', verbose = verbose)
+    str <- c(str, capture.output(cat('**No predictor values are missing. **\n')))
 
-  } else{
-    cat(missing_x, ' observations have missing fields.', sep = '')
-    str <- c(str, capture.output(cat(missing_x, ' observations have missing fields.', sep = '')))
+  } else {
+    verbose_cat(missing_x, ' observations have missing fields.\n', sep = '', verbose = verbose)
+    str <- c(str, capture.output(cat('**', missing_x, ' observations have missing fields.**\n', sep = '')))
 
   }
-  cat('\n')
+  verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
 
   return(str)
 }
 
-#' Searches for dimensionality problems in the dataset
+
+#' Search for dimensionality problems in the dataset
 #'
-#' @param df A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
+#' @param df A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_dim <- function(df) {
+check_dim <- function(df, verbose = TRUE) {
   rows <- dim(df)[1]
   cols <- dim(df)[2]
 
   if (cols > 30) {
-    cat('Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '')
+    verbose_cat('Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
     str <- capture.output(
-      cat('Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = ''))
+      cat('**Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. **\n', sep = ''))
 
   }
   if (cols >= rows) {
-    cat('More features than observations, try reducing dimensionality or add new observations. \n')
+    verbose_cat('More features than observations, try reducing dimensionality or add new observations. \n', verbose = verbose)
     str <- capture.output(
-      cat('More features than observations, try reducing dimensionality or add new observations. \n'))
+      cat('**More features than observations, try reducing dimensionality or add new observations. **\n'))
 
   }
   if (cols < rows && cols <= 30) {
-    cat('No issues with dimensionality. \n')
-    str <- capture.output(cat('No issues with dimensionality. \n'))
+    verbose_cat('No issues with dimensionality. \n', verbose = verbose)
+    str <- capture.output(cat('**No issues with dimensionality. **\n'))
 
   }
-  cat('\n')
+  verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
 
   return(str)
 }
 
-#' Searches for strongly correlated values (Spearman for numerical, Crammer V for
+
+#' Search for strongly correlated values (Spearman for numerical, Crammer V for
 #' categorical)
 #'
-#' @param df A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
-#' @param y A string which indicates a target column name.
+#' @param df A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param y A string that indicates a target column name.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_cor <- function(df, y) {
-
+check_cor <- function(df, y, verbose = TRUE) {
   data    <- df[, !names(df) %in% y]
   data    <- as.data.frame(unclass(data), stringsAsFactors = TRUE)
   num_idx <- c()
@@ -229,15 +253,16 @@ check_cor <- function(df, y) {
   for (i in 1:ncol(data)) {
     if (is.factor(data[, i])) {
       if (length(levels(data[, i])) > 1) {
-        # CramerV doesnt work with singular level and
-        # we check columns with single value before so no need for additional warning
+        # CramerV doesn't work with a singular level, and we check columns
+        # with a single value before, so no need for an additional warning.
         fct_idx <- c(fct_idx, i)
       }
-    } else{
+    } else {
       num_idx <- c(num_idx, i)
     }
   }
-
+  num_names <- NULL
+  cor_num   <- NULL
   if (length(num_idx) != 0) {
     cor_num    <- round(cor(data[num_idx]), 2)
     no_cor_num <- TRUE
@@ -247,23 +272,25 @@ check_cor <- function(df, y) {
       for (j in i:ncol(cor_num)) {
         if (i != j && cor_num[i, j] >= 0.7) {
           if (no_cor_num) {
-            cat('Strongly correlated pairs of numerical values are: \n')
-            str <- capture.output(cat('Strongly correlated pairs of numerical values are: \n'))
+            verbose_cat('Strongly correlated pairs of numerical values are: \n', verbose = verbose, '\n')
+            str <- capture.output(cat('**Strongly correlated pairs of numerical values are: **\n\n'))
             no_cor_num <- FALSE
 
           }
-          cat(num_names[i], ' - ', num_names[j], ': ', cor_num[i, j], ';\n', sep = '')
+          verbose_cat(num_names[i], ' - ', num_names[j], ': ', cor_num[i, j], ';\n', sep = '', verbose = verbose)
           str <- c(str, capture.output(
             cat(num_names[i], ' - ', num_names[j], ': ', cor_num[i, j], ';\n', sep = '')))
         }
       }
     }
     if (no_cor_num) {
-      cat('No strongly correlated pairs of numerical values. \n')
-      str <- capture.output(cat('No strongly correlated pairs of numerical values. \n'))
+      verbose_cat('No strongly correlated pairs of numerical values. \n\n', verbose = verbose)
+      str <- capture.output(cat('**No strongly correlated pairs of numerical values. **\n\n'))
     }
   }
 
+  fct_names <- NULL
+  cor_fct   <- NULL
   if (length(fct_idx) != 0) {
     fct_tbl <- data[fct_idx]
     cor_fct <- matrix(0, nrow = length(fct_idx), ncol = length(fct_idx))
@@ -283,53 +310,64 @@ check_cor <- function(df, y) {
       for (j in i:ncol(cor_fct)) {
         if (i != j && cor_fct[i, j] >= 0.7) {
           if (no_cor_fct) {
-            cat('\nStrongly correlated pairs of categorical values are: \n')
-            str <- c(str, capture.output(cat('\nStrongly correlated pairs of categorical values are: \n')))
+            verbose_cat('\nStrongly correlated pairs of categorical values are: \n', verbose = verbose)
+            str <- c(str, capture.output(cat('\n**Strongly correlated pairs of categorical values are: **\n\n')))
             no_cor_fct = FALSE
 
           }
-          cat(fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '')
+          verbose_cat(fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '', verbose = verbose)
           str <- c(str, capture.output(cat(fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '')))
         }
       }
     }
     if (no_cor_fct) {
-      cat('No strongly correlated pairs of categorical values. \n')
+      verbose_cat('No strongly correlated pairs of categorical values. \n', verbose = verbose)
       str <- c(str, capture.output(
-        cat('No strongly correlated pairs of categorical values. \n')))
+        cat('**No strongly correlated pairs of categorical values. **\n')))
     }
   }
-  cat('\n')
+  verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
 
-  return(str)
+  return(
+    list(
+      str       = str,
+      num_names = num_names,
+      cor_num   = cor_num,
+      fct_names = fct_names,
+      cor_fct   = cor_fct
+    )
+  )
 }
 
-#' Searches for outliers via mean standard deviation, median abosulte deviation
+
+#' Search for outliers via mean standard deviation, median absolute deviation
 #' and inter quantile range
 #'
-#' @param df A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
+#' @param df A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_outliers <- function(df) {
+check_outliers <- function(df, verbose = TRUE) {
   # Methods from: https://www.reneshbedre.com/blog/find-outliers.html
   mean_standard_deviation <- function(x) {
     mean = mean(x)
-    std = sd(x)
+    std  = sd(x)
     Tmin = mean - (3 * std)
     Tmax = mean + (3 * std)
     return (which(x < Tmin | x > Tmax))
   }
 
   median_absolute_deviation <- function(x) {
-    med = median(x)
+    med     = median(x)
     abs_dev = abs(x - med)
-    mad = 1.4826 * median(abs_dev) # for normally distributed data
-    Tmin = med - (3 * mad)
-    Tmax = med + (3 * mad)
+    mad     = 1.4826 * median(abs_dev) # for normally distributed data
+    Tmin    = med - (3 * mad)
+    Tmax    = med + (3 * mad)
     return (which(x < Tmin | x > Tmax))
   }
 
@@ -339,7 +377,7 @@ check_outliers <- function(df) {
     return (which(x < Tmin | x > Tmax))
   }
 
-  data <- as.data.frame(unclass(df), stringsAsFactors = TRUE)
+  data    <- as.data.frame(unclass(df), stringsAsFactors = TRUE)
   num_idx <- c()
 
   for (i in 1:ncol(data)) {
@@ -362,46 +400,48 @@ check_outliers <- function(df) {
   outliers <- unique(outliers)
   outliers <- sort(outliers)
   if (length(outliers) == 0) {
-    cat('No outliers in the dataset. \n')
-    str <- capture.output(cat('No outliers in the dataset. \n'))
+    verbose_cat('No outliers in the dataset. \n\n', verbose = verbose)
+    str <- capture.output(cat('**No outliers in the dataset. **\n'))
 
-  } else{
-    cat('These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n')
+  } else {
+    verbose_cat('These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
     str <- capture.output(
-      cat('These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n'))
+      cat('**These obserwation migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
   }
-  cat('\n')
+  verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
 
   return(str)
 }
 
-#' Checks wheter target column is unbalanced (for regression it bins values
+
+#' Check whether the target column is unbalanced (for regression it bins values
 #' via quantiles)
 #'
-#' @param df A data source, that is one of major R formats: data.table, data.frame,
-#' matrix and so on.
-#' @param y A string which indicates a target column name.
+#' @param df A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param y A string that indicates a target column name.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_y_balance <- function(df, y) {
+check_y_balance <- function(df, y, verbose = TRUE) {
   type   <- guess_type(df, y)
   target <- df[[y]]
 
   if (type %in% c('binary_clf')) {
     if (table(target)[1] / table(target)[2] > 1.5 || table(target)[1] / table(target)[2] < 0.75) {
-      cat('Dataset is unbalanced with ', table(target)[1] / table(target)[2], ' proportion. \n')
+      verbose_cat('Dataset is unbalanced with ', table(target)[1] / table(target)[2], ' proportion. \n', verbose = verbose)
       str <- capture.output(
-        cat('Dataset is unbalanced with ', table(target)[1] / table(target)[2], ' proportion. \n'))
+        cat('**Dataset is unbalanced with: **', table(target)[1] / table(target)[2], ' proportion. \n'))
 
-    } else{
-      cat('Dataset is balanced. \n')
-      str <- capture.output(cat('Dataset is balanced. \n'))
+    } else {
+      verbose_cat('Dataset is balanced. \n', verbose = verbose)
+      str <- capture.output(cat('**Dataset is balanced. **\n'))
     }
   } else if (type == 'regression') {
-
     Q1   <- summary(target)[2]
     Mean <- summary(target)[4]
     Q2   <- summary(target)[5]
@@ -414,7 +454,7 @@ check_y_balance <- function(df, y) {
         bins[2] <- bins[2] + 1
       } else if (target[i] < Q2) {
         bins[3] <- bins[3] + 1
-      } else{
+      } else {
         bins[4] <- bins[4] + 1
       }
     }
@@ -431,21 +471,75 @@ check_y_balance <- function(df, y) {
     perc_bins <- round(bins / sum(bins), 2)
 
     if (balanced) {
-      cat('Target data is evenly distributed. \n')
-      str <- capture.output(cat('Target data is evenly distributed. \n'))
+      verbose_cat('Target data is evenly distributed. \n', verbose = verbose)
+      str <- capture.output(cat('**Target data is evenly distributed. **\n'))
 
-    } else{
-      cat('Target data is not evenly distributed with quantile bins:', perc_bins, '\n')
+    } else {
+      verbose_cat('Target data is not evenly distributed with quantile bins:', perc_bins, '\n', verbose = verbose)
       str <- capture.output(
-        cat('Target data is not evenly distributed with quantile bins:', perc_bins, '\n'))
+        cat('**Target data is not evenly distributed with quantile bins:**', perc_bins, '\n'))
     }
 
-
   } else if (type == 'multi_clf') {
-    cat('Multilabel classification is not supported yet. \n')
-    str <- capture.output(cat('Multilabel classification is not supported yet. \n'))
+    verbose_cat('Multilabel classification is not supported yet. \n', verbose = verbose)
+    str <- capture.output(cat('**Multilabel classification is not supported yet. **\n'))
   }
-  cat('\n')
+  verbose_cat('\n', verbose = verbose)
+  str <- c(str, capture.output(cat('\n')))
+
+  return(str)
+}
+
+
+#' Detect columns that are ID-like columns
+#'
+#' @param data A data source before preprocessing, that is one of the major R formats:
+#' data.table, data.frame, matrix, and so on.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
+#'
+#' @return A list with every line of the sub-report.
+#' @export
+detect_id_columns <- function(data, verbose = TRUE) {
+  names     <- colnames(data)
+  id_names  <- c('id', 'no', 'nr', 'number', 'idx', 'identification')
+  sus_names <- c()
+  sus_data  <- c()
+  for (i in 1:ncol(data)) {
+    if (tolower(names[i]) %in% id_names) {
+      sus_names <- c(sus_names, names[i])
+    }
+
+    if (isTRUE(all.equal(data[, i], as.integer(data[, i]))) &&
+        length(unique(data[, i])) == nrow(data)) {
+      sus_data <- c(sus_data, names[i])
+    }
+  }
+
+  if (length(sus_names) > 0) {
+    verbose_cat('Columns names suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are:',
+        sus_names, '.\n\n', verbose = verbose)
+    str <- capture.output(
+      cat('**Columns names suggest that some of them are IDs, removing them can improve the model. Suspicious columns are: **\n\n',
+          sus_names, '\n\n'))
+  } else {
+    verbose_cat('Columns names suggest that none of them are IDs. \n\n', verbose = verbose)
+    str <- capture.output(
+      cat('**Columns names suggest that none of them are IDs. **\n\n'))
+  }
+  if (length(sus_data) > 0) {
+    verbose_cat('Columns data suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are:',
+        sus_data, '.\n', verbose = verbose)
+    str <- c(str, capture.output(
+      cat('**Columns data suggest that some of them are IDs, removing them can improve the model. Suspicious columns are: **\n\n',
+          sus_data, '\n\n')))
+  } else {
+    verbose_cat('Columns data suggest that none of them are IDs. \n', verbose = verbose)
+    str <- c(str, capture.output(
+      cat('**Columns data suggest that none of them are IDs. **\n\n')))
+  }
+
+  verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
 
   return(str)

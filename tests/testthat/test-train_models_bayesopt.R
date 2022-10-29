@@ -1,7 +1,7 @@
 test_that('test-train_models_bayesopt', {
   data(iris)
-  iris_bin <- iris[1:100, ]
-  type <- guess_type(iris_bin, 'Species')
+  iris_bin          <- iris[1:100, ]
+  type              <- guess_type(iris_bin, 'Species')
   preprocessed_data <- preprocessing(iris_bin, 'Species')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -27,10 +27,11 @@ test_that('test-train_models_bayesopt', {
                                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                                    type = type,
                                    iters.n = 1,
-                                   return_params = FALSE)
+                                   return_params = FALSE,
+                                   verbose = FALSE)
   )
 
-  # iris - classification
+  # Iris dataset for classification.
   expect_true(length(model) == 5)
   expect_true(class(model$ranger_bayes) == 'ranger')
   expect_true(class(model$xgboost_bayes) == 'xgb.Booster')
@@ -44,12 +45,13 @@ test_that('test-train_models_bayesopt', {
                                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                                  type = type,
                                  iters.n = 1,
-                                 return_params = TRUE)
+                                 return_params = TRUE,
+                                 verbose = FALSE)
   expect_true(length(model) == 6)
 
 
-  # compas - classification
-  type <- guess_type(compas, 'Two_yr_Recidivism')
+  # Compas dataset for classification.
+  type              <- guess_type(compas, 'Two_yr_Recidivism')
   preprocessed_data <- preprocessing(compas, 'Two_yr_Recidivism')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -74,7 +76,8 @@ test_that('test-train_models_bayesopt', {
                                    test_data,
                                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                                    type = type,
-                                   iters.n = 1))
+                                   iters.n = 1,
+                                   verbose = FALSE))
 
   expect_true(length(model) == 5)
   expect_true(class(model$ranger_bayes) == 'ranger')
@@ -83,11 +86,14 @@ test_that('test-train_models_bayesopt', {
   expect_true(class(model$lightgbm_bayes)[1] == 'lgb.Booster')
   expect_true(class(model$catboost_bayes) == 'catboost.Model')
 
-  # lisbon - regression
-  type <- guess_type(lisbon, 'Price')
 
-  suppressWarnings(preprocessed_data <- preprocessing(lisbon, 'Price'))
-  preprocessed_data <- preprocessed_data$data
+  # Lisbon dataset for regression.
+  type                <- guess_type(lisbon, 'Price')
+
+  suppressWarnings(
+    preprocessed_data <- preprocessing(lisbon, 'Price')
+  )
+  preprocessed_data   <- preprocessed_data$data
 
   split_data <-
     train_test_balance(preprocessed_data,
@@ -112,7 +118,8 @@ test_that('test-train_models_bayesopt', {
                                    test_data,
                                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                                    type = type,
-                                   iters.n = 1))
+                                   iters.n = 1,
+                                   verbose = FALSE))
 
   expect_true(length(model) == 5)
   expect_true(class(model$ranger_bayes) == 'ranger')

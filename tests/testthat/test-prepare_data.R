@@ -1,8 +1,10 @@
 test_that('test-prepare_data', {
-  # lisbon
-  type <- guess_type(lisbon, 'Price')
-  suppressWarnings(preprocessed_data <- preprocessing(lisbon, 'Price'))
-  preprocessed_data <- preprocessed_data$data
+  # Tests for lisbon dataset.
+  type                <- guess_type(lisbon, 'Price')
+  suppressWarnings(
+    preprocessed_data <- preprocessing(lisbon, 'Price')
+  )
+  preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Price',
@@ -47,8 +49,8 @@ test_that('test-prepare_data', {
   expect_identical(colnames(train_data$xgboost_data), colnames(test_data$xgboost_data))
 
 
-  # iris
-  type <- guess_type(iris,'Species')
+  # Tests for iris dataset.
+  type              <- guess_type(iris,'Species')
   preprocessed_data <- preprocessing(iris, 'Species')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -88,8 +90,8 @@ test_that('test-prepare_data', {
   expect_false('other' %in% levels(train_data$ranger$Petal.Width))
   expect_identical(colnames(train_data$xgboost_data), colnames(test_data$xgboost_data))
 
-  # lymph
-  type <- guess_type(lymph, 'class')
+  # Tests for lymph dataset.
+  type              <- guess_type(lymph, 'class')
   preprocessed_data <- preprocessing(lymph, 'class')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -129,9 +131,9 @@ test_that('test-prepare_data', {
   expect_false('other' %in% levels(train_data$ranger$lym_nodes_dimin))
   expect_identical(colnames(train_data$xgboost_data), colnames(test_data$xgboost_data))
 
-  # test
 
-  type <- guess_type(testing_data, 'y')
+  # Tests.
+  type              <- guess_type(testing_data, 'y')
   preprocessed_data <- preprocessing(testing_data, 'y')
   preprocessed_data <- preprocessed_data$data
   split_data <-

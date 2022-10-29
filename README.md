@@ -4,22 +4,6 @@ A significant amount of time is spent on building models with high performance. 
 
 They definitely are and that’s why we want to fully automate the machine learning process for them, so everyone will be able to use the computational power of the trees.
 
-## Installation
-
-(From CRAN - not yet available)
-
-``` r
-install.packages("forester")
-```
-
-
-From GitHub
-
-``` r
-install.packages("devtools")
-devtools::install_github("ModelOriented/forester")
-```
-
 ## Authors
 
 This package is created inside the MI2 Data Lab as both scientific research and Bachelor thesis by:
@@ -51,10 +35,6 @@ However, that’s not everything that the forester has to offer. Via additional 
 - Visualizations comparing the best models
 - Explanations of the aforementioned models
 
-
-<img src="misc/graph.png" align="center" width="600"/>
-
-
 ## For whom is this package created?
 
 The forester aims for both experienced and inexperienced users. The major advantage of this package is simple syntax and the ability to train plenty of highly effective models in just a few lines. It is really handy for the newcomers, because they don’t have to fully understand what stays behind the training process and they have to read only short documentation to train their first, yet highly effective models.
@@ -70,10 +50,6 @@ The first and probably most important step in the forester pipeline is preproces
 - Preprocessing
 - Balancing and splitting the dataset
 - Preparation for different models
-
-
-<img src="misc/Forester.png" align="center" width="600"/>
-
 
 ### Guessing type of ml task
 
@@ -132,10 +108,5 @@ One of the extensional features which are great is an option to automatically ge
 - Feature importance plot for the best model
 
 In the end, we want to create more report templates, with the current one set as a default one. There might be reports more focused on: EDA, visualization of the training process, outcomes of the model with metrics and Explainable Artificial Intelligence (XAI).
-
-
-## Note
-
-The previous version of the package is available on the [`old`](https://github.com/ModelOriented/forester/tree/old) branch. It will not be supported, we encourage you to use the new one.
 
 

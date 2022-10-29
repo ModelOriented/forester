@@ -32,6 +32,6 @@
 #' @docType data
 #' @usage data(lymph)
 #'
-#' @source Data from openml \url{https://www.openml.org/search?type=data&status=active&id=10&sort=runs}
+#' @source Data from openml \url{https://www.openml.org/search?type=data&status=active&id=10&sort=runs}.
 #'
 NULL
