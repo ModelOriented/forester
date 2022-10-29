@@ -2,19 +2,22 @@
 % Please edit documentation in R/check_data.R
 \name{check_outliers}
 \alias{check_outliers}
-\title{Searches for outliers via mean standard deviation, median abosulte deviation
+\title{Search for outliers via mean standard deviation, median absolute deviation
 and inter quantile range}
 \usage{
-check_outliers(df)
+check_outliers(df, verbose = TRUE)
 }
 \arguments{
-\item{df}{A data source, that is one of major R formats: data.table, data.frame,
-matrix and so on.}
+\item{df}{A data source, that is one of the major R formats: data.table, data.frame,
+matrix, and so on.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none.}
 }
 \value{
 A list with every line of the sub-report.
 }
 \description{
-Searches for outliers via mean standard deviation, median abosulte deviation
+Search for outliers via mean standard deviation, median absolute deviation
 and inter quantile range
 }

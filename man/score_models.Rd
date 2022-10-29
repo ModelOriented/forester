@@ -9,34 +9,49 @@ score_models(
   predictions,
   observed,
   type,
-  metrics = NULL,
-  sort_by = "auto"
+  metrics = "auto",
+  sort_by = "auto",
+  metric_function = NULL,
+  metric_function_name = NULL,
+  metric_function_decreasing = TRUE
 )
 }
 \arguments{
-\item{models}{List of models trained by `train_models` function.}
+\item{models}{A list of models trained by `train_models()` function.}
 
-\item{predictions}{List of predictions of every engine from test data.}
+\item{predictions}{A list of predictions of every engine from the test data.}
 
-\item{observed}{Vector of true values from test data.}
+\item{observed}{A vector of true values from the test data.}
 
-\item{type}{String, determines if future task is `binary_clf` or `regression`.}
+\item{type}{A string, determines if the future task is `binary_clf` or `regression`.}
 
-\item{metrics}{Vector of metrics names.}
+\item{metrics}{A vector of metrics names. By default param set for `auto`, most important metrics are returned.
+For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.}
 
-\item{sort_by}{String with name of metric to sort by.}
+\item{sort_by}{String with name of metric to sort by.
+For `auto` models going to be sorted by `mse` for regression and `f1` for classification.}
+
+\item{metric_function}{The self-created function.
+It should look like name(predictions, observed) and return the numeric value.
+In case of using `metrics` param with value other than `auto` or `all`, is needed to use value `metric_function`
+in order to see given metric in report. If `sort_by` is equal to `auto` models are sorted by `metric_function`.}
+
+\item{metric_function_name}{The name of the column with values of param `metric_function`.
+By default `metric_function_name` is `metric_function`.}
+
+\item{metric_function_decreasing}{A logical value indicating how metric_function should be sorted. `TRUE` by default.}
 }
 \value{
-data.frame with 'no.' - number of model from models,
-'engine' - name of model from models, other metrics columns.
+A data.frame with 'no.' - number of model from models,
+'engine' - name of the model from models, other metrics columns.
 }
 \description{
 Score models by suitable metrics
 }
 \examples{
-iris_bin <- iris[1:100, ]
-iris_bin$Species <- factor(iris_bin$Species)
-type <- guess_type(iris_bin, 'Species')
+iris_bin          <- iris[1:100, ]
+iris_bin$Species  <- factor(iris_bin$Species)
+type              <- guess_type(iris_bin, 'Species')
 preprocessed_data <- preprocessing(iris_bin, 'Species')
 preprocessed_data <- preprocessed_data$data
 split_data <-

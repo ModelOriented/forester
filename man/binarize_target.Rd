@@ -2,22 +2,22 @@
 % Please edit documentation in R/preprocessing.R
 \name{binarize_target}
 \alias{binarize_target}
-\title{Binarizes the target column}
+\title{Binarize the target column}
 \usage{
 binarize_target(data, y)
 }
 \arguments{
-\item{data}{A data source, that is one of major R formats: data.table, data.frame,
-matrix and so on.}
+\item{data}{A data source, that is one of the major R formats: data.table, data.frame,
+matrix, and so on.}
 
-\item{y}{A string which indicates a target column name.}
+\item{y}{A string that indicates a target column name.}
 }
 \value{
 A dataset with binarized target column.
 }
 \description{
-Binarizes the target column
+Binarize the target column
 }
 \examples{
-binarize_target(iris[1:100,],'Species')
+binarize_target(iris[1:100, ], 'Species')
 }

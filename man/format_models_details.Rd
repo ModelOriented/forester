@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_models_details.R
 \name{format_models_details}
 \alias{format_models_details}
-\title{Formats info about models}
+\title{Format info about models}
 \usage{
 format_models_details(models)
 }
@@ -11,15 +11,15 @@ format_models_details(models)
 from engine.}
 }
 \value{
-Prints formatted text..
+Prints formatted text.
 }
 \description{
-Formats info about models
+Format info about models
 }
 \examples{
 data(iris)
-iris_bin <- iris[1:100, ]
-type <- guess_type(iris_bin, 'Species')
+iris_bin          <- iris[1:100, ]
+type              <- guess_type(iris_bin, 'Species')
 preprocessed_data <- preprocessing(iris_bin, 'Species')
 preprocessed_data <- preprocessed_data$data
 split_data <-

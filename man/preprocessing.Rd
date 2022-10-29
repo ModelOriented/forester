@@ -2,21 +2,27 @@
 % Please edit documentation in R/preprocessing.R
 \name{preprocessing}
 \alias{preprocessing}
-\title{Conducts preprocessing processes}
+\title{Conduct preprocessing processes}
 \usage{
-preprocessing(data, y)
+preprocessing(data, y, advanced = FALSE, verbose = FALSE)
 }
 \arguments{
-\item{data}{A data source, that is one of major R formats: data.table, data.frame,
-matrix and so on.}
+\item{data}{A data source, that is one the of major R formats: data.table, data.frame,
+matrix, and so on.}
 
-\item{y}{A string which indicates a target column name.}
+\item{y}{A string that indicates a target column name.}
+
+\item{advanced}{A logical value describing, whether the user wants to use
+advanced preprocessing methods (deleting correlated values).}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none.}
 }
 \value{
 A preprocessed dataset.
 }
 \description{
-Conducts preprocessing processes
+Conduct preprocessing processes
 }
 \examples{
 data(compas)

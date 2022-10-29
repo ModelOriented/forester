@@ -2,20 +2,20 @@
 % Please edit documentation in R/preprocessing.R
 \name{save_deleted_columns}
 \alias{save_deleted_columns}
-\title{Saves column names deleted during preprocessing process}
+\title{Save column names deleted during preprocessing process}
 \usage{
 save_deleted_columns(df, pre_df)
 }
 \arguments{
-\item{df}{A data source before preprocessing, that is one of major R formats:
-data.table, data.frame, matrix and so on.}
+\item{df}{A data source before preprocessing, that is one of the major R formats:
+data.table, data.frame, matrix, and so on.}
 
-\item{pre_df}{A data source after preprocessing, that is one of major R formats:
-data.table, data.frame, matrix and so on.}
+\item{pre_df}{A data source after preprocessing, that is one of the major R formats:
+data.table, data.frame, matrix, and so on.}
 }
 \value{
-A  vector of strings with column names.
+A vector of strings with column names.
 }
 \description{
-Saves column names deleted during preprocessing process
+Save column names deleted during preprocessing process
 }

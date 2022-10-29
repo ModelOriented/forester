@@ -12,7 +12,11 @@ train(
   loss = "default",
   validation = "default",
   tuning = "default",
-  keep = FALSE
+  keep = FALSE,
+  verbose = TRUE,
+  bayes_iter = 10,
+  random_iter = 10,
+  advanced_preprocessing = FALSE
 )
 }
 \arguments{
@@ -25,12 +29,12 @@ on all columns in the `data`.}
 (2) a character name of variable in the `data` that contains
 the target variable.}
 
-\item{type}{A character, one of `classification`/`regression`/`guess` which
+\item{type}{A character, one of `classification`/`regression`/`guess` that
 sets the type of the task. If `guess` (the default option) then
 forester will figure out `type` based on the number of unique values
 in the `y` variable.}
 
-\item{engine}{A vector of tree-based models that shall be testes.
+\item{engine}{A vector of tree-based models that shall be tested.
 Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
 All models from this vector will be trained and the best one will be returned.}
 
@@ -38,8 +42,8 @@ All models from this vector will be trained and the best one will be returned.}
 If `default` then the default loss function for a given task will be used.}
 
 \item{validation}{A validation/model selection a character of
-data.frame. If data.frame then this data will be used for model
-assessment and selection. If character, then it will be a name of
+data.frame. If `data.frame` then this data will be used for the model
+assessment and selection. If `character`, then it will be a name of
 the hyperparameter.}
 
 \item{tuning}{A character with the name of the tuning procedure.
@@ -51,15 +55,27 @@ If `random search` then random search is performed.}
 
 \item{keep}{Shall all models be returned (`keep = FALSE`) or only the best one
 (`keep = FALSE`, default option)?}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+training process, if FALSE gives none.}
+
+\item{bayes_iter}{An integer value describing number of optimization rounds
+used by Bayesian optimization.}
+
+\item{random_iter}{An integer value describing number of optimization rounds
+used by random search.}
+
+\item{advanced_preprocessing}{A logical value describing, whether the user wants to use
+advanced preprocessing methods (ex. deleting correlated values).}
 }
 \value{
-List of all necessary objects for other functions.
+A list of all necessary objects for other functions.
 }
 \description{
-The `train()` is the core function of this package.
+The `train()` function is the core function of this package.
 The only obligatory arguments are `data` and `target`.
 Setting and changing other arguments will affect model
-validation strategy, tested model families and so on.
+validation strategy, tested model families, and so on.
 }
 \examples{
 library(forester)

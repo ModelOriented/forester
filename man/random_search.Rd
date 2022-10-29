@@ -16,24 +16,24 @@ random_search(
 )
 }
 \arguments{
-\item{train_data}{A training data for models created by `prepare_data`.}
+\item{train_data}{A training data for models created by `prepare_data()` function.}
 
-\item{test_data}{A test data for models created by `prepare_data`.}
+\item{test_data}{A test data for models created by `prepare_data()` function.}
 
-\item{y}{A string which indicates a target column name.}
+\item{y}{A string that indicates a target column name.}
 
-\item{models}{A list of models trained by `train_models` function.
-They will be compered with models train with different hiperparameters.}
+\item{models}{A list of models trained by `train_models()` function.
+They will be compered with models trained with different hiperparameters.}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
 values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
 
-\item{type}{A string which determines if machine learning task is the
-`classification` or `regression`.}
+\item{type}{A string that determines if Machine Learning task is the
+`classification` or `regression` task.}
 
-\item{max_evals}{Number of trained models for each model type in `engine`.}
+\item{max_evals}{The number of trained models for each model type in `engine`.}
 
-\item{nr_return_models}{Number of best models to return, `all` value is possible.}
+\item{nr_return_models}{The number of the best models to return, `all` value is possible.}
 }
 \value{
 A list consisting of models created via random search and ranked list
@@ -44,8 +44,8 @@ Random optimalization of hiperparameters
 }
 \examples{
 data(iris)
-iris_bin <- iris[1:100,]
-type <- guess_type(iris_bin, 'Species')
+iris_bin          <- iris[1:100, ]
+type              <- guess_type(iris_bin, 'Species')
 preprocessed_data <- preprocessing(iris_bin, 'Species')
 preprocessed_data <- preprocessed_data$data
 split_data <-

@@ -2,31 +2,31 @@
 % Please edit documentation in R/train_models.R
 \name{train_models}
 \alias{train_models}
-\title{Trains models from given engines}
+\title{Train models from given engines}
 \usage{
 train_models(data, y, engine, type)
 }
 \arguments{
-\item{data}{A training data for models created by `prepare_data`.}
+\item{data}{A training data for models created by `prepare_data()` function.}
 
-\item{y}{A string which indicates a target column name.}
+\item{y}{A string that indicates a target column name.}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
 values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`.}
 
-\item{type}{A string which determines if machine learning task is the
+\item{type}{A string that determines if Machine Learning task is the
 `classification` or `regression`.}
 }
 \value{
 A list of models for every engine.
 }
 \description{
-Trains models from given engines
+Train models from given engines
 }
 \examples{
 data(iris)
-iris_bin <- iris[1:100,]
-type <- guess_type(iris_bin, 'Species')
+iris_bin          <- iris[1:100, ]
+type              <- guess_type(iris_bin, 'Species')
 preprocessed_data <- preprocessing(iris_bin, 'Species')
 preprocessed_data <- preprocessed_data$data
 split_data <-

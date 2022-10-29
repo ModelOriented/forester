@@ -2,28 +2,28 @@
 % Please edit documentation in R/choose_best_models.R
 \name{choose_best_models}
 \alias{choose_best_models}
-\title{Choose bests models, according to score data frame}
+\title{Choose the bests models, according to the score data frame}
 \usage{
 choose_best_models(models, score, number)
 }
 \arguments{
-\item{models}{List of models trained by `train_models` function.}
+\item{models}{A list of models trained by `train_models()` function.}
 
-\item{score}{Data frame with metrics value for given models, by `score_models`.}
+\item{score}{A data frame with metrics values for given models, by `score_models`.}
 
-\item{number}{Number of models to return.}
+\item{number}{The number of models to return.}
 }
 \value{
-List of chosen best models
+The list of chosen best models.
 }
 \description{
-Choose bests models, according to score data frame
+Choose the bests models, according to the score data frame
 }
 \examples{
 data(iris)
-iris_bin <- iris[1:100,]
-iris_bin$Species <- factor(iris_bin$Species)
-type <- guess_type(iris_bin, 'Species')
+iris_bin          <- iris[1:100, ]
+iris_bin$Species  <- factor(iris_bin$Species)
+type              <- guess_type(iris_bin, 'Species')
 preprocessed_data <- preprocessing(iris_bin, 'Species')
 preprocessed_data <- preprocessed_data$data
 split_data <-

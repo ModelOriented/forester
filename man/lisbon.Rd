@@ -30,7 +30,7 @@ A data frame with 246 rows and 17 variables:
 }
 }
 \source{
-Data from Kaggle \url{https://www.kaggle.com/datasets/cgrodrigues/lisbon-house-prices}
+Data from Kaggle \url{https://www.kaggle.com/datasets/cgrodrigues/lisbon-house-prices}.
 }
 \usage{
 data(lisbon)
