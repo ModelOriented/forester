@@ -1,7 +1,7 @@
 Package: forester
 Type: Package
 Title: Quick and Simple Tools for Training and Testing of Tree-based Models
-Version: 0.1.0
+Version: 1.0.0
 Authors@R:
     c(person("Anna", "Kozak", role = c("aut", "cre"), email = "anna1993kozak@gmail.com"),
     person("Hubert", "Ruczyński", role = c("aut"), email = "hruczynski21@interia.pl"),
@@ -19,34 +19,36 @@ Description: Extendable set of tools to facilitate training, tuning and testing
     As tree models are trained, the explanations developed by the TreeShap method can be used. 
     So resulting explanations have a quick feedback loop that can leverage Navigated Data Exploration.
 License: GPL-3
-Imports: 
-  DALEX,
-  magrittr,
-  ranger,
-  xgboost,
-  catboost,
-  partykit,
-  varhandle,
-  lightgbm,
-  mltools,
-  data.table,
-  splitTools,
-  rcompanion,
-  mice,
-  nnet,
-  fmsb,
-  rmarkdown,
-  scales,
-  ParBayesianOptimization,
-  cvms,
-  verification,
-  tibble,
-  here
+Imports:
+    ranger,
+    xgboost,
+    catboost,
+    lightgbm,
+    ParBayesianOptimization,
+    partykit,
+    varhandle,
+    mltools,
+    data.table,
+    splitTools,
+    rcompanion,
+    mice,
+    rmarkdown,
+    Boruta,
+    ggplot2,
+    ggradar,
+    ggrepel,
+    pROC,
+    stats,
+    tibble
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
 URL: https://github.com/ModelOriented/forester
 BugReports: https://github.com/ModelOriented/forester/issues
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    DALEX,
+    knitr
 Config/testthat/edition: 3
+VignetteBuilder:
+    knitr

@@ -1,13 +1,13 @@
-#' Prepares data into format correct for the selected model engine
+#' Prepare data into format correct for the selected model engine
 #'
-#' @param data A data source, that is one of major R formats: data.table, data.frame,
+#' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix and so on.
-#' @param y A string which indicates a target column name.
+#' @param y A string that indicates a target column name.
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`, `lightgbm`, `catboost`, `decision_tree`.
 #' Determines which models will be later learnt.
 #' @param predict A logical value, determines whether the data set will be used
-#' for prediction or training. It is necessary, because lightgbm can't predict
+#' for prediction or training. It is necessary, because lightgbm model can't predict
 #' on training dataset.
 #' @param train A train data, if predict is TRUE you have to provide training
 #' dataset from split data here.
@@ -18,7 +18,7 @@
 #' @examples
 #' data(iris)
 #'
-#' type <- guess_type(lisbon, 'Price')
+#' type              <- guess_type(lisbon, 'Price')
 #' preprocessed_data <- preprocessing(lisbon, 'Price')
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
@@ -42,38 +42,36 @@ prepare_data <- function(data,
                          y,
                          engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                          predict = FALSE,
-                         train = NULL)
-{
+                         train = NULL) {
   ranger_data        <- NULL
   xgboost_data       <- NULL
   decision_tree_data <- NULL
   lightgbm_data      <- NULL
   catboost_data      <- NULL
 
-
-  data <- as.data.frame(unclass(data), stringsAsFactors = TRUE) # important part
-  # is conversion strings to factors because we are able to work on them and
-  # add category `other` for predictions
+  data <- as.data.frame(unclass(data), stringsAsFactors = TRUE) # Important part
+  # is conversion strings to factors because we can work on them and
+  # add category `other` for predictions.
 
   if (!predict) {
-    # if it is a training dataset we add the level other and in first
-    # observation of the dataset we change all factor values to other, so that
-    # we will have other value in training dataset and model can recognize that
+    # If it is a training dataset we add the level other and in first
+    # observation of the dataset we change all factor values to others so that
+    # we will have other values in the training dataset and the model can recognize that.
     for (i in 1:ncol(data)) {
       if ('factor' %in% class(data[, i]) && names(data[i]) != y) {
         levels(data[, i]) <- c(levels(data[, i]), 'other')
         data[1, i] <- 'other'
       }
     }
-  } else{
-    # if it is a test dataset we perform otherisation of levels for train again
+  } else {
+    # If it is a test dataset we perform otherisation of levels for the train again.
     train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
     for (i in 1:ncol(train)) {
       if ('factor' %in% class(train[, i]) && names(data[i]) != y) {
         levels(train[, i]) <- c(levels(train[, i]), 'other')
       }
     }
-    # then change all factors unseen in train to category other
+    # Then we change all factors unseen in the train to category other.
     for (i in 1:ncol(data)) {
       if ('factor' %in% class(data[, i]) && names(data[i]) != y) {
         levels(data[, i]) <- c(levels(data[, i]), 'other')
@@ -84,56 +82,54 @@ prepare_data <- function(data,
         }
       }
     }
-    data <- droplevels(data) # the we have to drop levels which were changed to other
-    # and insert all levels from train (for ohe in xgboost)
+    data <- droplevels(data) # We have to drop levels that were changed to other
+    # and insert all levels from the train (for OHE in the xgboost model).
     for (i in 1:ncol(data)) {
       if ('factor' %in% class(data[, i])) {
         levels(data[, i]) <- c(levels(data[, i]), levels(train[, i]))
       }
     }
-
   }
-
-
-
 
   if ('ranger' %in% engine) {
     ranger_data <- data.frame(data)
   }
   if ('xgboost' %in% engine) {
-    # xgboost works on numerical data only, so we have to perform OHE - OHE NOT WORKING
+    # The xgboost model works on numerical data only, so we have to perform OHE - OHE NOT WORKING.
     ohe_feats = c()
-    xgboost_data <- data
+    xgboost_data  <- data
     for (i in 1:ncol(data)) {
       if ('factor' %in% class(data[, i])) {
         condition <- !is.numeric(varhandle::unfactor(data[, i]))
-      } else{
+      } else {
         condition <- !is.numeric(data[, i])
       }
       if (condition) {
-        # we need to unfactor the data
+        # We need to unfactor the data.
         if (colnames(data)[i] == y) {
-          # integer encoding if the column is the target
+          # We use the integer encoding if the column is the target.
           xgboost_data[y] <- as.numeric(unlist(data[y]))
-        } else{
-          # OHE for rest of the variables
+        } else {
+          # The OHE for the rest of variables.
           ohe_feats <- c(ohe_feats, colnames(data)[i])
         }
       }
     }
 
     label = xgboost_data[, y]
-    xgboost_table <- data.table::as.data.table(data[, -which(names(xgboost_data) == y)])
-    xgboost_data  <- mltools::one_hot(xgboost_table)
-    xgboost_data  <- apply(xgboost_data, 2, as.numeric)
-    xgboost_data  <- as.data.frame(xgboost_data) # couldn't figure out how to do
+    xgboost_table  <- data.table::as.data.table(data[, -which(names(xgboost_data) == y)])
+    xgboost_data   <- mltools::one_hot(xgboost_table)
+    xgboost_data   <- apply(xgboost_data, 2, as.numeric)
+    xgboost_data   <- as.data.frame(xgboost_data) # couldn't figure out how to do
     # the next step on data.table
-    xgboost_data  <- xgboost_data[, order(names(xgboost_data))] # for proper
-    # work. without this, the ohe cols in train and test are not in the same order
-    # and xgboost can't work properly
-    xgboost_data <- as.matrix(xgboost_data)
+    xgboost_data   <- xgboost_data[, order(names(xgboost_data))] # For proper
+    # work. Without this, the OHE cols in the train and test are not in the same order
+    # and the xgboost model can't work properly.
+    xgboost_data   <- as.matrix(xgboost_data)
+    if (nrow(data) == 1) {
+      xgboost_data <- t(xgboost_data)
+    }
     #xgboost_data  <- xgboost::xgb.DMatrix(data = as.matrix(xgboost_data), label = label)
-
   }
   if ('decision_tree' %in% engine) {
     decision_tree_data <- data
@@ -154,7 +150,7 @@ prepare_data <- function(data,
 
       if (guess_type(data, y) != 'regression') {
         label <- as.matrix(as.numeric(y_true) - 1)
-      } else{
+      } else {
         label <- as.matrix(y_true)
       }
 
@@ -163,9 +159,9 @@ prepare_data <- function(data,
 
       lightgbm_data <- lightgbm::lgb.Dataset(data = dat,
                                              label = label)
-      # -1, because lgb enumarates classees from 0
-    } else{
-      #lgbm can't predict on lgb.Dataset
+      # -1, because lgb enumarates classees from 0.
+    } else {
+      # The lgbm model can't predict on lgb.Dataset.
       X <- data[, -which(names(data) == y)]
       lightgbm_data <- as.matrix(X)
     }
@@ -176,9 +172,12 @@ prepare_data <- function(data,
     X <- data[, -which(names(data) == y)]
     X <- data.matrix(X)
     X <- apply(X, 2, as.numeric)
-
-    catboost_data <- catboost::catboost.load_pool(data.matrix(X),
-                                                  as.numeric(y_true))
+    X <- as.matrix(X, ncol = ncol(data) - 1)
+    if (nrow(data) == 1) {
+      X <- t(X)
+    }
+    X <- data.matrix(X)
+    catboost_data <- catboost::catboost.load_pool(X, as.numeric(y_true))
   }
 
   return(

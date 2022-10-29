@@ -30,6 +30,6 @@
 #' @docType data
 #' @usage data(lisbon)
 #'
-#' @source Data from Kaggle \url{https://www.kaggle.com/datasets/cgrodrigues/lisbon-house-prices}
+#' @source Data from Kaggle \url{https://www.kaggle.com/datasets/cgrodrigues/lisbon-house-prices}.
 #'
 NULL

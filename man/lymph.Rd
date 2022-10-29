@@ -31,7 +31,7 @@ A data frame with 148 rows and 19 variables:
 }
 }
 \source{
-Data from openml \url{https://www.openml.org/search?type=data&status=active&id=10&sort=runs}
+Data from openml \url{https://www.openml.org/search?type=data&status=active&id=10&sort=runs}.
 }
 \usage{
 data(lymph)

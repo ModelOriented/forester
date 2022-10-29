@@ -1,17 +1,17 @@
-#' Choose bests models, according to score data frame
+#' Choose the bests models, according to the score data frame
 #'
-#' @param models List of models trained by `train_models` function.
-#' @param score Data frame with metrics value for given models, by `score_models`.
-#' @param number Number of models to return.
+#' @param models A list of models trained by `train_models()` function.
+#' @param score A data frame with metrics values for given models, by `score_models`.
+#' @param number The number of models to return.
 #'
-#' @return List of chosen best models
+#' @return The list of chosen best models.
 #' @export
 #'
 #' @examples
 #' data(iris)
-#' iris_bin <- iris[1:100,]
-#' iris_bin$Species <- factor(iris_bin$Species)
-#' type <- guess_type(iris_bin, 'Species')
+#' iris_bin          <- iris[1:100, ]
+#' iris_bin$Species  <- factor(iris_bin$Species)
+#' type              <- guess_type(iris_bin, 'Species')
 #' preprocessed_data <- preprocessing(iris_bin, 'Species')
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
@@ -51,5 +51,6 @@
 #'                      score = score,
 #'                      number = 3)
 choose_best_models <- function(models, score, number) {
-  return(models[score[1:number, "engine"]])
+  number <- min(number, length(models))
+  return(models[score[1:number, 'engine']])
 }

@@ -2,17 +2,20 @@
 % Please edit documentation in R/check_data.R
 \name{check_static}
 \alias{check_static}
-\title{Searches for columns dominated by a single value}
+\title{Search for columns dominated by a single value}
 \usage{
-check_static(df)
+check_static(df, verbose = TRUE)
 }
 \arguments{
-\item{df}{A data source, that is one of major R formats: data.table, data.frame,
-matrix and so on.}
+\item{df}{A data source, that is one of the major R formats: data.table, data.frame,
+matrix, and so on.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none.}
 }
 \value{
 A list with every line of the sub-report.
 }
 \description{
-Searches for columns dominated by a single value
+Search for columns dominated by a single value
 }

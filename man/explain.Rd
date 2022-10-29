@@ -4,28 +4,18 @@
 \alias{explain}
 \title{Explain forester model}
 \usage{
-explain(
-  model,
-  data,
-  y,
-  engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
-  verbose = FALSE
-)
+explain(models, test_data, y, verbose = FALSE)
 }
 \arguments{
-\item{model}{A single model created with the `train()` function or a list of
-up to 5 unique models (unique = of different engine).}
+\item{models}{A single model created with the `train()` function or a list of
+models.}
 
-\item{data}{A test dataset returned from `train()` function.}
+\item{test_data}{A test dataset returned from `train()` function.}
 
 \item{y}{A target variable. It can be either
 (1) a vector of the same number of observations as `data` or
 (2) a character name of variable in the `data` that contains
 the target variable.}
-
-\item{engine}{A vector of tree-based models that shall be testes.
-Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
-All models from this vector will be trained and the best one will be returned.}
 
 \item{verbose}{A logical value determining whether explainer creation messages
 should be printed or not.}
@@ -34,15 +24,11 @@ should be printed or not.}
 A list of DALEX explainers for 5 models of different engines.
 }
 \description{
-The `explain()` is a wrapper for `DALEX` methods for model explanations.
-If possible it will use methods for tree based models.
+The `explain()` function is a wrapper for `DALEX` methods for model explanations.
+If possible it will use methods for tree-based models.
 }
 \examples{
-\dontrun{
-library(DALEX)
-library(magrittr)
-titanic_imputed \%>\%
-    train('survived') \%>\%
-    forester::explain()
-}
+data(lisbon)
+train_output   <- train(lisbon, 'Price', verbose = FALSE, random_iter = 2, bayes_iter = 1)
+best_explainer <- explain(train_output$best_models[[1]], train_output$data, train_output$y)
 }

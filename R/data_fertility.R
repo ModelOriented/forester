@@ -1,7 +1,7 @@
 #' Fertility dataset
 #'
 #' \code{fertility} 100 volunteers provide a semen sample analyzed according to
-#' the WHO 2010 criteria. Sperm concentration are related to socio-demographic
+#' the WHO 2010 criteria. Sperm concentration is related to socio-demographic
 #' data, environmental factors, health status, and life habits.
 #'
 #'
@@ -31,6 +31,6 @@
 #' @docType data
 #' @usage data(fertility)
 #'
-#' @source Data from UCI \url{https://archive.ics.uci.edu/ml/datasets/Fertility}
+#' @source Data from UCI \url{https://archive.ics.uci.edu/ml/datasets/Fertility}.
 #'
 NULL

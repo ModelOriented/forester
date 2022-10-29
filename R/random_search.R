@@ -1,16 +1,16 @@
 #' Random optimalization of hiperparameters
 #'
-#' @param train_data A training data for models created by `prepare_data`.
-#' @param test_data A test data for models created by `prepare_data`.
-#' @param y A string which indicates a target column name.
-#' @param models A list of models trained by `train_models` function.
-#' They will be compered with models train with different hiperparameters.
+#' @param train_data A training data for models created by `prepare_data()` function.
+#' @param test_data A test data for models created by `prepare_data()` function.
+#' @param y A string that indicates a target column name.
+#' @param models A list of models trained by `train_models()` function.
+#' They will be compered with models trained with different hiperparameters.
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.
-#' @param type A string which determines if machine learning task is the
-#' `classification` or `regression`.
-#' @param max_evals Number of trained models for each model type in `engine`.
-#' @param nr_return_models Number of best models to return, `all` value is possible.
+#' @param type A string that determines if Machine Learning task is the
+#' `classification` or `regression` task.
+#' @param max_evals The number of trained models for each model type in `engine`.
+#' @param nr_return_models The number of the best models to return, `all` value is possible.
 #'
 #' @return A list consisting of models created via random search and ranked list
 #' of models scores.
@@ -18,8 +18,8 @@
 #'
 #' @examples
 #' data(iris)
-#' iris_bin <- iris[1:100,]
-#' type <- guess_type(iris_bin, 'Species')
+#' iris_bin          <- iris[1:100, ]
+#' type              <- guess_type(iris_bin, 'Species')
 #' preprocessed_data <- preprocessing(iris_bin, 'Species')
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
@@ -62,7 +62,6 @@
 #'                              type = type,
 #'                              max_evals = 4,
 #'                              nr_return_models = 'all')
-
 random_search <- function(train_data,
                           test_data,
                           y,
@@ -139,8 +138,6 @@ random_search <- function(train_data,
       paste('ranger_RS_', 1:max_ranger_evals, sep = '')
     search_models <- c(search_models, ranger_models)
     search_engine <- c(search_engine, rep('ranger', max_ranger_evals))
-
-
   }
   if ('xgboost' %in% engine) {
     if (type == 'regression') {
@@ -269,7 +266,7 @@ random_search <- function(train_data,
           learning_rate = unlist(sample_catboost_grid[i, 'learning_rate'])
         )
       )
-      catboost_models[i] <- list(catboost::catboost.train(train_data$catboost_data, params = parameters))
+      capture.output(catboost_models[i] <- list(catboost::catboost.train(train_data$catboost_data, params = parameters)))
     }
     names(catboost_models) <- paste('catboost_RS_', 1:max_catboost_evals, sep = '')
     search_models          <- c(search_models, catboost_models)
@@ -285,11 +282,11 @@ random_search <- function(train_data,
     engine = search_engine,
     type = type
   )
-  score_search <- score_models(search_models, predictions, test_data$ranger_data[, y], type)
+  score_search       <- score_models(search_models, predictions, test_data$ranger_data[, y], type, metrics = 'all')
   if (nr_return_models == 'all') {
     nr_return_models <- length(search_models)
   }
-  best_models <- choose_best_models(search_models, score_search, nr_return_models)
+  best_models        <- choose_best_models(search_models, score_search, nr_return_models)
   return(list(
       best_models = best_models,
       score       = score_search

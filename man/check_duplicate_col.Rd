@@ -2,17 +2,20 @@
 % Please edit documentation in R/check_data.R
 \name{check_duplicate_col}
 \alias{check_duplicate_col}
-\title{Searches for duplicates between columns}
+\title{Search for duplicates between columns}
 \usage{
-check_duplicate_col(df)
+check_duplicate_col(df, verbose = TRUE)
 }
 \arguments{
-\item{df}{A data source, that is one of major R formats: data.table, data.frame,
-matrix and so on.}
+\item{df}{A data source, that is one of the major R formats: data.table, data.frame,
+matrix, and so on.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none.}
 }
 \value{
 A list with every line of the sub-report.
 }
 \description{
-Searches for duplicates between columns
+Search for duplicates between columns
 }

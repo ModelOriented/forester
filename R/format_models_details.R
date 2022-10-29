@@ -1,15 +1,15 @@
-#' Formats info about models
+#' Format info about models
 #'
 #' @param models The result of `choose_best_models()` function or just a list of models
 #' from engine.
 #'
-#' @return Prints formatted text..
+#' @return Prints formatted text.
 #' @export
 #'
 #' @examples
 #' data(iris)
-#' iris_bin <- iris[1:100, ]
-#' type <- guess_type(iris_bin, 'Species')
+#' iris_bin          <- iris[1:100, ]
+#' type              <- guess_type(iris_bin, 'Species')
 #' preprocessed_data <- preprocessing(iris_bin, 'Species')
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
@@ -42,7 +42,6 @@
 #'               score = score,
 #'               number = 3)
 #' format_models_details(best_models)
-
 format_models_details <- function(models) {
   for (i in 1:length(models)) {
     if (names(models[i]) == 'ranger_model') {
@@ -84,10 +83,7 @@ format_models_details <- function(models) {
       params <- models[[i]]$params
       cat(paste0('------------ Lightgbm model ------------\n\n',
                  'Parameters\n',
-                 # '  num_leaves: ', params$num_leaves, '\n',
-                 # '  num_tree: ', params$num_tree, '\n',
                  '  num_iterations: ', params$num_iterations, '\n',
-                 # '  learning_rate: ', params$learning_rate,
                  '\n\n'))
     }
     if (names(models[i]) == 'catboost_model') {
@@ -100,6 +96,5 @@ format_models_details <- function(models) {
                  '  border_count: ', params$cat_feature_params$simple_ctrs$ctr_binarization$border_count[1], '\n',
                  '\n\n'))
     }
-
   }
 }

@@ -1,9 +1,8 @@
 test_that('test-predict_models', {
-
-  # iris - classification
-  iris_bin <- iris[1:100,]
-  iris_bin$Species <- factor(iris_bin$Species)
-  type <- guess_type(iris_bin, 'Species')
+  # Iris dataset for classification.
+  iris_bin          <- iris[1:100, ]
+  iris_bin$Species  <- factor(iris_bin$Species)
+  type              <- guess_type(iris_bin, 'Species')
   preprocessed_data <- preprocessing(iris_bin, 'Species')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -44,8 +43,9 @@ test_that('test-predict_models', {
   expect_true(length(predictions$lightgbm_preds) == 20)
   expect_true(length(predictions$catboost_preds) == 20)
 
-  # compas - classification
-  type <- guess_type(compas, 'Two_yr_Recidivism')
+
+  # Compas dataset for classification.
+  type              <- guess_type(compas, 'Two_yr_Recidivism')
   preprocessed_data <- preprocessing(compas, 'Two_yr_Recidivism')
   preprocessed_data <- preprocessed_data$data
   set.seed(123)
@@ -89,11 +89,13 @@ test_that('test-predict_models', {
   expect_true(length(predictions$lightgbm_preds) == 1235)
   expect_true(length(predictions$catboost_preds) == 1235)
 
-  # lisbon
 
-  type <- guess_type(lisbon, 'Price')
-  suppressWarnings(preprocessed_data <- preprocessing(lisbon, 'Price'))
-  preprocessed_data <- preprocessed_data$data
+  # Tests for lisbon dataset.
+  type                <- guess_type(lisbon, 'Price')
+  suppressWarnings(
+    preprocessed_data <- preprocessing(lisbon, 'Price')
+  )
+  preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Price',
@@ -127,7 +129,6 @@ test_that('test-predict_models', {
                      type)
   )
 
-
   expect_true(length(predictions) == 5)
   expect_true(length(predictions$ranger_preds) == 50)
   expect_true(length(predictions$xgboost_preds) == 50)
@@ -135,9 +136,9 @@ test_that('test-predict_models', {
   expect_true(length(predictions$lightgbm_preds) == 50)
   expect_true(length(predictions$catboost_preds) == 50)
 
-  # test - regression
 
-  type <- guess_type(testing_data, 'y')
+  # Tests for regression.
+  type              <- guess_type(testing_data, 'y')
   preprocessed_data <- preprocessing(testing_data, 'y')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -173,7 +174,6 @@ test_that('test-predict_models', {
                      type)
   )
 
-
   expect_true(length(predictions) == 5)
   expect_true(length(predictions$ranger_preds) == 200)
   expect_true(length(predictions$xgboost_preds) == 200)
@@ -181,9 +181,9 @@ test_that('test-predict_models', {
   expect_true(length(predictions$lightgbm_preds) == 200)
   expect_true(length(predictions$catboost_preds) == 200)
 
-  # test - regression
 
-  type <- guess_type(adult[1:100, ], 'salary')
+  # Tests for regression.
+  type              <- guess_type(adult[1:100, ], 'salary')
   preprocessed_data <- preprocessing(adult[1:100, ], 'salary')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -218,7 +218,6 @@ test_that('test-predict_models', {
                      engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                      type)
   )
-
 
   expect_true(length(predictions) == 5)
   expect_true(length(predictions$ranger_preds) == 20)

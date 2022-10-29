@@ -2,24 +2,24 @@
 % Please edit documentation in R/guess_type.R
 \name{guess_type}
 \alias{guess_type}
-\title{Guess task type by the target value from dataset}
+\title{Guess task type by the target value from the dataset}
 \usage{
 guess_type(data, y, max_unique_numeric = 5, max_unique_not_numeric = 15)
 }
 \arguments{
-\item{data}{A data source, that is one of major R formats: data.table, data.frame,
-matrix and so on.}
+\item{data}{A data source, that is one of the major R formats: data.table, data.frame,
+matrix, and so on.}
 
-\item{y}{A string which indicates a target column name.}
+\item{y}{A string that indicates a target column name.}
 
-\item{max_unique_numeric}{An integer describing maximal number of unique
+\item{max_unique_numeric}{An integer describing the maximal number of unique
 values in `y` if `y` is numeric.}
 
-\item{max_unique_not_numeric}{An integer describing maximal number of unique
-values in `y` if `y` is not numeric.}
+\item{max_unique_not_numeric}{An integer describing the maximal number of unique
+values in `y` if `y` is NOT numeric.}
 }
 \value{
-A string describing type of ml task: `binary_clf`, `multi_clf` or
+A string describing the type of ml task: `binary_clf`, `multi_clf` or
 `regression`.
 }
 \description{

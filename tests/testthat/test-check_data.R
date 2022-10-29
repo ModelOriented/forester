@@ -20,32 +20,25 @@ test_that('test-check_data', {
   expect_output(check_data(df_adult, y_adult))
   expect_output(check_data(df_test, y_test))
 
-  basic_iris   <- 'The dataset has 100 observations and 5 columns, which names are: \nSepal.Length; Sepal.Width; Petal.Length; Petal.Width; Species; \nWith the target value described by column Species.\n'
-  basic_lisbon <- 'The dataset has 246 observations and 17 columns, which names are: \nId; Condition; PropertyType; PropertySubType; Bedrooms; Bathrooms; AreaNet; AreaGross; Parking; Latitude; Longitude; Country; District; Municipality; Parish; Price.M2; Price; \nWith the target value described by column Price.\n'
-  basic_compas <- 'The dataset has 6172 observations and 7 columns, which names are: \nTwo_yr_Recidivism; Number_of_Priors; Age_Above_FourtyFive; Age_Below_TwentyFive; Misdemeanor; Ethnicity; Sex; \nWith the target value described by column Two_yr_Recidivism.\n'
-  basic_iris2  <- 'The dataset has 150 observations and 5 columns, which names are: \nSepal.Length; Sepal.Width; Petal.Length; Petal.Width; Species; \nWith the target value described by column Species.\n'
-  basic_adult  <- 'The dataset has 1000 observations and 15 columns, which names are: \nsalary; age; workclass; fnlwgt; education; education_num; marital_status; occupation; relationship; race; sex; capital_gain; capital_loss; hours_per_week; native_country; \nWith the target value described by column salary.\n'
-  basic_test   <- 'The dataset has 1000 observations and 12 columns, which names are: \nX1; X2; X3; X4; X5; X6; X7; X8; X9; X10; y; X11; \nWith the target value described by column y.'
-
-  expect_output(basic_info(df_iris, y_iris), basic_iris)
-  expect_output(basic_info(df_lisbon, y_lisbon), basic_lisbon)
-  expect_output(basic_info(df_compas, y_compas), basic_compas)
-  expect_output(basic_info(df_iris2, y_iris2), basic_iris2)
-  expect_output(basic_info(df_adult, y_adult), basic_adult)
-  expect_output(basic_info(df_test, y_test), basic_test)
+  expect_equal(length(basic_info(df_iris, y_iris, verbose = FALSE)), 6)
+  expect_equal(length(basic_info(df_lisbon, y_lisbon, verbose = FALSE)), 6)
+  expect_equal(length(basic_info(df_compas, y_compas, verbose = FALSE)), 6)
+  expect_equal(length(basic_info(df_iris2, y_iris2, verbose = FALSE)), 6)
+  expect_equal(length(basic_info(df_adult, y_adult, verbose = FALSE)), 6)
+  expect_equal(length(basic_info(df_test, y_test, verbose = FALSE)), 6)
 
   no_static     <- 'No static columns.'
   static_lisbon <- 'Static columns are: Country; District; Municipality; \nWith dominating values: Portugal; Lisboa; Lisboa;'
 
   expect_output(check_static(df_iris), no_static)
-  expect_output(check_static(df_lisbon), static_lisbon)
+  expect_equal(length(check_static(df_lisbon, verbose = FALSE)), 5)
   expect_output(check_static(df_compas), no_static)
   expect_output(check_static(df_iris2), no_static)
   expect_output(check_static(df_adult), no_static)
   expect_output(check_static(df_test), no_static)
 
   no_duplicate     <- 'No duplicate columns.'
-  duplicate_lisbon <- 'These column pairs are duplicate: District - Municipality;'
+  duplicate_lisbon <- 'These column pairs are duplicate:\n District - Municipality; \n'
 
   expect_output(check_duplicate_col(df_iris), no_duplicate)
   expect_output(check_duplicate_col(df_lisbon), duplicate_lisbon)
@@ -54,15 +47,15 @@ test_that('test-check_data', {
   expect_output(check_duplicate_col(df_adult), no_duplicate)
   expect_output(check_duplicate_col(df_test), no_duplicate)
 
-  no_missing <- 'No target values are missing. \nNo predictor values are missing.'
-  missing_test <- 'No target values are missing. \n943 observations have missing fields.'
+  no_missing   <- 'No target values are missing. \n\nNo predictor values are missing. \n'
+  missing_test <- 'No target values are missing. \n\n943 observations have missing fields.\n'
 
   expect_output(check_missing(df_iris, y_iris), no_missing)
   expect_output(check_missing(df_lisbon, y_lisbon), no_missing)
   expect_output(check_missing(df_compas, y_compas), no_missing)
   expect_output(check_missing(df_iris2, y_iris2), no_missing)
   expect_output(check_missing(df_adult, y_adult), no_missing)
-  expect_output(check_missing(df_test, y_test), missing_test) # brakuje mi braków danych w y
+  expect_output(check_missing(df_test, y_test), missing_test)
 
   df_test       <- manage_missing(df_test, y_test)
 
@@ -75,10 +68,10 @@ test_that('test-check_data', {
   expect_output(check_dim(df_adult), no_dim_issues)
   expect_output(check_dim(df_test), no_dim_issues)
 
-  no_cor     <- 'No strongly correlated pairs of numerical values. \nNo strongly correlated pairs of categorical values.'
-  cor_iris   <- 'Strongly correlated pairs of numerical values are: \nSepal.Length - Petal.Length: 0.81;\nSepal.Length - Petal.Width: 0.79;\nPetal.Length - Petal.Width: 0.98;'
-  cor_lisbon <- 'Strongly correlated pairs of numerical values are: \nBedrooms - AreaNet: 0.77;\nBedrooms - AreaGross: 0.77;\nBathrooms - AreaNet: 0.78;\nBathrooms - AreaGross: 0.78;\nAreaNet - AreaGross: 1;\n\nStrongly correlated pairs of categorical values are: \nPropertyType - PropertySubType: 1;'
-  cor_iris2  <- 'Strongly correlated pairs of numerical values are: \nSepal.Length - Petal.Length: 0.87;\nSepal.Length - Petal.Width: 0.82;\nPetal.Length - Petal.Width: 0.96;'
+  no_cor     <- 'No strongly correlated pairs of numerical values. \n\nNo strongly correlated pairs of categorical values. \n'
+  cor_iris   <- 'Strongly correlated pairs of numerical values are: \n \nSepal.Length - Petal.Length: 0.81;\nSepal.Length - Petal.Width: 0.79;\nPetal.Length - Petal.Width: 0.98;\n'
+  cor_lisbon <- 'Strongly correlated pairs of numerical values are: \n \nBedrooms - AreaNet: 0.77;\nBedrooms - AreaGross: 0.77;\nBathrooms - AreaNet: 0.78;\nBathrooms - AreaGross: 0.78;\nAreaNet - AreaGross: 1;\n\nStrongly correlated pairs of categorical values are: \nPropertyType - PropertySubType: 1;\n'
+  cor_iris2  <- 'Strongly correlated pairs of numerical values are: \n \nSepal.Length - Petal.Length: 0.87;\nSepal.Length - Petal.Width: 0.82;\nPetal.Length - Petal.Width: 0.96;\n'
   cor_test   <- 'No strongly correlated pairs of numerical values.'
 
   expect_output(check_cor(df_iris, y_iris), cor_iris)
@@ -113,4 +106,14 @@ test_that('test-check_data', {
   expect_output(check_y_balance(df_iris2, y_iris2), multi_balance)
   expect_output(check_y_balance(df_adult, y_adult), balance_adult)
   expect_output(check_y_balance(df_test, y_test), balance_test)
+
+  no_id     <- 'Columns names suggest that none of them are IDs. \n\nColumns data suggest that none of them are IDs. \n'
+  id_lisbon <- 'Columns names suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n\nColumns data suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n'
+
+  expect_output(detect_id_columns(df_iris), no_id)
+  suppressWarnings(expect_output(detect_id_columns(df_lisbon), id_lisbon))
+  expect_output(detect_id_columns(df_compas), no_id)
+  expect_output(detect_id_columns(df_iris2), no_id)
+  expect_output(detect_id_columns(df_adult), no_id)
+  suppressWarnings(expect_output(detect_id_columns(df_test), no_id))
 })

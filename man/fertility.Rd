@@ -29,13 +29,13 @@ A data frame with 100 rows and 10 variables:
 }
 }
 \source{
-Data from UCI \url{https://archive.ics.uci.edu/ml/datasets/Fertility}
+Data from UCI \url{https://archive.ics.uci.edu/ml/datasets/Fertility}.
 }
 \usage{
 data(fertility)
 }
 \description{
 \code{fertility} 100 volunteers provide a semen sample analyzed according to
-the WHO 2010 criteria. Sperm concentration are related to socio-demographic
+the WHO 2010 criteria. Sperm concentration is related to socio-demographic
 data, environmental factors, health status, and life habits.
 }

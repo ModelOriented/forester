@@ -2,56 +2,39 @@
 % Please edit documentation in R/report.R
 \name{report}
 \alias{report}
-\title{Generates report after training}
+\title{Generate report after training}
 \usage{
 report(
-  models,
-  data,
-  y,
-  score,
-  best_models,
-  type = "guess",
+  train_output,
+  output_file = NULL,
   output_format = "pdf_document",
   output_dir = getwd(),
   check_data = TRUE
 )
 }
 \arguments{
-\item{models}{List of models trained by `train_models` function.}
+\item{train_output}{The output of `train()` function.}
 
-\item{data}{Test data for models created by `prepare_data`.}
+\item{output_file}{The otput file name.}
 
-\item{y}{String, target column for predictions.}
+\item{output_format}{Format of the output file ('pdf_document', 'html_document' or both).}
 
-\item{score}{The result of `score_models` function (all? metrics required).}
-
-\item{best_models}{The result of `choose_best_models` function.}
-
-\item{type}{A character, one of `binary_clf`/`multi_clf`/`regression`/`guess`.
-sets the type of the task. If `guess` (the default option) then
-forester will figure out `type` based on the number of unique values
-in the `y` variable.}
-
-\item{output_format}{Format of output file ('pdf_document', 'html_document' or both).}
-
-\item{output_dir}{The path where the report will be saved, by default working
+\item{output_dir}{The path where the report will be saved, by default - the working
 directory.}
 
-\item{check_data}{If TRUE, prints results of check_data() function.}
+\item{check_data}{If TRUE, prints results of `check_data()` function.}
 }
 \value{
 Report generated to the local file. It contains table with
 metrics for every model, scatter plot for chosen metric
-and result of check_data() function - about used data.
+and result of `check_data()` function - about used data.
 }
 \description{
-Generates report after training
+Generate report after training
 }
 \examples{
-\dontrun{
-data(iris)
-iris_bin <- iris[1:100,]
-models <- train(iris_bin, 'Species')
-report(models, data = iris_bin, y = 'Species')
-}
+library(forester)
+data('lisbon')
+train_output <- train(lisbon, 'Price')
+report(train_output, 'regression.pdf')
 }

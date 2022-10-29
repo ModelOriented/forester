@@ -10,26 +10,30 @@ train_models_bayesopt(
   test_data,
   engine,
   type,
-  iters.n = 15,
-  return_params = FALSE
+  iters.n = 7,
+  return_params = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{train_data}{A training data for models created by `prepare_data`.}
+\item{train_data}{A training data for models created by `prepare_data()` function.}
 
-\item{y}{A string which indicates a target column name.}
+\item{y}{A string that indicates a target column name.}
 
-\item{test_data}{A test data for models created by `prepare_data`.}
+\item{test_data}{A test data for models created by `prepare_data()` function.}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
 values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.}
 
-\item{type}{A string which determines if machine learning task is the
+\item{type}{A string which determines if Machine Learning task is the
 `classification` or `regression`.}
 
-\item{iters.n}{Number of iterations of BayesOpt function.}
+\item{iters.n}{The number of iterations of BayesOpt function.}
 
 \item{return_params}{If TRUE, returns optimized model params.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none.}
 }
 \value{
 Trained models with optimized parameters. If `retun_params` is `TRUE`, then
@@ -41,10 +45,8 @@ Train models with Bayesian Optimization algorithm
 \examples{
 # Binary classification
 data(iris)
-iris_bin <- iris[1:100, ]
-iris_bin$Species[c(1,5,6, 16,18, 22,23,49)] <- rep('versicolor', 8) # noise
-iris_bin$Species <- factor(iris_bin$Species)
-type <- guess_type(iris_bin, 'Species')
+iris_bin          <- iris[1:100, ]
+type              <- guess_type(iris_bin, 'Species')
 preprocessed_data <- preprocessing(iris_bin, 'Species')
 preprocessed_data <- preprocessed_data$data
 split_data <-
@@ -65,10 +67,11 @@ models <- train_models_bayesopt(train_data,
                                test_data,
                                engine = c('ranger', 'xgboost', 'decision_tree',
                                'lightgbm', 'catboost'),
-                               type = type)
+                               type = type,
+                               iters.n = 1,)
 
 # Regression
-type <- guess_type(lisbon, 'Price')
+type              <- guess_type(lisbon, 'Price')
 preprocessed_data <- preprocessing(lisbon, 'Price')
 preprocessed_data <- preprocessed_data$data
 split_data2 <-

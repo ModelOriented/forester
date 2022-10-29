@@ -2,24 +2,27 @@
 % Please edit documentation in R/check_data.R
 \name{check_data}
 \alias{check_data}
-\title{Runs data check pipeline to seek for potential problems with the data}
+\title{Run data check pipeline to seek for potential problems with the data}
 \usage{
-check_data(data, y)
+check_data(data, y, verbose = TRUE)
 }
 \arguments{
-\item{data}{A data source, that is one of major R formats: data.table, data.frame,
-matrix and so on.}
+\item{data}{A data source, that is one of the major R formats: data.table, data.frame,
+matrix, and so on.}
 
-\item{y}{A string which indicates a target column name.}
+\item{y}{A string that indicates a target column name.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none.}
 }
 \value{
 A list with every line of the report.
 }
 \description{
-Runs data check pipeline to seek for potential problems with the data
+Run data check pipeline to seek for potential problems with the data
 }
 \examples{
-check_data(iris[1:100,], 'Species')
+check_data(iris[1:100, ], 'Species')
 check_data(lisbon, 'Price')
 check_data(compas, 'Two_yr_Recidivism')
 check_data(iris, 'Species')

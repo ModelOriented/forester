@@ -1,9 +1,10 @@
 test_that('test-train', {
+  set.seed(123)
   df_iris   <- iris[1:100, ]
   df_lisbon <- lisbon
-  df_compas <- compas
+  df_compas <- compas[1:100, ]
   df_adult  <- adult[1:100, ]
-  df_test   <- testing_data
+  df_test   <- testing_data[1:100, ]
 
   y_iris   <- 'Species'
   y_lisbon <- 'Price'
@@ -11,11 +12,11 @@ test_that('test-train', {
   y_adult  <- 'salary'
   y_test   <- 'y'
 
-  suppressWarnings(output_iris   <- train(df_iris, y_iris))
-  suppressWarnings(output_lisbon <- train(df_lisbon, y_lisbon))
-  suppressWarnings(output_compas <- train(df_compas, y_compas))
-  suppressWarnings(output_adult  <- train(df_adult, y_adult))
-  suppressWarnings(output_test   <- train(df_test, y_test))
+  suppressWarnings(output_iris   <- train(df_iris, y_iris, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_lisbon <- train(df_lisbon, y_lisbon, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_compas <- train(df_compas, y_compas, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_adult  <- train(df_adult, y_adult, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_test   <- train(df_test, y_test, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
 
   bin <- 'binary_clf'
   reg <- 'regression'
@@ -33,9 +34,9 @@ test_that('test-train', {
 
   expect_equal(dim(output_iris$preprocessed_data), c(100, 5))
   expect_equal(dim(output_lisbon$preprocessed_data), c(246, 14))
-  expect_equal(dim(output_compas$preprocessed_data), c(6172, 7))
+  expect_equal(dim(output_compas$preprocessed_data), c(100, 7))
   expect_equal(dim(output_adult$preprocessed_data), c(100, 15))
-  expect_equal(dim(output_test$preprocessed_data), c(1000, 11))
+  expect_equal(dim(output_test$preprocessed_data), c(100, 11))
 
   expect_false(list(NULL) %in% output_iris$train_data)
   expect_false(list(NULL) %in% output_lisbon$train_data)
@@ -60,12 +61,4 @@ test_that('test-train', {
   expect_false(list(NULL) %in% output_compas$predictions)
   expect_false(list(NULL) %in% output_adult$predictions)
   expect_false(list(NULL) %in% output_test$predictions)
-
-  expect_true(nrow(output_iris$ranked_list)   == 30)
-  expect_true(nrow(output_lisbon$ranked_list) == 30)
-  expect_true(nrow(output_compas$ranked_list) == 30)
-  expect_true(nrow(output_adult$ranked_list)  == 30)
-  expect_true(nrow(output_test$ranked_list)   == 30)
-
   })
-

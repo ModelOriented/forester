@@ -2,21 +2,21 @@
 % Please edit documentation in R/preprocessing.R
 \name{pre_rm_static_cols}
 \alias{pre_rm_static_cols}
-\title{Removes columns with one value for all rows}
+\title{Remove columns with one value for all rows}
 \usage{
 pre_rm_static_cols(data, y)
 }
 \arguments{
-\item{data}{A data source, that is one of major R formats: data.table, data.frame,
+\item{data}{A data source, that is one of the major R formats: data.table, data.frame,
 matrix and so on.}
 
-\item{y}{A string which indicates a target column name.}
+\item{y}{A string that indicates a target column name.}
 }
 \value{
 A dataset with deleted unwanted columns.
 }
 \description{
-Removes columns with one value for all rows
+Remove columns with one value for all rows
 }
 \examples{
 prep_data <- pre_rm_static_cols(compas,'Two_yr_Recidivism')

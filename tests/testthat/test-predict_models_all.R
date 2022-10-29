@@ -1,11 +1,11 @@
-test_that("predict_models_all", {
+test_that('test-predict_models_all', {
   data(compas)
   data(lisbon)
   data(iris)
 
-  # iris - classification
-  iris_bin <- iris[1:100, ]
-  type <- guess_type(iris_bin, 'Species')
+  # Iris dataset for classification.
+  iris_bin          <- iris[1:100, ]
+  type              <- guess_type(iris_bin, 'Species')
   preprocessed_data <- preprocessing(iris_bin, 'Species')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -38,14 +38,14 @@ test_that("predict_models_all", {
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                    type = type)
 
-
   expect_true(length(predictions) == 5)
   expect_true(all(lapply(predictions, length) == 20))
   expect_true(range(predictions)[1] >= 0)
   expect_true(range(predictions)[2] <= 1)
 
-  # compas - classification
-  type <- guess_type(compas, 'Two_yr_Recidivism')
+
+  # Compas dataset for classification.
+  type              <- guess_type(compas, 'Two_yr_Recidivism')
   preprocessed_data <- preprocessing(compas, 'Two_yr_Recidivism')
   preprocessed_data <- preprocessed_data$data
   set.seed(123)
@@ -87,11 +87,13 @@ test_that("predict_models_all", {
   expect_true(range(predictions)[1] >= 0)
   # expect_true(range(predictions)[2] <= 1)
 
-  # lisbon
 
-  type <- guess_type(lisbon,'Price')
-  suppressWarnings(preprocessed_data <- preprocessing(lisbon, 'Price'))
-  preprocessed_data <- preprocessed_data$data
+  # Tests for lisbon dataset.
+  type                <- guess_type(lisbon, 'Price')
+  suppressWarnings(
+    preprocessed_data <- preprocessing(lisbon, 'Price')
+  )
+  preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Price',
@@ -124,8 +126,7 @@ test_that("predict_models_all", {
                      type = type)
   )
 
-
-  expect_true(length(predictions)==5)
+  expect_true(length(predictions) == 5)
   expect_true(length(predictions[[1]]) == 50)
   expect_true(length(predictions[[2]]) == 50)
   expect_true(length(predictions[[3]]) == 50)

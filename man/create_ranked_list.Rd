@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_ranked_list.R
 \name{create_ranked_list}
 \alias{create_ranked_list}
-\title{Creates final ranked_list}
+\title{Create final ranked_list}
 \usage{
 create_ranked_list(basic, random, Bayes, type)
 }
@@ -13,12 +13,12 @@ create_ranked_list(basic, random, Bayes, type)
 
 \item{Bayes}{A data.frame with ranked list of Bayes Optimization models.}
 
-\item{type}{A string which determines if machine learning task is the
+\item{type}{A string which determines if Machine Learning task is the
 `classification` or `regression`.}
 }
 \value{
 A data.frame ranked list sorted by default metric.
 }
 \description{
-Creates final ranked_list
+Create final ranked_list
 }

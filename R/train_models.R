@@ -1,10 +1,10 @@
-#' Trains models from given engines
+#' Train models from given engines
 #'
-#' @param data A training data for models created by `prepare_data`.
-#' @param y A string which indicates a target column name.
+#' @param data A training data for models created by `prepare_data()` function.
+#' @param y A string that indicates a target column name.
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`.
-#' @param type A string which determines if machine learning task is the
+#' @param type A string that determines if Machine Learning task is the
 #' `classification` or `regression`.
 #'
 #' @return A list of models for every engine.
@@ -12,8 +12,8 @@
 #'
 #' @examples
 #' data(iris)
-#' iris_bin <- iris[1:100,]
-#' type <- guess_type(iris_bin, 'Species')
+#' iris_bin          <- iris[1:100, ]
+#' type              <- guess_type(iris_bin, 'Species')
 #' preprocessed_data <- preprocessing(iris_bin, 'Species')
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
@@ -27,17 +27,14 @@
 #'                'Species',
 #'                c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
 #'                type)
-train_models <- function(data,
-                         y,
-                         engine,
-                         type) {
+train_models <- function(data, y, engine, type) {
   ranger_model        <- NULL
   xgboost_model       <- NULL
   decision_tree_model <- NULL
   lightgbm_model      <- NULL
   catboost_model      <- NULL
 
-  if(type == 'multi_clf'){
+  if (type == 'multi_clf') {
     stop('Multilabel classification is not supported currently!')
   }
 
@@ -76,15 +73,15 @@ train_models <- function(data,
       decision_tree_model <- partykit::ctree(form, data = data$decision_tree_data)
 
     } else if (engine[i] == 'lightgbm') {
-      # for each objective type we need another set of params
-      # setting up the parameters
-      if(type == 'binary_clf'){
+      # For each objective type, we need another set of params
+      # setting up the parameters.
+      if (type == 'binary_clf') {
         obj = 'binary'
         params <- list(objective = obj)
-      }else if(type == 'multi_clf'){
+      } else if (type == 'multi_clf') {
         obj = 'multiclass'
         params <- list(objective = obj)
-      }else if(type == 'regression'){
+      } else if (type == 'regression') {
         obj = 'regression'
         params <- list(objective = obj)
       }
@@ -94,17 +91,17 @@ train_models <- function(data,
                                             verbose = -1)
 
     } else if (engine[i] == 'catboost') {
-      if(type == 'binary_clf'){
+      if (type == 'binary_clf') {
         obj = 'Logloss'
         params <- list(loss_function = obj, logging_level = 'Silent')
-      }else if(type == 'multi_clf'){
+      } else if (type == 'multi_clf') {
         obj = 'MultiClass'
         params <- list(loss_function = obj, logging_level = 'Silent')
-      }else if(type == 'regression'){
+      } else if (type == 'regression') {
         obj = 'MAE'
         params <- list(loss_function = obj, logging_level = 'Silent')
       }
-      catboost_model <- catboost::catboost.train(data$catboost_data, params=params)
+      capture.output(catboost_model <- catboost::catboost.train(data$catboost_data, params = params))
     }
   }
   return(

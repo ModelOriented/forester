@@ -1,6 +1,6 @@
-test_that("random search", {
-  iris_bin <- iris[1:100, ]
-  type <- guess_type(iris_bin, 'Species')
+test_that('test-random_search', {
+  iris_bin          <- iris[1:100, ]
+  type              <- guess_type(iris_bin, 'Species')
   preprocessed_data <- preprocessing(iris_bin, 'Species')
   preprocessed_data <- preprocessed_data$data
   split_data <-
@@ -35,8 +35,6 @@ test_that("random search", {
                      type = type)
   )
 
-
-
   score <- score_models(model, predictions, test_data$ranger_data$Species, type)
 
   suppressWarnings(
@@ -48,6 +46,6 @@ test_that("random search", {
                                  max_evals = 4,
                                  nr_return_models = 'all')
   )
-  expect_true(all(dim(random_best$score) == c(20,5)))
+  expect_true(all(dim(random_best$score) == c(20, 7)))
   expect_true(length(random_best$best_models) == 20)
 })
