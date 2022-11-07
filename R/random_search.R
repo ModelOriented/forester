@@ -69,7 +69,12 @@ random_search <- function(train_data,
                           engine,
                           type,
                           max_evals = 10,
-                          nr_return_models = 10) {
+                          nr_return_models = 10,
+                          metrics = 'auto',
+                          sort_by = 'auto',
+                          metric_function = NULL,
+                          metric_function_name = NULL,
+                          metric_function_decreasing = TRUE) {
   ranger_grid <- list(
     num.trees     = list(50, 100, 200),
     mtry          = list(NULL),
@@ -282,7 +287,15 @@ random_search <- function(train_data,
     engine = search_engine,
     type = type
   )
-  score_search       <- score_models(search_models, predictions, test_data$ranger_data[, y], type, metrics = 'all')
+  score_search       <- score_models(search_models,
+                                     predictions,
+                                     test_data$ranger_data[, y],
+                                     type,
+                                     metrics = metrics,
+                                     sort_by = sort_by,
+                                     metric_function = metric_function,
+                                     metric_function_name = metric_function_name,
+                                     metric_function_decreasing = metric_function_decreasing)
   if (nr_return_models == 'all') {
     nr_return_models <- length(search_models)
   }

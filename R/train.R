@@ -41,6 +41,17 @@
 #' used by random search.
 #' @param advanced_preprocessing A logical value describing, whether the user wants to use
 #' advanced preprocessing methods (ex. deleting correlated values).
+#' @param metrics A vector of metrics names. By default param set for `auto`, most important metrics are returned.
+#' For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.
+#' @param sort_by String with name of metric to sort by.
+#' For `auto` models going to be sorted by `mse` for regression and `f1` for classification.
+#' @param metric_function The self-created function.
+#' It should look like name(predictions, observed) and return the numeric value.
+#' In case of using `metrics` param with value other than `auto` or `all`, is needed to use value `metric_function`
+#' in order to see given metric in report. If `sort_by` is equal to `auto` models are sorted by `metric_function`.
+#' @param metric_function_name The name of the column with values of param `metric_function`.
+#' By default `metric_function_name` is `metric_function`.
+#' @param metric_function_decreasing A logical value indicating how metric_function should be sorted. `TRUE` by default.
 #'
 #' @return A list of all necessary objects for other functions.
 #' @export
@@ -61,7 +72,12 @@ train <- function(data,
                   verbose = TRUE,
                   bayes_iter = 10,
                   random_iter = 10,
-                  advanced_preprocessing = FALSE) {
+                  advanced_preprocessing = FALSE,
+                  metrics = 'auto',
+                  sort_by = 'auto',
+                  metric_function = NULL,
+                  metric_function_name = NULL,
+                  metric_function_decreasing = TRUE) {
   if (type == 'guess') {
     type <- guess_type(data, y)
   }
@@ -93,7 +109,14 @@ train <- function(data,
   predictions       <- predict_models(model, test_data, y, engine, type)
   verbose_cat('Predicted Successfully \n', verbose = verbose)
 
-  score_basic       <- score_models(model, predictions, test_data$ranger_data[[y]], type, metrics = 'all')
+  score_basic       <- score_models(model,
+                                    predictions,
+                                    test_data$ranger_data[[y]],
+                                    type,
+                                    metrics = metrics,
+                                    sort_by = sort_by,
+                                    metric_function = metric_function,
+                                    metric_function_decreasing = metric_function_decreasing)
 
   random_best       <- random_search(train_data,
                                test_data,
@@ -101,7 +124,11 @@ train <- function(data,
                                engine = engine,
                                type = type,
                                max_evals = random_iter,
-                               nr_return_models = 'all')
+                               nr_return_models = 'all',
+                               metrics = metrics,
+                               sort_by = sort_by,
+                               metric_function = metric_function,
+                               metric_function_decreasing = metric_function_decreasing)
 
   bayes_best  <- train_models_bayesopt(train_data,
                                       y,
@@ -111,9 +138,23 @@ train <- function(data,
                                       iters.n = bayes_iter,
                                       verbose = verbose)
 
-  score_bayes <- score_models(bayes_best, predictions, test_data$ranger_data[[y]], type, metrics = 'all')
+  score_bayes <- score_models(bayes_best,
+                              predictions,
+                              test_data$ranger_data[[y]],
+                              type,
+                              metrics = metrics,
+                              sort_by = sort_by,
+                              metric_function = metric_function,
+                              metric_function_decreasing = metric_function_decreasing)
 
-  ranked_list <- create_ranked_list(score_basic, random_best, score_bayes, type)
+  ranked_list <- create_ranked_list(score_basic,
+                                    random_best,
+                                    score_bayes,
+                                    type,
+                                    sort_by = sort_by,
+                                    metric_function = metric_function,
+                                    metric_function_name = metric_function_name,
+                                    metric_function_decreasing = metric_function_decreasing)
 
   models_list <- append(model, random_best$best_models)
 

@@ -12,7 +12,12 @@ random_search(
   engine,
   type,
   max_evals = 10,
-  nr_return_models = 10
+  nr_return_models = 10,
+  metrics = "auto",
+  sort_by = "auto",
+  metric_function = NULL,
+  metric_function_name = NULL,
+  metric_function_decreasing = TRUE
 )
 }
 \arguments{
