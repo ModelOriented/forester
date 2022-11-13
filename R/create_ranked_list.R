@@ -13,7 +13,7 @@ create_ranked_list <- function(basic,
                                Bayes,
                                type,
                                score,
-                               sort_by ='auto',
+                               sort_by = 'auto',
                                metric_function = NULL,
                                metric_function_name = 'metric_function',
                                metric_function_decreasing = TRUE) {
@@ -29,9 +29,6 @@ create_ranked_list <- function(basic,
     if (sort_by == 'auto' && is.null(metric_function)) {
       sort_by <- 'mse'
     }
-#    ranked_list[, 'mse'] <- as.numeric(ranked_list[, 'mse'])
-#    ranked_list[, 'r2']  <- as.numeric(ranked_list[, 'r2'])
-#    ranked_list[, 'mad'] <- as.numeric(ranked_list[, 'mad'])
   } else if (type == 'binary_clf') {
     if (sort_by == 'auto' && is.null(metric_function)) {
       sort_by <- 'f1'

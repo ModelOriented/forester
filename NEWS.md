@@ -1,8 +1,8 @@
 # forester 1.1.0
 * Changes in a `train()` function by adding paramters to:
-	* choose metrics
-	* choose metric to sort models
-	* add self-created metric function
+	* Choose metrics.
+	* Choose metric to sort model.
+	* Add self-created metric function.
 # forester 1.0.0
 * General code quality and readability improvements as well as improving the quality of the documentation.
 * `check_data()` added detection of id columns and reformatted the outputs.
