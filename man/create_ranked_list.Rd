@@ -4,7 +4,17 @@
 \alias{create_ranked_list}
 \title{Create final ranked_list}
 \usage{
-create_ranked_list(basic, random, Bayes, type)
+create_ranked_list(
+  basic,
+  random,
+  Bayes,
+  type,
+  score,
+  sort_by = "auto",
+  metric_function = NULL,
+  metric_function_name = "metric_function",
+  metric_function_decreasing = TRUE
+)
 }
 \arguments{
 \item{basic}{A data.frame with ranked list of basic models.}

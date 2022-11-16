@@ -16,7 +16,12 @@ train(
   verbose = TRUE,
   bayes_iter = 10,
   random_iter = 10,
-  advanced_preprocessing = FALSE
+  advanced_preprocessing = FALSE,
+  metrics = "auto",
+  sort_by = "auto",
+  metric_function = NULL,
+  metric_function_name = NULL,
+  metric_function_decreasing = TRUE
 )
 }
 \arguments{
@@ -67,6 +72,22 @@ used by random search.}
 
 \item{advanced_preprocessing}{A logical value describing, whether the user wants to use
 advanced preprocessing methods (ex. deleting correlated values).}
+
+\item{metrics}{A vector of metrics names. By default param set for `auto`, most important metrics are returned.
+For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.}
+
+\item{sort_by}{String with name of metric to sort by.
+For `auto` models going to be sorted by `mse` for regression and `f1` for classification.}
+
+\item{metric_function}{The self-created function.
+It should look like name(predictions, observed) and return the numeric value.
+In case of using `metrics` param with value other than `auto` or `all`, is needed to use value `metric_function`
+in order to see given metric in report. If `sort_by` is equal to `auto` models are sorted by `metric_function`.}
+
+\item{metric_function_name}{The name of the column with values of param `metric_function`.
+By default `metric_function_name` is `metric_function`.}
+
+\item{metric_function_decreasing}{A logical value indicating how metric_function should be sorted. `TRUE` by default.}
 }
 \value{
 A list of all necessary objects for other functions.

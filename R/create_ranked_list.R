@@ -8,24 +8,35 @@
 #'
 #' @return A data.frame ranked list sorted by default metric.
 #' @export
-create_ranked_list <- function(basic, random, Bayes, type) {
+create_ranked_list <- function(basic,
+                               random,
+                               Bayes,
+                               type,
+                               score,
+                               sort_by = 'auto',
+                               metric_function = NULL,
+                               metric_function_name = 'metric_function',
+                               metric_function_decreasing = TRUE) {
   ranked_list            <- rbind(basic, random$score, Bayes)[, -1]
 
   metrics_decreasing     <- c('mse' = FALSE, 'rmse' = FALSE, 'r2' = TRUE,
                           'mad' = FALSE, 'recall' = TRUE, 'precision' = TRUE,
-                          'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE)
-
+                          'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE, 'metric_function' = metric_function_decreasing)
+  if (!is.null(metric_function) && sort_by == 'auto') {
+    sort_by <- 'metric_function'
+  }
   if (type == 'regression') {
-    sort_by              <- 'mse'
-    ranked_list[, 'mse'] <- as.numeric(ranked_list[, 'mse'])
-    ranked_list[, 'r2']  <- as.numeric(ranked_list[, 'r2'])
-    ranked_list[, 'mad'] <- as.numeric(ranked_list[, 'mad'])
+    if (sort_by == 'auto' && is.null(metric_function)) {
+      sort_by <- 'mse'
+    }
   } else if (type == 'binary_clf') {
-    sort_by              <- 'f1'
+    if (sort_by == 'auto' && is.null(metric_function)) {
+      sort_by <- 'f1'
+    }
   }
   ranked_list[, sort_by] <- as.numeric(ranked_list[, sort_by])
   ranked_list            <- ranked_list[order(ranked_list[, sort_by],
-                                   decreasing = metrics_decreasing[sort_by]), ]
+                                        decreasing = metrics_decreasing[sort_by]), ]
 
   row.names(ranked_list) <- NULL
 
@@ -38,6 +49,13 @@ create_ranked_list <- function(basic, random, Bayes, type) {
     }
   }
   ranked_list <- ranked_list[idx, ]
+
+  if (is.null(metric_function_name)) {
+    metric_function_name <- 'metric_function'
+  }
+  if (!is.null(metric_function)) {
+    colnames(ranked_list)[colnames(ranked_list) == 'metric_function'] <- metric_function_name
+  }
 
   return(ranked_list)
 }
