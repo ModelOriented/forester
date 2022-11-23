@@ -63,18 +63,11 @@
 #'                              max_evals = 4,
 #'                              nr_return_models = 'all')
 random_search <- function(train_data,
-                          test_data,
                           y,
                           models = NULL,
                           engine,
                           type,
-                          max_evals = 10,
-                          nr_return_models = 10,
-                          metrics = 'auto',
-                          sort_by = 'auto',
-                          metric_function = NULL,
-                          metric_function_name = NULL,
-                          metric_function_decreasing = TRUE) {
+                          max_evals = 10) {
   ranger_grid <- list(
     num.trees     = list(50, 100, 200),
     mtry          = list(NULL),
@@ -139,10 +132,9 @@ random_search <- function(train_data,
           )
         )
     }
-    names(ranger_models) <-
-      paste('ranger_RS_', 1:max_ranger_evals, sep = '')
-    search_models <- c(search_models, ranger_models)
-    search_engine <- c(search_engine, rep('ranger', max_ranger_evals))
+    names(ranger_models) <- paste('ranger_RS_', 1:max_ranger_evals, sep = '')
+    search_models        <- c(search_models, ranger_models)
+    search_engine        <- c(search_engine, rep('ranger', max_ranger_evals))
   }
   if ('xgboost' %in% engine) {
     if (type == 'regression') {
@@ -172,8 +164,7 @@ random_search <- function(train_data,
           )
         )
     }
-    names(xgboost_models) <-
-      paste('xgboost_RS_', 1:max_xgboost_evals, sep = '')
+    names(xgboost_models) <- paste('xgboost_RS_', 1:max_xgboost_evals, sep = '')
     search_models         <- c(search_models, xgboost_models)
     search_engine         <- c(search_engine, rep('xgboost', max_xgboost_evals))
   }
@@ -278,30 +269,8 @@ random_search <- function(train_data,
     search_engine          <- c(search_engine, rep('catboost', max_catboost_evals))
   }
 
-  search_models <- c(search_models, models)
-  search_engine <- c(search_engine, engine)
-  predictions   <- predict_models_all(
-    models = search_models,
-    data = test_data,
-    y = y,
-    engine = search_engine,
-    type = type
-  )
-  score_search       <- score_models(search_models,
-                                     predictions,
-                                     test_data$ranger_data[, y],
-                                     type,
-                                     metrics = metrics,
-                                     sort_by = sort_by,
-                                     metric_function = metric_function,
-                                     metric_function_name = metric_function_name,
-                                     metric_function_decreasing = metric_function_decreasing)
-  if (nr_return_models == 'all') {
-    nr_return_models <- length(search_models)
-  }
-  best_models        <- choose_best_models(search_models, score_search, nr_return_models)
   return(list(
-      best_models = best_models,
-      score       = score_search
+      models = search_models,
+      engine = search_engine
       ))
 }

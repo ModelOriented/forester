@@ -46,6 +46,6 @@ test_that('test-random_search', {
                                  max_evals = 4,
                                  nr_return_models = 'all')
   )
-  expect_true(all(dim(random_best$score) == c(20, 5)))
-  expect_true(length(random_best$best_models) == 20)
+  expect_true(length(random_best$engine) == 20)
+  expect_true(length(random_best$models) == 20)
 })

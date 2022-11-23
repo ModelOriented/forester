@@ -50,7 +50,9 @@
 #'   choose_best_models(model,
 #'                      score = score,
 #'                      number = 3)
-choose_best_models <- function(models, score, number) {
+choose_best_models <- function(models, engine, score, number) {
   number <- min(number, length(models))
-  return(models[score[1:number, 'engine']])
+  return(list(
+    models = models[score[1:number, 'name']],
+    engine = score[1:number, 'engine']))
 }

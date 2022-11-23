@@ -37,11 +37,14 @@ test_that('choose_best_models', {
     score_models(model,
                  predictions,
                  observed = split_data$test$Species,
-                 type = type)
+                 type = type,
+                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   best_models <-
     choose_best_models(model,
                        score = score,
+                       engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                        number = 3)
 
-  expect_true(length(best_models) == 3)
+  expect_equal(length(best_models$models), 3)
+  expect_equal(length(best_models$engine), 3)
 })

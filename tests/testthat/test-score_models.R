@@ -81,9 +81,12 @@ test_that('regresion scoring works', {
     score_models(model,
                  predictions,
                  observed = split_data$test$Petal.Width,
-                 type = type)
+                 type = type,
+                 metrics = 'all',
+                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 tuning = rep('test', 5))
 
-  expect_true(all(dim(score) == c(5, 5)))
+  expect_true(all(dim(score) == c(5, 7)))
 })
 
 
@@ -125,8 +128,20 @@ test_that('regresion scoring compas', {
                          type = type)
   )
 
-  score_all      <- score_models(models = model, predictions = predictions, observed = test_data$ranger_data$Two_yr_Recidivism, type = type, metrics = 'all')
-  score_auto     <- score_models(models = model, predictions = predictions, observed = test_data$ranger_data$Two_yr_Recidivism, type = type, sort_by = 'f1')
+  score_all      <- score_models(models = model,
+                                 predictions = predictions,
+                                 observed = test_data$ranger_data$Two_yr_Recidivism,
+                                 type = type,
+                                 metrics = 'all',
+                                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                 tuning = rep('test', 5))
+  score_auto     <- score_models(models = model,
+                                 predictions = predictions,
+                                 observed = test_data$ranger_data$Two_yr_Recidivism,
+                                 type = type,
+                                 sort_by = 'f1',
+                                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                 tuning = rep('test', 5))
   score_warnings <- suppressWarnings(
    score_models(models = model,
                 predictions = predictions,
@@ -136,12 +151,12 @@ test_that('regresion scoring compas', {
                 sort_by = 'wrong')
   )
 
-  expect_true(all(dim(score_all) == c(5, 7)))
-  expect_true(all(colnames(score_all) == c('no.', 'engine', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
+  expect_true(all(dim(score_all) == c(5, 9)))
+  expect_true(all(colnames(score_all) == c('no.', 'name', 'engine', 'tuning', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
   expect_true(all(score_all$auc == score_all$auc[order(score_all$auc, decreasing = TRUE)]))
 
-  expect_true(all(dim(score_auto) == c(5, 5)))
-  expect_true(all(colnames(score_auto) == c('no.', 'engine', 'auc', 'f1', 'accuracy')))
+  expect_true(all(dim(score_auto) == c(5, 7)))
+  expect_true(all(colnames(score_auto) == c('no.', 'name', 'engine', 'tuning', 'auc', 'f1', 'accuracy')))
   expect_true(all(score_auto$f1 == score_auto$f1[order(score_auto$f1, decreasing = TRUE)]))
 
   expect_warning(
@@ -151,8 +166,8 @@ test_that('regresion scoring compas', {
       ),
     'sort_by need to by one of binary classification metrics. Default metric applied : auc.'
     )
-  expect_true(all(dim(score_warnings) == c(5, 4)))
-  expect_true(all(colnames(score_warnings) == c('no.', 'engine', 'auc', 'f1')))
+  expect_true(all(dim(score_warnings) == c(5, 6)))
+  expect_true(all(colnames(score_warnings) == c('no.', 'name', 'engine', 'tuning', 'auc', 'f1')))
   expect_true(all(score_warnings$auc == score_warnings$auc[order(score_warnings$auc, decreasing = TRUE)]))
 
 
@@ -166,14 +181,18 @@ test_that('regresion scoring compas', {
                                 observed = test_data$ranger_data$Two_yr_Recidivism,
                                 type = type,
                                 metrics = 'all',
-                                metric_function = good_fun)
+                                metric_function = good_fun,
+                                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                tuning = rep('test', 5))
   score_warinig <- suppressWarnings(
     score_models(models = model,
                  predictions = predictions,
                  observed = test_data$ranger_data$Two_yr_Recidivism,
                  type = type,
                  metrics = 'auto',
-                 metric_function = warning_fun)
+                 metric_function = warning_fun,
+                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 tuning = rep('test', 5))
     )
   score_error   <- suppressWarnings(
     score_models(models = model,
@@ -181,7 +200,9 @@ test_that('regresion scoring compas', {
                  observed = test_data$ranger_data$Two_yr_Recidivism,
                  type = type,
                  metrics = 'all',
-                 metric_function = error_fun)
+                 metric_function = error_fun,
+                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 tuning = rep('test', 5))
     )
   score_name    <- score_models(models = model,
                                predictions = predictions,
@@ -190,23 +211,25 @@ test_that('regresion scoring compas', {
                                metrics = c('f1', 'metric_function'),
                                metric_function = good_fun,
                                metric_function_name = 'works',
-                               metric_function_decreasing = FALSE)
+                               metric_function_decreasing = FALSE,
+                               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                               tuning = rep('test', 5))
 
-  expect_true(all(dim(score_good) == c(5, 8)))
-  expect_true(all(colnames(score_good) == c('no.', 'engine', 'metric_function', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
+  expect_true(all(dim(score_good) == c(5, 10)))
+  expect_true(all(colnames(score_good) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
   expect_true((all(is.numeric(score_good$metric_function))))
   expect_true(all(score_good$metric_function == score_good$metric_function[order(score_good$metric_function, decreasing = TRUE)]))
 
-  expect_true(all(dim(score_warinig) == c(5, 6)))
-  expect_true(all(colnames(score_warinig) == c('no.', 'engine', 'metric_function', 'auc', 'f1', 'accuracy')))
+  expect_true(all(dim(score_warinig) == c(5, 8)))
+  expect_true(all(colnames(score_warinig) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'auc', 'f1', 'accuracy')))
   expect_true((all(is.na(score_warinig$metric_function))))
 
-  expect_true(all(dim(score_error) == c(5, 8)))
-  expect_true(all(colnames(score_error) == c('no.', 'engine', 'metric_function', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
+  expect_true(all(dim(score_error) == c(5, 10)))
+  expect_true(all(colnames(score_error) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
   expect_true((all(is.na(score_error$metric_function))))
 
-  expect_true(all(dim(score_name) == c(5, 4)))
-  expect_true(all(colnames(score_name) == c('no.', 'engine', 'f1', 'works')))
+  expect_true(all(dim(score_name) == c(5, 6)))
+  expect_true(all(colnames(score_name) == c('no.', 'name', 'engine', 'tuning', 'f1', 'works')))
   expect_true((all(is.numeric(score_name$works))))
   expect_true(all(score_name$works == score_name$works[order(score_name$works, decreasing = FALSE)]))
 })
