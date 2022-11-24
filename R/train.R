@@ -107,7 +107,7 @@ train <- function(data,
   model_basic       <- train_models(train_data, y, engine, type)
   verbose_cat('Models sucsesfully trained \n', verbose = verbose)
 
-  preds_basic       <- predict_models(model, test_data, y, engine, type)
+  preds_basic       <- predict_models_all(model_basic, test_data, y, engine, type)
   verbose_cat('Predicted Successfully \n', verbose = verbose)
 
   test_observed    <- split_data$test[[y]]
@@ -120,11 +120,13 @@ train <- function(data,
                                engine = engine,
                                type = type,
                                max_evals = random_iter)
+  if (!is.null(model_random)){
   preds_random      <- predict_models_all(model_random$models,
                                        test_data,
                                        y,
-                                       models_random$engine,
-                                       type)
+                                       engine = models_random$engine,
+                                       type = type)
+  }
 
   model_bayes       <- train_models_bayesopt(train_data,
                                       y,
@@ -133,17 +135,17 @@ train <- function(data,
                                       type = type,
                                       iters.n = bayes_iter,
                                       verbose = verbose)
-
-  preds_bayes       <- predict_models(model, test_data, y, engine, type)
-
+  if (!is.null(model_bayes)){
+  preds_bayes       <- predict_models_all(model_bayes, test_data, y, engine, type)
+  }
 
   models_all <- c(model_basic, model_random$models, model_bayes)
   engine_all <- c(engine, model_random$engine, engine)
   preds_all  <- c(preds_basic, preds_random, preds_bayes)
 
-  tuning <- c(rep('basic', length(engine_all)),
+  tuning <- c(rep('basic', length(engine)),
               rep('reandom_search', length(model_random$engine)),
-              rep('bayes_opt'), length(engine_all))
+              rep('bayes_opt', length(engine)))
 
     score  <- score_models(models_all,
                            preds_all,
@@ -152,6 +154,7 @@ train <- function(data,
                            metrics = metrics,
                            sort_by = sort_by,
                            metric_function = metric_function,
+                           metric_function_name = metric_function_name,
                            metric_function_decreasing = metric_function_decreasing,
                            engine = engine_all,
                            tuning = tuning)
@@ -162,7 +165,6 @@ train <- function(data,
     test_observed  <- test_observed - 1 # [0, 1]
     train_observed <- train_observed - 1
   }
-  print(models_all)
   best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
   predictions_best <- predict_models_all(best_models$models, test_data, y, best_models$engine, type = type)
   predict_valid    <- predict_models_all(models_all, valid_data, y, engine, type = type)

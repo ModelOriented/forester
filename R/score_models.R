@@ -90,7 +90,7 @@ score_models <- function(models,
     colnames_basic <- c(colnames_basic, 'tuning')
   }
 
-  if (is.null(metric_function)) {
+    if (is.null(metric_function)) {
     metric_function_name <- NULL
   } else {
     metrics_reggresion <- c('metric_function', metrics_reggresion)
