@@ -1,5 +1,5 @@
 ---
-title: "Knowlage Check"
+title: "Knowledge Check"
 author: "Patryk Słowakiewicz, Ada Grudzień, Hubert Ruczyński"
 date: "2022-11-13"
 output:
@@ -7,37 +7,35 @@ output:
   pdf_document: default
 ---
 
-This script was prepared for the first forester "hands on" conducted inside
+This script was prepared for the first forester "hands-on" conducted inside
 of the MI2 Data Lab researchers and R enthusiasts. The main goal of this
 event is to check the completeness level of the forester package, find some
-bugs, check the clarity of the user interface and obtain ideas for new modules
-which could increase packages value.
+bugs, check the clarity of the user interface, and obtain ideas for new modules
+which could increase the value of the package.
 
-To obtain such effects, during this "hands on", we will make a short introduction
-into forester package and show the participants how to use its functionalists.
-After the workshop part, the participants will have time to test the package on
-their own ml tasks prepared beforehand.
+To obtain such effects, during this "hands-on," we will briefly introduce the forester package and show the participants how to use its functionalists.
+After the workshop part, the participants will have time to test the package on their ml datasets prepared beforehand.
 
 The outline of the workshop is presented below:
 
 1. Setup
 2. Task 1: Dataset
-3. Task 2: Basics of autoML with forester
+3. Task 2: Basics of autoML with the forester
 4. Task 3: The train mastery
 5. Task 4: Advanced preprocessing
 6. Task 5: How to understand the output?
-7. Task 6: Explain model
+7. Task 6: Explain the model
 8. Task 7: Report generating
-9. Task 8: Your own metric
+9. Task 8: Your metric
 10. Task 9: Free testing
 11. Task 10: Discussion and suggestions
 
-For each task we will define WHY? are we asking you to do this, WHAT? are you supposed to do.  
+For each task, we will define WHY? we are asking you to do this, WHAT? are you supposed to do.  
 
 # Setup
 
-In order to run the code we have to install the forester package from our
-GitHub repository, load the package and get to know the basic dataset.
+To run the code, we have to install the forester package from our
+GitHub repository, load the package, and get to know the primary dataset.
 
 ```{r Setup, eval=FALSE, echo=TRUE}
 install.packages('DALEX')
@@ -50,11 +48,10 @@ data(lisbon)
 View(lisbon)
 ```
 
-To understand our dataset better we will use forester `check_data()` function
-which was designed to provide basic dataset info for the user and provide him
-with additional information describing the quality of the dataset. As our
-target column is named 'Price' we will provide it to the `check_data()` function.
-Typically this function is run inside of the `train()`, so we have to assing
+To better understand our dataset, we will use the forester `check_data()` function, which was designed to provide basic dataset info for the user and provide him
+with additional information describing the dataset's quality. As our
+target column is named 'Price', we will provide it to the `check_data()` function.
+Typically this function is run inside of the `train()`, so we have to assign
 the output to the variable.
 
 ```{r data, eval=FALSE, echo=TRUE}
@@ -63,14 +60,14 @@ check <- check_data(lisbon, 'Price', verbose = TRUE)
 
 Check data report correctly detected the issues present in the data, such as
 high correlation of subset of the columns, presence of duplicate and static
-columns, unequal quantile bins or suspicious Id columns.
+columns, unequal quantile bins, or suspicious Id columns.
 
 # Task 1: Dataset
 
 ##### WHY?
 Forester is not picky and accepts datasets in various formats and qualities
-(e.g. it may contain NA values). You will check how the forester sees
-the lisbon dataset.
+(e.g., it may contain NA values). You will check how the forester sees
+the Lisbon dataset.
 
 ##### WHAT?
 Based on the `check_data()` function, write the following information about the
@@ -111,16 +108,16 @@ dataset.
 # Task 2: Basics of AutoML with forester
 
 ##### WHY?
-The first task is designed to introduce you to the main function which is
-called `train()`. This function conducts all autoML process, including data
-preprocessing, model training and evaluation.
+The first task is designed to introduce you to the main function, which is
+called `train()`. This function conducts all autoML processes, including data
+preprocessing, model training, and evaluation.
 
 ##### WHAT?
-In this task you are asked to assign the output of `train()` into the variable
+In this task, you are asked to assign the output of `train()` to the variable
 `output1`. Instead of using default parameters, we want to shorten the computation
-time and ask you to limit number of bayesian optimization iteration to 0,
-hide output of the function and set number of random search iterations to 5
-In the end print the ranked list from the output object.
+time and ask you to limit the number of bayesian optimization iterations to 0,
+hide the output of the function and set the number of random search iterations to 5
+In the end, print the ranked list from the output object.
 
 <details>
 <summary>Answers:</summary>
@@ -135,25 +132,25 @@ output1$ranked_list
 ```
 </details>
 
-The output is a pretty complex object which is later used in other functions.
-The most important part is however the `ranked_list`, which evaluates all models
-trained. The output list is sorted by the main metric for each task (classification
-or regression). Can you guess which metric is main for the regression task?
+The output is a pretty complex object later used in other functions.
+The most important part is, however the `ranked_list`, which evaluates all models
+trained. The main metric sorts the output list for each task (classification
+or regression). Can you guess which metric is the main for the regression task?
 
 
 # Task 3: The train mastery
 
 ##### WHY?
-The second tasks aims to get you know the train functions parameters even better.
+The second task aims to get you to know the train function parameters better.
 As plenty of the processes hidden behind `train()` are complex and can also be
-tuned in some way, this options has to be accessible from `train()` interface.
+tuned in some way, these options have to be accessible from `train()` interface.
 
 ##### WHAT?
-This time you are asked to experiment with the with other parameters and
-compare what do they do. Try to create the output with ranger, xgboost and
+This time you are asked to experiment with the other parameters and
+compare what they do. Try to create the output with ranger, xgboost and
 decision_tree models only. You can then set bayesian optimization iterations
 to 5 and random search iterations to 3. What are the differences between these
-two hyperparameter tuning methods behavior? Finally you can turn on the text
+two hyperparameter tuning methods' behavior? Finally, you can turn on the text
 outputs from the function.
 
 <details>
@@ -173,14 +170,14 @@ output2$ranked_list
 # Task 4: Advanced preprocessing
 
 ##### WHY?
-The `check()` function just suggests hypothetical problems with the dataset, but
-the `train()` function offers also turning on the preprocessing option.
+The `check()` function suggests hypothetical problems with the dataset, but
+the `train()` function also offers turning on the preprocessing option.
 
 ##### WHAT?
 1. Perform automatic preprocessing with the appropriate parameter
-data. In order to reduce the time of counting functions, the number of optimization iterations
-Bayessian to 0 and random search to 5. Compare the input with the data
-after preprocessing - check which columns have been removed and compare if they match
+data. To reduce the time of counting functions, the number of optimization iterations
+Bayesian to 0 and random search to 5. Compare the input with the data
+after preprocessing. Check which columns have been removed and compare if they 
 match this with the information from check_data.
 
 <details>
@@ -196,7 +193,7 @@ output3 <- train(data = lisbon,
 </details>
 
 2. Which model achieves the best results? Is it a model with default parameters,
-after Bayess optimization or random search?
+after Bayesian optimization or a random search?
 
 ```{r ranked_list, eval=FALSE, echo=TRUE}
 output3$ranked_list[1, ]
@@ -213,23 +210,23 @@ output1$ranked_list[1, ]
 # Task 5: How to understand the output?
 
 ##### WHY?
-As the forester team, our goal is not only to make the training process quick
-and simple, but also make it totally understandable even for the newcomers.
+As the forester team, our goal is to make the training process quick
+and simple and understandable, even for newcomers.
 Our extensional tools are one of the points that differentiate us from other
-autoML frameworks. In this chapter we will use these extra functions to show
+autoML frameworks. In this chapter, we will use these extra functions to show
 the full capabilities of the forester.
 
 ##### WHAT?
 This time we will ask you to use the output created in the previous task and
 explore four functions provided by the forester:
 
-1. First task is to save and load the output via `save()` function
-2. Second one is creating a subset from original `lisbon` data frame and run the
-`predict_new()` method on this. The methods enables the user to make predictions
-on the data unseen by models before. Can you guess why is this function needed?
-3. Third one is associated to well known package in MI2 Lab - DALEX. You are
+1. The first task is to save and load the output via `save()` function
+2. The Second one is creating a subset from the original `lisbon` data frame and running the
+`predict_new()` method on this. The method enables the user to make predictions
+on the data unseen by models before. Why is this function needed?
+3. The third one is associated with the well-known package in MI2 Lab - DALEX. You are
 asked to create an explainer via `explain()` method and use some DALEX
-visualization on the outcome. (Taks 6)
+visualization on the outcome. (Task 6)
 4. The last task is to create and read a `report()` outcome. (Task 7)
 
 <details>
@@ -246,12 +243,12 @@ predict_new(train_out = output2,
 ```
 </details>
 
-# Task 6: Explain model
+# Task 6: Explain the model
 
 ##### WHY?
-Explaining the model helps you understand it better. The Forester does not
-include its own functions to explain the model, but uses a ready-made
-DALEX package. Thanks to the simple `explain()` function, it creates an object
+Explaining the model helps you understand it better. The forester does not
+include its functions to explain the model but uses a ready-made
+DALEX package. The simple `explain()` function creates an object
 adapted to the DALEX functions.
 
 ##### WHAT?
@@ -275,15 +272,14 @@ plot(p1)
 
 ##### WHY?
 For convenient storage and comparison of the training results of the models,
-the forester offers a report generating function - containing the most
+the forester offers a report-generating function - containing the most
 important information about the data and training. Thanks to this, it is
-possible to store the results of work in independent files and return to
+possible to store the results of work in independent files and come back to
 them at any time.
 
 ##### WHAT?
-Generate a report based on `output2`. Then based on the report
-find out which model is the best, assess the dispersion of the training set
-and test. Compare the feature importance chart to that created in Task 6.
+Generate a report based on `output2`. Then based on the report,
+find out which model is the best, assess the dispersion of the training set, and test. Compare the feature importance chart to that created in Task 6.
 
 <details>
 <summary>Answers:</summary>
@@ -298,13 +294,13 @@ report(train_output = output2,
 
 ##### WHY?
 Forester offers some of the most commonly used metrics for model evaluation,
-however, it does not preclude the use of a different, proprietary metric.
-This allows a fuller use of the forester's potential for the individual
+however, it does not preclude using a different, proprietary metric.
+Applying self-made allows a fuller use of the forester's potential for the individual
 needs of the user.
 
 ##### WHAT?
-Use the `train()` function with the default parameters but with your own metric added.  
-It's good idea to turn off Bayes Optimization and
+Use the `train()` function with the default parameters but with your metric added.  
+It's a good idea to turn off Bayes Optimization and
 decrease Random Search iterations to build models faster.
 
 <details>
@@ -330,27 +326,27 @@ output4$ranked_list
 # Task 9: Free testing
 
 ##### WHY?
-As the main goal of the "hands on" is getting valuable feedback from this
+As the "hands-on" goal is getting valuable feedback from this
 workshop, we want you to test the forester on your own datasets prepared
-beforehand. This way we will be able to test these features in the new
-environment which might generate some bugs and issues.
+beforehand. This way, we can test these features in the new
+environment, which might generate some bugs and issues.
 
 ##### WHAT?
 During the last task, we ask you to 'play' with the package, delve into its
 documentation and not only do everything we did before on the new data, but
-also try to do the things we didn't talk about during the workshop.
+also, try to do the things we didn't discuss during the workshop.
 
 
 # Task 10: Discussion and suggestions
 
 ##### WHY?
-We want to develop and improve the forester package so your feedback is
+We want to develop and improve the forester package, so your feedback is
 very valuable to us.
 
 ##### WHAT?
-As a forester team we ask you to join the discussion about features which
-should be improved, what would you change in the forester or add. If you
-happen to find any bug, please post it in ours GitHub `Issues` page.
+As a forester team, we ask you to join the discussion about features that
+should be improved and what you would change in the forester or add. If you
+find any bug, please post it on our GitHub `Issues` page.
 https://github.com/ModelOriented/forester/issues
   
 &nbsp;

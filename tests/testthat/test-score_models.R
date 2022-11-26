@@ -86,7 +86,7 @@ test_that('regresion scoring works', {
                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  tuning = rep('test', 5))
 
-  expect_true(all(dim(score) == c(5, 7)))
+  expect_true(all(dim(score) == c(5, 9)))
 })
 
 
@@ -166,8 +166,8 @@ test_that('regresion scoring compas', {
       ),
     'sort_by need to by one of binary classification metrics. Default metric applied : auc.'
     )
-  expect_true(all(dim(score_warnings) == c(5, 6)))
-  expect_true(all(colnames(score_warnings) == c('no.', 'name', 'engine', 'tuning', 'auc', 'f1')))
+  expect_true(all(dim(score_warnings) == c(5, 4)))
+  expect_true(all(colnames(score_warnings) == c('no.', 'name', 'auc', 'f1')))
   expect_true(all(score_warnings$auc == score_warnings$auc[order(score_warnings$auc, decreasing = TRUE)]))
 
 

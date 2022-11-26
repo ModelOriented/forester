@@ -37,8 +37,8 @@
 #' training process, if FALSE gives none.
 #' @param bayes_iter An integer value describing number of optimization rounds
 #' used by Bayesian optimization.
-#' @param random_iter An integer value describing number of optimization rounds
-#' used by random search.
+#' @param random_evals An integer value describing number of trained models
+#' with different parameters byrandom search.
 #' @param advanced_preprocessing A logical value describing, whether the user wants to use
 #' advanced preprocessing methods (ex. deleting correlated values).
 #' @param metrics A vector of metrics names. By default param set for `auto`, most important metrics are returned.
@@ -63,7 +63,7 @@
 #' train_output$ranked_list
 train <- function(data,
                   y,
-                  type = 'guess',
+                  type = 'auto',
                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                   loss = 'default',
                   validation = 'default',
@@ -71,7 +71,7 @@ train <- function(data,
                   keep = FALSE,
                   verbose = TRUE,
                   bayes_iter = 10,
-                  random_iter = 10,
+                  random_evals = 10,
                   advanced_preprocessing = FALSE,
                   metrics = 'auto',
                   sort_by = 'auto',
@@ -79,14 +79,18 @@ train <- function(data,
                   metric_function_name = NULL,
                   metric_function_decreasing = TRUE,
                   best_model_number = 1) {
-  if (type == 'guess') {
+  if (type == 'auto') {
     type <- guess_type(data, y)
   }
   verbose_cat('Type guessed as: ', type, '\n', verbose = verbose)
 
-  check_report      <- check_data(data, y, verbose)
+  if(verbose) {
+    check_report <- check_data(data, y, verbose)
+  } else {
+    check_report <- NULL
+  }
 
-  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
+ preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
   verbose_cat('Data preprocessed. \n', verbose = verbose)
 
   split_data        <- train_test_balance(preprocessed_data$data, y, type,
@@ -119,8 +123,8 @@ train <- function(data,
                                y = y,
                                engine = engine,
                                type = type,
-                               max_evals = random_iter)
-  if (!is.null(model_random)){
+                               max_evals = random_evals)
+  if (!is.null(model_random)) {
   preds_random      <- predict_models_all(model_random$models,
                                        test_data,
                                        y,
@@ -135,7 +139,7 @@ train <- function(data,
                                       type = type,
                                       iters.n = bayes_iter,
                                       verbose = verbose)
-  if (!is.null(model_bayes)){
+  if (!is.null(model_bayes)) {
   preds_bayes       <- predict_models_all(model_bayes, test_data, y, engine, type)
   }
 
@@ -203,7 +207,8 @@ train <- function(data,
       engine            = engine,
       predictions_all   = predictions_all,
       predictions_best  = predictions_best,
-      raw_train         = raw_train
+      raw_train         = raw_train,
+      check_report      = check_report
     )
   )
 }

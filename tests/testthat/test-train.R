@@ -15,12 +15,12 @@ test_that('test-train', {
   metric_fun <- function(predictions, observed) {
     return (predictions - observed) / length(predictions)
   }
-  suppressWarnings(output_iris    <- train(df_iris, y_iris, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_lisbon  <- train(df_lisbon, y_lisbon, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_compas  <- train(df_compas, y_compas, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_adult   <- train(df_adult, y_adult, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_test    <- train(df_test, y_test, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_metrics <- train(df_iris, y_iris, verbose = FALSE, random_iter = 2, bayes_iter = 1, advanced_preprocessing = FALSE,
+  suppressWarnings(output_iris    <- train(df_iris, y_iris, verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_lisbon  <- train(df_lisbon, y_lisbon, verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_compas  <- train(df_compas, y_compas, verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_adult   <- train(df_adult, y_adult, verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_test    <- train(df_test, y_test, verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
+  suppressWarnings(output_metrics <- train(df_iris, y_iris, verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE,
                                           metrics = 'all', metric_function = metric_fun, metric_function_name = 'custom', metric_function_decreasing = FALSE))
   bin <- 'binary_clf'
   reg <- 'regression'
@@ -66,5 +66,5 @@ test_that('test-train', {
   expect_false(list(NULL) %in% output_adult$predictions)
   expect_false(list(NULL) %in% output_test$predictions)
 
-  expect_true(colnames(output_metrics$ranked_list)[2] == 'custom')
+  expect_true(colnames(output_metrics$score_test)[5] == 'custom')
   })
