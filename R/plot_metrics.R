@@ -129,8 +129,10 @@ best_model_predict <- function(best_models, test_data) {
 #' @export
 #'
 #' @examples
-#' train_out <- train(lisbon, 'Price', verbose = FALSE, best_model_number = 10)
-#' draw_radar_plot(train_out$best_models[1:10, ], train_out$type)
+#'
+#' train_out <- train(lisbon, 'Price', bayes_iter = 2, random_evals = 2,
+#' verbose = FALSE, best_model_number = 10)
+#' draw_radar_plot(train_out$score_test[1:10, ], train_out$type)
 draw_radar_plot <- function(score_frame, type) {
   data <- NULL
 
