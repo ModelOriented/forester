@@ -133,7 +133,7 @@ output1 <- train(data = lisbon,
                  y = 'Price',
                  bayes_iter = 0,
                  verbose = FALSE,
-                 random_iter = 5)
+                 random_evals = 5)
 
 output1$ranked_list
 ```
@@ -168,7 +168,7 @@ output2 <- train(data = lisbon,
                  bayes_iter = 5,
                  engine = c('ranger', 'xgboost', 'decision_tree'),
                  verbose = TRUE,
-                 random_iter = 3)
+                 random_evals = 3)
 
 output2$ranked_list
 ```
@@ -194,7 +194,7 @@ output3 <- train(data = lisbon,
                  y = 'Price',
                  bayes_iter = 0,
                  verbose = FALSE,
-                 random_iter = 5,
+                 random_evals = 5,
                  advanced_preprocessing = TRUE)
 ```
 </details>
@@ -203,15 +203,15 @@ output3 <- train(data = lisbon,
 after Bayesian optimization or a random search?
 
 ```{r ranked_list, eval = FALSE, echo = TRUE}
-output3$ranked_list[1, ]
+output3$score_test[1, ]
 ```
 
 3. Compare the performance of the best model trained on the data with preprocessing
 `output3` and without `output1`. Have the results improved?
 
 ```{r ranked_lists, eval=FALSE, echo=TRUE}
-output3$ranked_list[1, ]
-output1$ranked_list[1, ]
+output3$score_test[1, ]
+output1$score_test[1, ]
 ```
 
 # Task 5: How to understand the output?
@@ -321,7 +321,7 @@ max_error <- function(predictions, observed) {
 output4 <- train(data = lisbon,
                  y = 'Price',
                  bayes_iter = 0,
-                 random_iter = 3,
+                 random_evals = 3,
                  metric_function = max_error,
                  metric_function_name = 'Max Error',
                  metric_function_decreasing = FALSE)
