@@ -21,10 +21,6 @@ values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
 `classification` or `regression` task.}
 
 \item{max_evals}{The number of trained models for each model type in `engine`.}
-
-\item{test_data}{A test data for models created by `prepare_data()` function.}
-
-\item{nr_return_models}{The number of the best models to return, `all` value is possible.}
 }
 \value{
 A list consisting of models created via random search and ranked list

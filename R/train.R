@@ -80,7 +80,7 @@ train <- function(data,
                   metric_function = NULL,
                   metric_function_name = NULL,
                   metric_function_decreasing = TRUE,
-                  best_model_number = 1) {
+                  best_model_number = 5) {
   if (type == 'auto') {
     type <- guess_type(data, y)
   }
@@ -130,7 +130,7 @@ train <- function(data,
   preds_random      <- predict_models_all(model_random$models,
                                        test_data,
                                        y,
-                                       engine = models_random$engine,
+                                       engine = model_random$engine,
                                        type = type)
   }
 
@@ -197,7 +197,7 @@ train <- function(data,
       train_data        = train_data,
       test_data         = test_data,
       valid_data        = valid_data,
-      predictions       = predictions,
+      predictions       = predictions_all,
       score_test        = score,
       score_valid       = score_valid,
       models_list       = models_all,

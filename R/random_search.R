@@ -1,7 +1,6 @@
 #' Random optimalization of hiperparameters
 #'
 #' @param train_data A training data for models created by `prepare_data()` function.
-#' @param test_data A test data for models created by `prepare_data()` function.
 #' @param y A string that indicates a target column name.
 #' @param models A list of models trained by `train_models()` function.
 #' They will be compered with models trained with different hiperparameters.
@@ -10,7 +9,6 @@
 #' @param type A string that determines if Machine Learning task is the
 #' `classification` or `regression` task.
 #' @param max_evals The number of trained models for each model type in `engine`.
-#' @param nr_return_models The number of the best models to return, `all` value is possible.
 #'
 #' @return A list consisting of models created via random search and ranked list
 #' of models scores.

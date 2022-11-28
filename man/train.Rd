@@ -22,7 +22,7 @@ train(
   metric_function = NULL,
   metric_function_name = NULL,
   metric_function_decreasing = TRUE,
-  best_model_number = 1
+  best_model_number = 5
 )
 }
 \arguments{

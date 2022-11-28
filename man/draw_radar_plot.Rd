@@ -16,6 +16,6 @@ draw_radar_plot(score_frame, type)
 Plot radar chart of one metric
 }
 \examples{
-train_out <- train(lisbon, 'Price', verbose = FALSE)
-draw_radar_plot(train_out$ranked_list[1:10, ], train_out$type)
+train_out <- train(lisbon, 'Price', verbose = FALSE, best_model_number = 10)
+draw_radar_plot(train_out$best_models[1:10, ], train_out$type)
 }
