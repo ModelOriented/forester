@@ -38,7 +38,7 @@
 #' @param bayes_iter An integer value describing number of optimization rounds
 #' used by Bayesian optimization.
 #' @param random_evals An integer value describing number of trained models
-#' with different parameters byrandom search.
+#' with different parameters by random search.
 #' @param advanced_preprocessing A logical value describing, whether the user wants to use
 #' advanced preprocessing methods (ex. deleting correlated values).
 #' @param metrics A vector of metrics names. By default param set for `auto`, most important metrics are returned.
@@ -52,6 +52,8 @@
 #' @param metric_function_name The name of the column with values of `metric_function` parameter.
 #' By default `metric_function_name` is `metric_function`.
 #' @param metric_function_decreasing A logical value indicating how metric_function should be sorted. `TRUE` by default.
+#' @param best_model_number Number best models to be chosen as element of the return.
+#' All trained models will be returned as different element of the return.
 #'
 #' @return A list of all necessary objects for other functions.
 #' @export
@@ -84,7 +86,7 @@ train <- function(data,
   }
   verbose_cat('Type guessed as: ', type, '\n', verbose = verbose)
 
-  if(verbose) {
+  if (verbose) {
     check_report <- check_data(data, y, verbose)
   } else {
     check_report <- NULL

@@ -37,11 +37,11 @@ For each task, we will define WHY? we are asking you to do this, WHAT? are you s
 To run the code, we have to install the forester package from our
 GitHub repository, load the package, and get to know the primary dataset.
 
-```{r Setup, eval=FALSE, echo=TRUE}
+```{r Setup, eval = FALSE, echo = TRUE}
 install.packages('DALEX')
 install.packages('devtools')
 library(devtools)
-install_github("ModelOriented/forester")
+install_github('ModelOriented/forester')
 library(DALEX)
 library(forester)
 data(lisbon)
@@ -121,7 +121,7 @@ In the end, print the ranked list from the output object.
 
 <details>
 <summary>Answers:</summary>
-```{r Train, eval=FALSE, echo=TRUE}
+```{r Train, eval = FALSE, echo = TRUE}
 output1 <- train(data = lisbon,
                  y = 'Price',
                  bayes_iter = 0,
@@ -155,7 +155,7 @@ outputs from the function.
 
 <details>
 <summary>Answers:</summary>
-```{r train 2, eval=FALSE, echo=TRUE}
+```{r train 2, eval = FALSE, echo = TRUE}
 output2 <- train(data = lisbon,
                  y = 'Price',
                  bayes_iter = 5,
@@ -182,7 +182,7 @@ match this with the information from check_data.
 
 <details>
 <summary>Answers:</summary>
-```{r train 3, eval=FALSE, echo=TRUE}
+```{r train 3, eval = FALSE, echo = TRUE}
 output3 <- train(data = lisbon,
                  y = 'Price',
                  bayes_iter = 0,
@@ -195,7 +195,7 @@ output3 <- train(data = lisbon,
 2. Which model achieves the best results? Is it a model with default parameters,
 after Bayesian optimization or a random search?
 
-```{r ranked_list, eval=FALSE, echo=TRUE}
+```{r ranked_list, eval = FALSE, echo = TRUE}
 output3$ranked_list[1, ]
 ```
 

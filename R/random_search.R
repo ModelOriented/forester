@@ -68,7 +68,7 @@ random_search <- function(train_data,
                           engine,
                           type,
                           max_evals = 10) {
-  if(max_evals <= 0){
+  if (max_evals <= 0) {
     return(NULL)
   }
 

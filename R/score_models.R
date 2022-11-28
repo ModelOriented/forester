@@ -16,6 +16,7 @@
 #' By default `metric_function_name` is `metric_function`.
 #' @param metric_function_decreasing A logical value indicating how metric_function should be sorted. `TRUE` by default.
 #' @param engine A vector of strings containing information of engine in `models` list.
+#' @param tuning A vector of strings containing information of tuning method in `models` list.
 #'
 #' @return A data.frame with 'no.' - number of model from models,
 #' 'engine' - name of the model from models, other metrics columns.
@@ -81,11 +82,11 @@ score_models <- function(models,
   metrics <- c(metrics)
   colnames_basic <- c('no.', 'name')
   nr_add_col <- 2
-  if(!is.null(engine)){
+  if (!is.null(engine)) {
     nr_add_col <- nr_add_col + 1
     colnames_basic <- c(colnames_basic, 'engine')
   }
-  if(!is.null(tuning)){
+  if (!is.null(tuning)) {
     nr_add_col <- nr_add_col + 1
     colnames_basic <- c(colnames_basic, 'tuning')
   }
@@ -152,7 +153,7 @@ score_models <- function(models,
     }
   }
   if (type == 'regression') {
-      models_frame <- data.frame(matrix(nrow = length(models), ncol = length(metrics_reggresion) + nr_add_col))
+      models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_reggresion) + nr_add_col))
       colnames(models_frame) <- c(colnames_basic, metrics_reggresion)
 
       for (i in 1:length(models)) {
@@ -170,7 +171,7 @@ score_models <- function(models,
                                )
     }
   } else if (type == 'binary_clf') {
-      models_frame <- data.frame(matrix(nrow = length(models), ncol = length(metrics_binary_clf) + nr_add_col))
+      models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_binary_clf) + nr_add_col))
       colnames(models_frame) <- c(colnames_basic, metrics_binary_clf)
 
       observed <- as.numeric(observed)
@@ -194,9 +195,9 @@ score_models <- function(models,
     }
   }
   models_frame[, -c(2:4)] <- sapply(models_frame[, -c(2:4)], as.numeric)
-  models_frame <- models_frame[order(models_frame[, sort_by],
-                                     decreasing = unname(metrics_decreasing[sort_by])),
-                               c(colnames_basic, metrics)]
+  models_frame            <- models_frame[order(models_frame[, sort_by],
+                                          decreasing = unname(metrics_decreasing[sort_by])),
+                                          c(colnames_basic, metrics)]
 
   if (!is.null(metric_function)) {
     colnames(models_frame)[colnames(models_frame) == 'metric_function'] <- metric_function_name

@@ -80,7 +80,7 @@ train_models_bayesopt <- function(train_data,
                                   iters.n = 7,
                                   return_params = FALSE,
                                   verbose = TRUE) {
-  if(iters.n <= 0){
+  if (iters.n <= 0) {
     return(NULL)
   }
   ranger_model        <- NULL

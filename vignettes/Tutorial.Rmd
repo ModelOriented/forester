@@ -55,7 +55,7 @@ train_output <- train(lisbon,
                       'Price', 
                       engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
                       bayes_iter = 1, 
-                      random_iter = 2, 
+                      random_evals = 2, 
                       advanced_preprocessing = TRUE)
 ```
 
