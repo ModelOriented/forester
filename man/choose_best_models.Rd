@@ -4,7 +4,7 @@
 \alias{choose_best_models}
 \title{Choose the bests models, according to the score data frame}
 \usage{
-choose_best_models(models, score, number)
+choose_best_models(models, engine, score, number)
 }
 \arguments{
 \item{models}{A list of models trained by `train_models()` function.}
