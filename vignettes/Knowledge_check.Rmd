@@ -5,6 +5,13 @@ date: "2022-11-13"
 output:
   html_document: default
   pdf_document: default
+toc: yes
+toc_float: yes
+number_sections: yes
+vignette: >
+  %\VignetteIndexEntry{tutorial} 
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown} 
 ---
 
 This script was prepared for the first forester "hands-on" conducted inside
