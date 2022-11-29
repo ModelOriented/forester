@@ -97,7 +97,7 @@ train <- function(data,
 
   split_data        <- train_test_balance(preprocessed_data$data, y, type,
                                    balance = TRUE)
-  verbose_cat('Data splitted and balanced \n', verbose = verbose)
+  verbose_cat('Data split and balanced. \n', verbose = verbose)
 
   train_data        <- prepare_data(split_data$train, y, engine)
   test_data         <- prepare_data(split_data$test, y, engine, predict = TRUE,
@@ -108,13 +108,13 @@ train <- function(data,
   raw_train         <- prepare_data(split_data$train, y, engine, predict = TRUE,
                                     split_data$train)
 
-  verbose_cat('Correct formats prepared \n', verbose = verbose)
+  verbose_cat('Correct formats prepared. \n', verbose = verbose)
 
   model_basic       <- train_models(train_data, y, engine, type)
-  verbose_cat('Models sucsesfully trained \n', verbose = verbose)
+  verbose_cat('Models successfully trained. \n', verbose = verbose)
 
   preds_basic       <- predict_models_all(model_basic, test_data, y, engine, type)
-  verbose_cat('Predicted Successfully \n', verbose = verbose)
+  verbose_cat('Predicted successfully. \n', verbose = verbose)
 
   test_observed    <- split_data$test[[y]]
   train_observed   <- split_data$train[[y]]
@@ -141,8 +141,9 @@ train <- function(data,
                                       type = type,
                                       iters.n = bayes_iter,
                                       verbose = verbose)
+  preds_bayes <- NULL
   if (!is.null(model_bayes)) {
-  preds_bayes       <- predict_models_all(model_bayes, test_data, y, engine, type)
+    preds_bayes       <- predict_models_all(model_bayes, test_data, y, engine, type)
   }
 
   models_all <- c(model_basic, model_random$models, model_bayes)
@@ -150,7 +151,7 @@ train <- function(data,
   preds_all  <- c(preds_basic, preds_random, preds_bayes)
 
   tuning <- c(rep('basic', length(engine)),
-              rep('reandom_search', length(model_random$engine)),
+              rep('random_search', length(model_random$engine)),
               rep('bayes_opt', length(engine)))
 
     score  <- score_models(models_all,
