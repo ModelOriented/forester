@@ -58,8 +58,7 @@
 #'                              engine = c('ranger', 'xgboost', 'decision_tree',
 #'                              'lightgbm', 'catboost'),
 #'                              type = type,
-#'                              max_evals = 4,
-#'                              nr_return_models = 'all')
+#'                              max_evals = 4)
 random_search <- function(train_data,
                           y,
                           models = NULL,

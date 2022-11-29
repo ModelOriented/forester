@@ -73,6 +73,5 @@ random_best <- random_search(train_data,
                              engine = c('ranger', 'xgboost', 'decision_tree',
                              'lightgbm', 'catboost'),
                              type = type,
-                             max_evals = 4,
-                             nr_return_models = 'all')
+                             max_evals = 4)
 }
