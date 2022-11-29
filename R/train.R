@@ -93,6 +93,9 @@ train <- function(data,
   }
 
  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
+ verbose_cat('Columns deleted during the advanced preprocessing: \n',
+             preprocessed_data$colnames, '\n\n', verbose = verbose)
+
   verbose_cat('Data preprocessed. \n', verbose = verbose)
 
   split_data        <- train_test_balance(preprocessed_data$data, y, type,
