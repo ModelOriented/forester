@@ -44,7 +44,7 @@
 #' format_models_details(best_models)
 format_models_details <- function(models) {
   for (i in 1:length(models)) {
-    if (names(models[i]) == 'ranger_model') {
+    if (grepl('ranger', names(models[i]))) {
       cat(paste0('------------ Ranger model ------------\n\n',
                  'Parameters\n',
                  '  num.trees: ', models[[i]]$num.trees, '\n',
@@ -53,7 +53,7 @@ format_models_details <- function(models) {
                  '  min.node.size: ', models[[i]]$min.node.size,
                  '\n\n'))
     }
-    if (names(models[i]) == 'xgboost_model') {
+    if (grepl('xgboost', names(models[i]))) {
       # Functions for getting params of xgboost model are not implementented!
       eval_log <- '    iter : train_rmse\n'
       for (j in 1:length(models[[i]]$evaluation_log$iter)) {
@@ -65,7 +65,7 @@ format_models_details <- function(models) {
                  '  evaluation_log: \n', eval_log,
                  '\n\n'))
     }
-    if (names(models[i]) == 'decision_tree_model') {
+    if (grepl('decision_tree', names(models[i]))) {
       list_rules_party <- utils::getFromNamespace('.list.rules.party', 'partykit')
       a <- as.vector(list_rules_party(models[[i]]))
       # The method above doesn't rise a note in check()
@@ -78,7 +78,7 @@ format_models_details <- function(models) {
                  'The list of rules: \n', rules,
                  '\n\n'))
     }
-    if (names(models[i]) == 'lightgbm_model') {
+    if (grepl('lightgbm', names(models[i]))) {
       # No method implemented to get parameters of model.
       params <- models[[i]]$params
       cat(paste0('------------ Lightgbm model ------------\n\n',
@@ -86,7 +86,7 @@ format_models_details <- function(models) {
                  '  num_iterations: ', params$num_iterations, '\n',
                  '\n\n'))
     }
-    if (names(models[i]) == 'catboost_model') {
+    if (grepl('catboost', names(models[i]))) {
       params <- catboost::catboost.get_model_params(models[[i]])
       cat(paste0('------------ Catboost model ------------\n\n',
                  'Parameters\n',
