@@ -21,7 +21,7 @@ The previous version of forester was created by:
 
 ## What is the forester?
 
-The forester is an autoML tool that wraps up all ML processes into a single `train()` function, which includes:
+The forester is an AutoML tool that wraps up all ML processes into a single `train()` function, which includes:
 
 - Rendering a brief data check report,
 - Preprocessing the initial dataset enough for models to be trained,

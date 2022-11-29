@@ -4,26 +4,10 @@
 \alias{random_search}
 \title{Random optimalization of hiperparameters}
 \usage{
-random_search(
-  train_data,
-  test_data,
-  y,
-  models = NULL,
-  engine,
-  type,
-  max_evals = 10,
-  nr_return_models = 10,
-  metrics = "auto",
-  sort_by = "auto",
-  metric_function = NULL,
-  metric_function_name = NULL,
-  metric_function_decreasing = TRUE
-)
+random_search(train_data, y, models = NULL, engine, type, max_evals = 10)
 }
 \arguments{
 \item{train_data}{A training data for models created by `prepare_data()` function.}
-
-\item{test_data}{A test data for models created by `prepare_data()` function.}
 
 \item{y}{A string that indicates a target column name.}
 
@@ -37,8 +21,6 @@ values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
 `classification` or `regression` task.}
 
 \item{max_evals}{The number of trained models for each model type in `engine`.}
-
-\item{nr_return_models}{The number of the best models to return, `all` value is possible.}
 }
 \value{
 A list consisting of models created via random search and ranked list
@@ -91,6 +73,5 @@ random_best <- random_search(train_data,
                              engine = c('ranger', 'xgboost', 'decision_tree',
                              'lightgbm', 'catboost'),
                              type = type,
-                             max_evals = 4,
-                             nr_return_models = 'all')
+                             max_evals = 4)
 }

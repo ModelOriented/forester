@@ -15,6 +15,8 @@
 #' @param metric_function_name The name of the column with values of param `metric_function`.
 #' By default `metric_function_name` is `metric_function`.
 #' @param metric_function_decreasing A logical value indicating how metric_function should be sorted. `TRUE` by default.
+#' @param engine A vector of strings containing information of engine in `models` list.
+#' @param tuning A vector of strings containing information of tuning method in `models` list.
 #'
 #' @return A data.frame with 'no.' - number of model from models,
 #' 'engine' - name of the model from models, other metrics columns.
@@ -68,7 +70,9 @@ score_models <- function(models,
                          sort_by = 'auto',
                          metric_function = NULL,
                          metric_function_name = NULL,
-                         metric_function_decreasing = TRUE) {
+                         metric_function_decreasing = TRUE,
+                         engine = NULL,
+                         tuning = NULL) {
   metrics_reggresion <- c('mse', 'rmse', 'r2', 'mad', 'mae')
   metrics_binary_clf <- c('auc', 'f1', 'recall', 'precision', 'accuracy')
   metrics_decreasing <- c('mse' = FALSE, 'rmse' = FALSE, 'r2' = TRUE,
@@ -76,8 +80,18 @@ score_models <- function(models,
                           'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE, 'metric_function' = metric_function_decreasing)
 
   metrics <- c(metrics)
+  colnames_basic <- c('no.', 'name')
+  nr_add_col <- 2
+  if (!is.null(engine)) {
+    nr_add_col <- nr_add_col + 1
+    colnames_basic <- c(colnames_basic, 'engine')
+  }
+  if (!is.null(tuning)) {
+    nr_add_col <- nr_add_col + 1
+    colnames_basic <- c(colnames_basic, 'tuning')
+  }
 
-  if (is.null(metric_function)) {
+    if (is.null(metric_function)) {
     metric_function_name <- NULL
   } else {
     metrics_reggresion <- c('metric_function', metrics_reggresion)
@@ -139,13 +153,15 @@ score_models <- function(models,
     }
   }
   if (type == 'regression') {
-      models_frame <- data.frame(matrix(nrow = length(models), ncol = length(metrics_reggresion) + 2))
-      colnames(models_frame) <- c('no.', 'engine', metrics_reggresion)
+      models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_reggresion) + nr_add_col))
+      colnames(models_frame) <- c(colnames_basic, metrics_reggresion)
 
       for (i in 1:length(models)) {
 
         models_frame[i, ] <- c(i,
                                names(models)[i],
+                               engine[i],
+                               tuning[i],
                                if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[1]], observed - 1)},
                                model_performance_mse(unlist(predictions[i], use.names = FALSE), observed),
                                model_performance_rmse(unlist(predictions[i], use.names = FALSE), observed),
@@ -155,8 +171,8 @@ score_models <- function(models,
                                )
     }
   } else if (type == 'binary_clf') {
-      models_frame <- data.frame(matrix(nrow = length(models), ncol = length(metrics_binary_clf) + 2))
-      colnames(models_frame) <- c('no.', 'engine', metrics_binary_clf)
+      models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_binary_clf) + nr_add_col))
+      colnames(models_frame) <- c(colnames_basic, metrics_binary_clf)
 
       observed <- as.numeric(observed)
       for (i in 1:length(models)) {
@@ -167,6 +183,8 @@ score_models <- function(models,
 
         models_frame[i, ] <- c(i,
                                names(models[i]),
+                               engine[i],
+                               tuning[i],
                                if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed - 1)},
                                model_performance_auc(predictions[i], observed - 1),
                                model_performance_f1(tp, fp, tn, fn),
@@ -176,15 +194,10 @@ score_models <- function(models,
                                )
     }
   }
-
-  models_frame[, -2] <- sapply(models_frame[, -2], as.numeric)
-  models_frame <- models_frame[
-    order(
-      models_frame[, sort_by],
-      decreasing = unname(metrics_decreasing[sort_by])
-    ),
-    c('no.', 'engine', metrics)
-  ]
+  models_frame[, -c(2:4)] <- sapply(models_frame[, -c(2:4)], as.numeric)
+  models_frame            <- models_frame[order(models_frame[, sort_by],
+                                          decreasing = unname(metrics_decreasing[sort_by])),
+                                          c(colnames_basic, metrics)]
 
   if (!is.null(metric_function)) {
     colnames(models_frame)[colnames(models_frame) == 'metric_function'] <- metric_function_name

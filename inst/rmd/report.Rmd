@@ -47,7 +47,7 @@ The best model is:
 ```{r table}
 score_frame          <- params$score
 score_rounded        <- score_frame
-for(i in 2:ncol(score_rounded)) {
+for(i in 5:ncol(score_rounded)) {
   score_rounded[, i] <- round(as.numeric(score_rounded[, i]), 4)
 }
 knitr::kable(score_rounded)

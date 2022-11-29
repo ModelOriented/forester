@@ -1,5 +1,5 @@
 test_that('test-save', {
-  train  <- suppressWarnings(train(iris, 'Sepal.Width', verbose = FALSE, random_iter = 2, bayes_iter = 1))
+  train  <- suppressWarnings(train(iris, 'Sepal.Width', verbose = FALSE, random_evals = 2, bayes_iter = 1))
   name   <- save(train, return_name = TRUE)
   train2 <- readRDS(name)
   expect_true(compare(train2, train)$equal)

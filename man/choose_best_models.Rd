@@ -4,10 +4,13 @@
 \alias{choose_best_models}
 \title{Choose the bests models, according to the score data frame}
 \usage{
-choose_best_models(models, score, number)
+choose_best_models(models, engine, score, number)
 }
 \arguments{
 \item{models}{A list of models trained by `train_models()` function.}
+
+\item{engine}{A vector of tree-based models that shall be tested.
+Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.}
 
 \item{score}{A data frame with metrics values for given models, by `score_models`.}
 

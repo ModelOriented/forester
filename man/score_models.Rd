@@ -13,7 +13,9 @@ score_models(
   sort_by = "auto",
   metric_function = NULL,
   metric_function_name = NULL,
-  metric_function_decreasing = TRUE
+  metric_function_decreasing = TRUE,
+  engine = NULL,
+  tuning = NULL
 )
 }
 \arguments{
@@ -40,6 +42,10 @@ in order to see given metric in report. If `sort_by` is equal to `auto` models a
 By default `metric_function_name` is `metric_function`.}
 
 \item{metric_function_decreasing}{A logical value indicating how metric_function should be sorted. `TRUE` by default.}
+
+\item{engine}{A vector of strings containing information of engine in `models` list.}
+
+\item{tuning}{A vector of strings containing information of tuning method in `models` list.}
 }
 \value{
 A data.frame with 'no.' - number of model from models,

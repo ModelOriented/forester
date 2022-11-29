@@ -37,8 +37,8 @@
 #' training process, if FALSE gives none.
 #' @param bayes_iter An integer value describing number of optimization rounds
 #' used by Bayesian optimization.
-#' @param random_iter An integer value describing number of optimization rounds
-#' used by random search.
+#' @param random_evals An integer value describing number of trained models
+#' with different parameters by random search.
 #' @param advanced_preprocessing A logical value describing, whether the user wants to use
 #' advanced preprocessing methods (ex. deleting correlated values).
 #' @param metrics A vector of metrics names. By default param set for `auto`, most important metrics are returned.
@@ -52,6 +52,8 @@
 #' @param metric_function_name The name of the column with values of `metric_function` parameter.
 #' By default `metric_function_name` is `metric_function`.
 #' @param metric_function_decreasing A logical value indicating how metric_function should be sorted. `TRUE` by default.
+#' @param best_model_number Number best models to be chosen as element of the return.
+#' All trained models will be returned as different element of the return.
 #'
 #' @return A list of all necessary objects for other functions.
 #' @export
@@ -63,7 +65,7 @@
 #' train_output$ranked_list
 train <- function(data,
                   y,
-                  type = 'guess',
+                  type = 'auto',
                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                   loss = 'default',
                   validation = 'default',
@@ -71,21 +73,26 @@ train <- function(data,
                   keep = FALSE,
                   verbose = TRUE,
                   bayes_iter = 10,
-                  random_iter = 10,
+                  random_evals = 10,
                   advanced_preprocessing = FALSE,
                   metrics = 'auto',
                   sort_by = 'auto',
                   metric_function = NULL,
                   metric_function_name = NULL,
-                  metric_function_decreasing = TRUE) {
-  if (type == 'guess') {
+                  metric_function_decreasing = TRUE,
+                  best_model_number = 5) {
+  if (type == 'auto') {
     type <- guess_type(data, y)
   }
   verbose_cat('Type guessed as: ', type, '\n', verbose = verbose)
 
-  check_report      <- check_data(data, y, verbose)
+  if (verbose) {
+    check_report <- check_data(data, y, verbose)
+  } else {
+    check_report <- NULL
+  }
 
-  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
+ preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
   verbose_cat('Data preprocessed. \n', verbose = verbose)
 
   split_data        <- train_test_balance(preprocessed_data$data, y, type,
@@ -103,78 +110,81 @@ train <- function(data,
 
   verbose_cat('Correct formats prepared \n', verbose = verbose)
 
-  model             <- train_models(train_data, y, engine, type)
+  model_basic       <- train_models(train_data, y, engine, type)
   verbose_cat('Models sucsesfully trained \n', verbose = verbose)
 
-  predictions       <- predict_models(model, test_data, y, engine, type)
+  preds_basic       <- predict_models_all(model_basic, test_data, y, engine, type)
   verbose_cat('Predicted Successfully \n', verbose = verbose)
 
-  score_basic       <- score_models(model,
-                                    predictions,
-                                    test_data$ranger_data[[y]],
-                                    type,
-                                    metrics = metrics,
-                                    sort_by = sort_by,
-                                    metric_function = metric_function,
-                                    metric_function_decreasing = metric_function_decreasing)
+  test_observed    <- split_data$test[[y]]
+  train_observed   <- split_data$train[[y]]
+  valid_observed   <- split_data$valid[[y]]
 
-  random_best       <- random_search(train_data,
+  model_random      <- random_search(train_data,
                                test_data,
                                y = y,
                                engine = engine,
                                type = type,
-                               max_evals = random_iter,
-                               nr_return_models = 'all',
-                               metrics = metrics,
-                               sort_by = sort_by,
-                               metric_function = metric_function,
-                               metric_function_decreasing = metric_function_decreasing)
+                               max_evals = random_evals)
+  if (!is.null(model_random)) {
+  preds_random      <- predict_models_all(model_random$models,
+                                       test_data,
+                                       y,
+                                       engine = model_random$engine,
+                                       type = type)
+  }
 
-  bayes_best  <- train_models_bayesopt(train_data,
+  model_bayes       <- train_models_bayesopt(train_data,
                                       y,
                                       test_data,
                                       engine = engine,
                                       type = type,
                                       iters.n = bayes_iter,
                                       verbose = verbose)
+  if (!is.null(model_bayes)) {
+  preds_bayes       <- predict_models_all(model_bayes, test_data, y, engine, type)
+  }
 
-  score_bayes <- score_models(bayes_best,
-                              predictions,
-                              test_data$ranger_data[[y]],
-                              type,
-                              metrics = metrics,
-                              sort_by = sort_by,
-                              metric_function = metric_function,
-                              metric_function_decreasing = metric_function_decreasing)
+  models_all <- c(model_basic, model_random$models, model_bayes)
+  engine_all <- c(engine, model_random$engine, engine)
+  preds_all  <- c(preds_basic, preds_random, preds_bayes)
 
-  ranked_list <- create_ranked_list(score_basic,
-                                    random_best,
-                                    score_bayes,
-                                    type,
-                                    sort_by = sort_by,
-                                    metric_function = metric_function,
-                                    metric_function_name = metric_function_name,
-                                    metric_function_decreasing = metric_function_decreasing)
+  tuning <- c(rep('basic', length(engine)),
+              rep('reandom_search', length(model_random$engine)),
+              rep('bayes_opt', length(engine)))
 
-  models_list <- append(model, random_best$best_models)
-
-  models_list <- append(models_list, bayes_best)
-
-  # Remove NULL object from recent steps
-  models_list[sapply(models_list, is.null)] <- NULL
-
-  predictions_all  <- predict_models_all(models_list, test_data, y, engine, type)
+    score  <- score_models(models_all,
+                           preds_all,
+                           test_observed,
+                           type,
+                           metrics = metrics,
+                           sort_by = sort_by,
+                           metric_function = metric_function,
+                           metric_function_name = metric_function_name,
+                           metric_function_decreasing = metric_function_decreasing,
+                           engine = engine_all,
+                           tuning = tuning)
+  predictions_all  <- predict_models_all(models_all, test_data, y, engine, type)
   verbose_cat('Ranked and models list created. \n', verbose = verbose)
 
-  test_observed    <- split_data$test[[y]]
-  train_observed   <- split_data$train[[y]]
   if (type == 'binary_clf') {
     test_observed  <- test_observed - 1 # [0, 1]
     train_observed <- train_observed - 1
   }
-  best_models      <- choose_best_models(models_list, ranked_list,  min(10, length(models_list)))
+  best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
+  predictions_best <- predict_models_all(best_models$models, test_data, y, best_models$engine, type = type)
+  predict_valid    <- predict_models_all(models_all, valid_data, y, engine, type = type)
 
-  predictions_best <- predict_models_all(best_models, test_data, y, engine, type)
+  score_valid      <- score_models(models_all,
+                                   predict_valid,
+                                   valid_data$ranger_data[[y]],
+                                   type,
+                                   metrics = metrics,
+                                   sort_by = sort_by,
+                                   metric_function = metric_function,
+                                   metric_function_decreasing = metric_function_decreasing,
+                                   engine = engine_all,
+                                   tuning = tuning)
 
   verbose_cat('Best models list created. \n', verbose = verbose)
 
@@ -187,9 +197,10 @@ train <- function(data,
       train_data        = train_data,
       test_data         = test_data,
       valid_data        = valid_data,
-      predictions       = predictions,
-      ranked_list       = ranked_list,
-      models_list       = models_list,
+      predictions       = predictions_all,
+      score_test        = score,
+      score_valid       = score_valid,
+      models_list       = models_all,
       data              = data,
       y                 = y,
       test_observed     = test_observed,
@@ -198,7 +209,8 @@ train <- function(data,
       engine            = engine,
       predictions_all   = predictions_all,
       predictions_best  = predictions_best,
-      raw_train         = raw_train
+      raw_train         = raw_train,
+      check_report      = check_report
     )
   )
 }
