@@ -19,16 +19,18 @@ devtools::install_github("ModelOriented/forester")
 
 ## What is the *forester*?
 
-`:bulb:` full automation of the process of training tree-based models 
-`:bulb:` no demand for ML expertise
-`:bulb:` powerful tool for making high-quality baseline models for experienced users
+:bulb: full automation of the process of training tree-based models 
+
+:bulb: no demand for ML expertise
+
+:bulb: powerful tool for making high-quality baseline models for experienced users
 
 
 The *forester* package is **an AutoML tool in R** that wraps up all machine learning processes into a single `train()` function, which includes:
 
 - rendering a brief **data check** report,
 - **preprocessing** initial dataset enough for models to be trained,
-- **training** 5 tree-based models with default parameters, random search     and Bayesian optimisation,
+- **training** 5 tree-based models with default parameters, random search and Bayesian optimisation,
 - **evaluating** them and providing a ranked list.
 
 
@@ -49,7 +51,7 @@ This package is created inside the MI2.AI (Warsaw University of Technology) as b
 - [Adrianna Grudzień](https://github.com/grudzienAda),
 - [Hubert Ruczyński](https://github.com/HubertR21), 
 - [Patryk Słowakiewicz](https://github.com/PSlowakiewicz).
--
+ 
 Project co-ordinator and supervisor: [Anna Kozak](https://github.com/kozaka93)
 Auxiliary supervisor [Przemysław Biecek]( https://github.com/pbiecek)
 
