@@ -53,6 +53,7 @@ This package is created inside the MI2.AI (Warsaw University of Technology) as b
 - [Patryk Słowakiewicz](https://github.com/PSlowakiewicz).
  
 Project co-ordinator and supervisor: [Anna Kozak](https://github.com/kozaka93)
+
 Auxiliary supervisor [Przemysław Biecek]( https://github.com/pbiecek)
 
 The previous version of forester was created by:
