@@ -143,7 +143,10 @@ random_search <- function(train_data,
       label     <- as.vector(train_data$ranger_data[[y]])
     } else if (type == 'binary_clf') {
       objective <- 'binary:logistic'
-      label     <- as.vector(train_data$ranger_data[[y]] - 1)
+      if (any(train_data$ranger_data[[y]] == 2)) {
+        data$ranger_data[[y]] = train_data$ranger_data[[y]] - 1
+      }
+      label     <- as.vector(train_data$ranger_data[[y]])
     }
     xgboost_models        <- list()
     expanded_xgboost_grid <- expand.grid(xgboost_grid)

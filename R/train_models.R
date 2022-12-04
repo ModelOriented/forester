@@ -54,13 +54,17 @@ train_models <- function(data, y, engine, type) {
 
     } else if (engine[i] == 'xgboost') {
       if (type == 'binary_clf') {
+        if (any(data$ranger_data[[y]] == 2)) {
+          data$ranger_data[[y]] = data$ranger_data[[y]] - 1
+        }
+        print(data$ranger_data[[y]])
       xgboost_model <-
         xgboost::xgboost(data$xgboost_data,
-                         as.vector(data$ranger_data[[y]] - 1),
+                         as.vector(data$ranger_data[[y]]),
                          objective = 'binary:logistic',
                          nrounds = 20,
                          verbose = 0,
-                         eval_metric='mlogloss')
+                         eval_metric = 'auc')
       } else if (type == 'regression'){
         xgboost_model <-
           xgboost::xgboost(data$xgboost_data,
