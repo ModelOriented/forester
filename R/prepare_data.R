@@ -163,7 +163,7 @@ prepare_data <- function(data,
     } else {
       # The lgbm model can't predict on lgb.Dataset.
       X <- data[, -which(names(data) == y)]
-      lightgbm_data <- as.matrix(X)
+      lightgbm_data <- data.matrix(X)
     }
   }
   if ('catboost' %in% engine) {
