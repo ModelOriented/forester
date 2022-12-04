@@ -59,7 +59,8 @@ train_models <- function(data, y, engine, type) {
                          as.vector(data$ranger_data[[y]] - 1),
                          objective = 'binary:logistic',
                          nrounds = 20,
-                         verbose = 0)
+                         verbose = 0,
+                         eval_metric='mlogloss')
       } else if (type == 'regression'){
         xgboost_model <-
           xgboost::xgboost(data$xgboost_data,
