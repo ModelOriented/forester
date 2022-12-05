@@ -68,11 +68,11 @@ test_that('test-check_data', {
   expect_output(check_dim(df_adult), no_dim_issues)
   expect_output(check_dim(df_test), no_dim_issues)
 
-  no_cor     <- 'No strongly correlated pairs of numerical values. \n\nNo strongly correlated pairs of categorical values. \n'
-  cor_iris   <- 'Strongly correlated pairs of numerical values are: \n \nSepal.Length - Petal.Length: 0.81;\nSepal.Length - Petal.Width: 0.79;\nPetal.Length - Petal.Width: 0.98;\n'
-  cor_lisbon <- 'Strongly correlated pairs of numerical values are: \n \nBedrooms - AreaNet: 0.77;\nBedrooms - AreaGross: 0.77;\nBathrooms - AreaNet: 0.78;\nBathrooms - AreaGross: 0.78;\nAreaNet - AreaGross: 1;\n\nStrongly correlated pairs of categorical values are: \nPropertyType - PropertySubType: 1;\n'
-  cor_iris2  <- 'Strongly correlated pairs of numerical values are: \n \nSepal.Length - Petal.Length: 0.87;\nSepal.Length - Petal.Width: 0.82;\nPetal.Length - Petal.Width: 0.96;\n'
-  cor_test   <- 'No strongly correlated pairs of numerical values.'
+  no_cor     <- 'No strongly correlated (by Spearman\'s rank) pairs of numerical values. \n\nNo strongly correlated (by Crammer V rank) pairs of categorical values. \n'
+  cor_iris   <- 'Strongly correlated (by Spearman\'s rank) pairs of numerical values are: \n \nSepal.Length - Petal.Length: 0.81;\nSepal.Length - Petal.Width: 0.79;\nPetal.Length - Petal.Width: 0.98;\n'
+  cor_lisbon <- 'Strongly correlated (by Spearman\'s rank) pairs of numerical values are: \n \nBedrooms - AreaNet: 0.77;\nBedrooms - AreaGross: 0.77;\nBathrooms - AreaNet: 0.78;\nBathrooms - AreaGross: 0.78;\nAreaNet - AreaGross: 1;\n\nStrongly correlated (by Crammer V rank) pairs of categorical values are: \nPropertyType - PropertySubType: 1;\n'
+  cor_iris2  <- 'Strongly correlated (by Spearman\'s rank) pairs of numerical values are: \n \nSepal.Length - Petal.Length: 0.87;\nSepal.Length - Petal.Width: 0.82;\nPetal.Length - Petal.Width: 0.96;\n'
+  cor_test   <- 'No strongly correlated (by Spearman\'s rank) pairs of numerical values.'
 
   expect_output(check_cor(df_iris, y_iris), cor_iris)
   expect_output(check_cor(df_lisbon, y_lisbon), cor_lisbon)
