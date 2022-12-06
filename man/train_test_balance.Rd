@@ -4,7 +4,14 @@
 \alias{train_test_balance}
 \title{Balance and split the dataset}
 \usage{
-train_test_balance(data, y, type, balance = TRUE, fractions = c(0.6, 0.2, 0.2))
+train_test_balance(
+  data,
+  y,
+  type,
+  balance = TRUE,
+  fractions = c(0.6, 0.2, 0.2),
+  seed = NULL
+)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -19,6 +26,9 @@ matrix and so on.}
 
 \item{fractions}{A vector with 3 numeric values that sum to 1 which
 determine sizes of train, test and validation datasets. DEFAULT: c(0.6, 0.2, 0.2).}
+
+\item{seed}{An integer random seed. It allows for comparable results. If it
+is NULL, the split is random.}
 }
 \value{
 A list of train, test and validation datasets.

@@ -40,7 +40,10 @@ Trained models with optimized parameters. If `retun_params` is `TRUE`, then
 returns also training parameters in the one list with models.
 }
 \description{
-Train models with Bayesian Optimization algorithm
+Bayesian Optimization takes relatively a long time - the bigger `iters.n` param,
+the more time (but if you want to get model parameters better than default params,
+it is suggest to set `iters.n` equals 20 at least.
+Also the bigger dataset, the more time takes Bayesian Optimization.
 }
 \examples{
 # Binary classification

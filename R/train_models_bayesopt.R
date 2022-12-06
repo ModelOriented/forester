@@ -2,7 +2,7 @@
 #'
 #' Bayesian Optimization takes relatively a long time - the bigger `iters.n` param,
 #' the more time (but if you want to get model parameters better than default params,
-#' it is suggest to set `iters.n` equals 20 at least.
+#' it is suggested to set `iters.n` equals 20 at least.
 #' Also the bigger dataset, the more time takes Bayesian Optimization.
 #'
 #' @param train_data A training data for models created by `prepare_data()` function.

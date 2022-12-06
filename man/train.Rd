@@ -94,7 +94,48 @@ By default `metric_function_name` is `metric_function`.}
 All trained models will be returned as different element of the return.}
 }
 \value{
-A list of all necessary objects for other functions.
+A list of all necessary objects for other functions. It contains:
+`type` The type of the ML task. If the user did not specify a type in the
+input parameters, the algorithm recognizes, uses and returns the same type.
+It could be 'regression' or 'classification'.
+`deleted_columns` Column names from the original data frame that have been
+removed in the data preprocessing process, e.g. due to too much correlation
+with other columns.
+`preprocessed_dataThe` data frame after the preprocessing process - that
+means: removing columns with one value for all rows, binarizing the target
+column, managing missing values, deleting correlated values, deleting columns
+that are ID-like columns and performing Boruta algorithm for selecting most
+important features.
+`bin_labels` Labels of binarized target value - {1, 2} values for binary
+classification and NULL for regression.
+`train_data` The training dataset - the part of the source dataset after
+preprocessing, balancing and splitting into the training, test and validation
+datasets.
+`test_data` The test dataset - the part of the source dataset after
+preprocessing, balancing and splitting into the training, test and
+validation datasets.
+`valid_data` The validation dataset - the part of the source dataset after
+preprocessing, balancing and splitting into the training, test and validation
+datasets.
+`predictions` Prediction list for all trained models based on the training
+dataset.
+`ranked_list` The list of metrics for all trained models. For regression task
+there are: mse, r2 and mad metrics. For the classification task there are:
+f1, auc, recall, precision and accuracy.
+`models_list` The list of all trained models.
+`data` The original data.
+`y` The original target column name.
+`test_observed` Values of y column from the test dataset.
+`train_observed` Values of y column from the training dataset.
+`best_models` Ranking list of top 10 trained models - with default
+parameters, with parameters optimized with the Bayesian optimization
+algorithm and with parameters optimized with the random search algorithm.
+`engine` The list of names of all types of trained models. Possible
+values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
+`predictions_all` Predictions for all trained models.
+`predictions_best` Predictions for models from best_models list.
+`raw_train` The another form of the training dataset (useful for creating
+VS plot and predicting on training dataset for catboost and lightgbm models).
 }
 \description{
 The `train()` function is the core function of this package.
