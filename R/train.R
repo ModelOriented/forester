@@ -55,7 +55,48 @@
 #' @param best_model_number Number best models to be chosen as element of the return.
 #' All trained models will be returned as different element of the return.
 #'
-#' @return A list of all necessary objects for other functions.
+#' @return A list of all necessary objects for other functions. It contains:
+#' `type` The type of the ML task. If the user did not specify a type in the
+#' input parameters, the algorithm recognizes, uses and returns the same type.
+#' It could be 'regression' or 'classification'.
+#' `deleted_columns` Column names from the original data frame that have been
+#' removed in the data preprocessing process, e.g. due to too high correlation
+#' with other columns.
+#' `preprocessed_data` The data frame after the preprocessing process - that
+#' means: removing columns with one value for all rows, binarizing the target
+#' column, managing missing values and in advanced preprocessing: deleting
+#' correlated values, deleting columns that are ID-like columns and performing
+#' Boruta algorithm for selecting most important features.
+#' `bin_labels` Labels of binarized target value - {1, 2} values for binary
+#' classification and NULL for regression.
+#' `train_data` The training dataset - the part of the source dataset after
+#' preprocessing, balancing and splitting into the training, test and validation
+#' datasets.
+#' `test_data` The test dataset - the part of the source dataset after
+#' preprocessing, balancing and splitting into the training, test and
+#' validation datasets.
+#' `valid_data` The validation dataset - the part of the source dataset after
+#' preprocessing, balancing and splitting into the training, test and validation
+#' datasets.
+#' `predictions` Prediction list for all trained models based on the training
+#' dataset.
+#' `ranked_list` The list of metrics for all trained models. For regression task
+#' there are: mse, r2 and mad metrics. For the classification task there are:
+#' f1, auc, recall, precision and accuracy.
+#' `models_list` The list of all trained models.
+#' `data` The original data.
+#' `y` The original target column name.
+#' `test_observed` Values of y column from the test dataset.
+#' `train_observed` Values of y column from the training dataset.
+#' `best_models` Ranking list of top 10 trained models - with default
+#' parameters, with parameters optimized with the Bayesian optimization
+#' algorithm and with parameters optimized with the random search algorithm.
+#' `engine` The list of names of all types of trained models. Possible
+#' values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
+#' `predictions_all` Predictions for all trained models.
+#' `predictions_best` Predictions for models from best_models list.
+#' `raw_train` The another form of the training dataset (useful for creating
+#' VS plot and predicting on training dataset for catboost and lightgbm models).
 #' @export
 #'
 #' @examples
@@ -93,11 +134,14 @@ train <- function(data,
   }
 
  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
+ verbose_cat('Columns deleted during the advanced preprocessing: \n',
+             preprocessed_data$colnames, '\n\n', verbose = verbose)
+
   verbose_cat('Data preprocessed. \n', verbose = verbose)
 
   split_data        <- train_test_balance(preprocessed_data$data, y, type,
                                    balance = TRUE)
-  verbose_cat('Data splitted and balanced \n', verbose = verbose)
+  verbose_cat('Data split and balanced. \n', verbose = verbose)
 
   train_data        <- prepare_data(split_data$train, y, engine)
   test_data         <- prepare_data(split_data$test, y, engine, predict = TRUE,
@@ -108,13 +152,13 @@ train <- function(data,
   raw_train         <- prepare_data(split_data$train, y, engine, predict = TRUE,
                                     split_data$train)
 
-  verbose_cat('Correct formats prepared \n', verbose = verbose)
+  verbose_cat('Correct formats prepared. \n', verbose = verbose)
 
   model_basic       <- train_models(train_data, y, engine, type)
-  verbose_cat('Models sucsesfully trained \n', verbose = verbose)
+  verbose_cat('Models successfully trained. \n', verbose = verbose)
 
   preds_basic       <- predict_models_all(model_basic, test_data, y, engine, type)
-  verbose_cat('Predicted Successfully \n', verbose = verbose)
+  verbose_cat('Predicted successfully. \n', verbose = verbose)
 
   test_observed    <- split_data$test[[y]]
   train_observed   <- split_data$train[[y]]
@@ -141,8 +185,9 @@ train <- function(data,
                                       type = type,
                                       iters.n = bayes_iter,
                                       verbose = verbose)
+  preds_bayes <- NULL
   if (!is.null(model_bayes)) {
-  preds_bayes       <- predict_models_all(model_bayes, test_data, y, engine, type)
+    preds_bayes       <- predict_models_all(model_bayes, test_data, y, engine, type)
   }
 
   models_all <- c(model_basic, model_random$models, model_bayes)
@@ -150,7 +195,7 @@ train <- function(data,
   preds_all  <- c(preds_basic, preds_random, preds_bayes)
 
   tuning <- c(rep('basic', length(engine)),
-              rep('reandom_search', length(model_random$engine)),
+              rep('random_search', length(model_random$engine)),
               rep('bayes_opt', length(engine)))
 
     score  <- score_models(models_all,

@@ -1,7 +1,7 @@
 #' Perform predictions on new data
 #'
 #' This function is used when the user created the models and evaluated them
-#' on a datset x and later on, he got new observations and wants to predict the
+#' on a dataset x and later on, he got new observations and wants to predict the
 #' target value for them. The `predict_new()` function quickly normalizes their format, like a
 #' subset of columns that were deleted for the models and makes predictions.
 #' It is strongly advised that the new dataset shouldn't have any missing values.
@@ -72,6 +72,7 @@ predict_new <- function(train_out, data, verbose = TRUE) {
     engine2 <- c(engine2, eng)
   }
   preds <- predict_models_all(model, data, y, engine2, type)
+  names(preds) <- names(train_out$models_list)
 
   return(preds)
 }

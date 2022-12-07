@@ -272,8 +272,8 @@ check_cor <- function(df, y, verbose = TRUE) {
       for (j in i:ncol(cor_num)) {
         if (i != j && cor_num[i, j] >= 0.7) {
           if (no_cor_num) {
-            verbose_cat('Strongly correlated pairs of numerical values are: \n', verbose = verbose, '\n')
-            str <- capture.output(cat('**Strongly correlated pairs of numerical values are: **\n\n'))
+            verbose_cat('Strongly correlated, by Spearman rank, pairs of numerical values are: \n', verbose = verbose, '\n')
+            str <- capture.output(cat('**Strongly correlated, by Spearman rank, pairs of numerical values are: **\n\n'))
             no_cor_num <- FALSE
 
           }
@@ -284,8 +284,8 @@ check_cor <- function(df, y, verbose = TRUE) {
       }
     }
     if (no_cor_num) {
-      verbose_cat('No strongly correlated pairs of numerical values. \n\n', verbose = verbose)
-      str <- capture.output(cat('**No strongly correlated pairs of numerical values. **\n\n'))
+      verbose_cat('No strongly correlated, by Spearman rank, pairs of numerical values. \n\n', verbose = verbose)
+      str <- capture.output(cat('**No strongly correlated, by Spearman rank, pairs of numerical values. **\n\n'))
     }
   }
 
@@ -310,8 +310,8 @@ check_cor <- function(df, y, verbose = TRUE) {
       for (j in i:ncol(cor_fct)) {
         if (i != j && cor_fct[i, j] >= 0.7) {
           if (no_cor_fct) {
-            verbose_cat('\nStrongly correlated pairs of categorical values are: \n', verbose = verbose)
-            str <- c(str, capture.output(cat('\n**Strongly correlated pairs of categorical values are: **\n\n')))
+            verbose_cat('\nStrongly correlated, by Crammer V rank, pairs of categorical values are: \n', verbose = verbose)
+            str <- c(str, capture.output(cat('\n**Strongly correlated, by Crammer V rank, pairs of categorical values are: **\n\n')))
             no_cor_fct = FALSE
 
           }
@@ -321,9 +321,9 @@ check_cor <- function(df, y, verbose = TRUE) {
       }
     }
     if (no_cor_fct) {
-      verbose_cat('No strongly correlated pairs of categorical values. \n', verbose = verbose)
+      verbose_cat('No strongly correlated, by Crammer V rank, pairs of categorical values. \n', verbose = verbose)
       str <- c(str, capture.output(
-        cat('**No strongly correlated pairs of categorical values. **\n')))
+        cat('**No strongly correlated, by Crammer V rank, pairs of categorical values. **\n')))
     }
   }
   verbose_cat('\n', verbose = verbose)
