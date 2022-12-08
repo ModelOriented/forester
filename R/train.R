@@ -157,7 +157,7 @@ train <- function(data,
   model_basic       <- train_models(train_data, y, engine, type)
   verbose_cat('Models successfully trained. \n', verbose = verbose)
 
-  preds_basic       <- predict_models_all(model_basic, test_data, y, engine, type)
+  preds_basic       <- predict_models_all(model_basic, test_data, y, type)
   verbose_cat('Predicted successfully. \n', verbose = verbose)
 
   test_observed    <- split_data$test[[y]]
@@ -174,7 +174,6 @@ train <- function(data,
   preds_random      <- predict_models_all(model_random$models,
                                        test_data,
                                        y,
-                                       engine = model_random$engine,
                                        type = type)
   }
 
@@ -187,7 +186,7 @@ train <- function(data,
                                       verbose = verbose)
   preds_bayes <- NULL
   if (!is.null(model_bayes)) {
-    preds_bayes       <- predict_models_all(model_bayes, test_data, y, engine, type)
+    preds_bayes       <- predict_models_all(model_bayes, test_data, y, type)
   }
 
   models_all <- c(model_basic, model_random$models, model_bayes)
@@ -198,18 +197,18 @@ train <- function(data,
               rep('random_search', length(model_random$engine)),
               rep('bayes_opt', length(engine)))
 
-    score  <- score_models(models_all,
-                           preds_all,
-                           test_observed,
-                           type,
-                           metrics = metrics,
-                           sort_by = sort_by,
-                           metric_function = metric_function,
-                           metric_function_name = metric_function_name,
-                           metric_function_decreasing = metric_function_decreasing,
-                           engine = engine_all,
-                           tuning = tuning)
-  predictions_all  <- predict_models_all(models_all, test_data, y, engine, type)
+  score  <- score_models(models_all,
+                         preds_all,
+                         test_observed,
+                         type,
+                         metrics = metrics,
+                         sort_by = sort_by,
+                         metric_function = metric_function,
+                         metric_function_name = metric_function_name,
+                         metric_function_decreasing = metric_function_decreasing,
+                         engine = engine_all,
+                         tuning = tuning)
+  predictions_all  <- predict_models_all(models_all, test_data, y, type)
   verbose_cat('Ranked and models list created. \n', verbose = verbose)
 
   if (type == 'binary_clf') {
@@ -217,8 +216,8 @@ train <- function(data,
     train_observed <- train_observed - 1
   }
   best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
-  predictions_best <- predict_models_all(best_models$models, test_data, y, best_models$engine, type = type)
-  predict_valid    <- predict_models_all(models_all, valid_data, y, engine, type = type)
+  predictions_best <- predict_models_all(best_models$models, test_data, y, type = type)
+  predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
 
   score_valid      <- score_models(models_all,
                                    predict_valid,

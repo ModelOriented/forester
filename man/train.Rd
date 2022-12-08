@@ -99,13 +99,13 @@ A list of all necessary objects for other functions. It contains:
 input parameters, the algorithm recognizes, uses and returns the same type.
 It could be 'regression' or 'classification'.
 `deleted_columns` Column names from the original data frame that have been
-removed in the data preprocessing process, e.g. due to too much correlation
+removed in the data preprocessing process, e.g. due to too high correlation
 with other columns.
-`preprocessed_dataThe` data frame after the preprocessing process - that
+`preprocessed_data` The data frame after the preprocessing process - that
 means: removing columns with one value for all rows, binarizing the target
-column, managing missing values, deleting correlated values, deleting columns
-that are ID-like columns and performing Boruta algorithm for selecting most
-important features.
+column, managing missing values and in advanced preprocessing: deleting
+correlated values, deleting columns that are ID-like columns and performing
+Boruta algorithm for selecting most important features.
 `bin_labels` Labels of binarized target value - {1, 2} values for binary
 classification and NULL for regression.
 `train_data` The training dataset - the part of the source dataset after

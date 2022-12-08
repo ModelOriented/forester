@@ -1,5 +1,5 @@
 test_that('test-predict_new', {
-  # lTests for lisbon dataset.
+  # Tests for lisbon dataset.
   data        <- lisbon
   y           <- 'Price'
   suppressWarnings(
