@@ -270,7 +270,14 @@ check_cor <- function(df, y, verbose = TRUE) {
 
     for (i in 1:ncol(cor_num)) {
       for (j in i:ncol(cor_num)) {
-        if (i != j && cor_num[i, j] >= 0.7) {
+
+        if (is.na(abs(cor_num[i, j]) >= 0.7)) {
+          strong_Spearman_cor <- FALSE
+        } else {
+          strong_Spearman_cor <- (abs(cor_num[i, j]) >= 0.7)
+        }
+
+        if (i != j && strong_Spearman_cor) {
           if (no_cor_num) {
             verbose_cat('Strongly correlated, by Spearman rank, pairs of numerical values are: \n', verbose = verbose, '\n')
             str <- capture.output(cat('**Strongly correlated, by Spearman rank, pairs of numerical values are: **\n\n'))
@@ -300,7 +307,19 @@ check_cor <- function(df, y, verbose = TRUE) {
 
     for (i in 1:length(fct_idx)) {
       for (j in 1:length(fct_idx)) {
-        cor_fct[i, j] <- round(rcompanion::cramerV(fct_tbl[, i], fct_tbl[, j]), 2)
+
+        a = as.numeric(length(unique(fct_tbl[, i])))
+        b = as.numeric(length(unique(fct_tbl[, j])))
+
+        if (as.numeric(a * b) <= 2^29 - 1){ # with 2^31 we have to big vector that can't be allocated (over 7.4 Gb)
+          cor_fct[i, j] <- round(rcompanion::cramerV(fct_tbl[, i], fct_tbl[, j]), 2)
+        } else {
+          cor_fct[i, j] <- NA
+          verbose_cat('\nWARNING! Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. \n', verbose = verbose)
+          str <- c(str, capture.output(
+            cat('\n**WARNING! Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. **\n')))
+        }
+
       }
     }
     no_cor_fct = TRUE
@@ -308,7 +327,13 @@ check_cor <- function(df, y, verbose = TRUE) {
 
     for (i in 1:ncol(cor_fct)) {
       for (j in i:ncol(cor_fct)) {
-        if (i != j && cor_fct[i, j] >= 0.7) {
+
+        if (is.na(abs(cor_fct[i, j]) >= 0.7)) {
+          strong_V_cor <- FALSE
+        } else {
+          strong_V_cor <- (abs(cor_fct[i, j]) >= 0.7)
+        }
+        if (i != j && strong_V_cor) {
           if (no_cor_fct) {
             verbose_cat('\nStrongly correlated, by Crammer V rank, pairs of categorical values are: \n', verbose = verbose)
             str <- c(str, capture.output(cat('\n**Strongly correlated, by Crammer V rank, pairs of categorical values are: **\n\n')))

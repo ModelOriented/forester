@@ -54,8 +54,8 @@ knitr::kable(score_rounded)
 ```
 
 ```{r echo = FALSE}
-train_predictions <- predict_models_all(params$models, params$raw_train, params$y, params$engine, params$type)
-test_predictions  <- predict_models_all(params$models, params$test_data, params$y, params$engine, params$type)
+train_predictions <- predict_models_all(params$models, params$raw_train, params$y, params$type)
+test_predictions  <- predict_models_all(params$models, params$test_data, params$y, params$type)
 ```
 
 ## Plots for all models
