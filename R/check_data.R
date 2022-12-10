@@ -92,14 +92,14 @@ check_static <- function(df, verbose = TRUE) {
     }
   }
   if (!dominator) {
-    verbose_cat('No static columns. \n', verbose = verbose)
-    str <- capture.output(cat('**No static columns. **\n\n'))
+    verbose_cat(green('\u2713'), 'No static columns. \n', verbose = verbose)
+    str <- capture.output(cat(green('\u2713'), '**No static columns. **\n\n'))
 
   } else {
-    verbose_cat('Static columns are: \n', dominator_cols, '\n\n', sep = '', verbose = verbose)
+    verbose_cat(red('\u2716'), 'Static columns are: \n', dominator_cols, '\n\n', sep = '', verbose = verbose)
     verbose_cat('With dominating values: \n', dominator_vals, '\n', sep = '', verbose = verbose)
     str <- capture.output(cat('**Static columns are: **', dominator_cols, '\n\n', sep = ''))
-    str <- c(str, capture.output(cat('**With dominating values: **', dominator_vals,
+    str <- c(str, capture.output(cat(red('\u2716'), '**With dominating values: **', dominator_vals,
                                      '\n\n', sep = '')))
   }
   verbose_cat('\n', verbose = verbose)
@@ -130,12 +130,12 @@ check_duplicate_col <- function(df, verbose = TRUE) {
     }
   }
   if (length(pairs) == 0) {
-    verbose_cat('No duplicate columns.\n', verbose = verbose)
-    str <- capture.output(cat('**No duplicate columns.**\n'))
+    verbose_cat(green('\u2714'), 'No duplicate columns.\n', verbose = verbose)
+    str <- capture.output(cat(green('\u2714'), '**No duplicate columns.**\n'))
 
   } else {
-    verbose_cat('These column pairs are duplicate:\n ', pairs, '\n', sep = '', verbose = verbose)
-    str <- capture.output(cat('**These column pairs are duplicate: **\n', pairs, '\n\n',
+    verbose_cat(red('\u2716'), 'These column pairs are duplicate:\n ', pairs, '\n', sep = '', verbose = verbose)
+    str <- capture.output(cat(red('\u2716'), '**These column pairs are duplicate: **\n', pairs, '\n\n',
                               sep = ''))
   }
   verbose_cat('\n', verbose = verbose)
@@ -169,22 +169,22 @@ check_missing <- function(df, y, verbose = TRUE) {
   }
 
   if (missing_y == 0) {
-    verbose_cat('No target values are missing. \n\n', verbose = verbose)
-    str <- capture.output(cat('**No target values are missing. **\n\n'))
+    verbose_cat(green('\u2714'), 'No target values are missing. \n\n', verbose = verbose)
+    str <- capture.output(cat(green('\u2714'), '**No target values are missing. **\n\n'))
 
   } else {
-    verbose_cat(missing_y, ' Target values are missing. \n', sep = '', verbose = verbose)
-    str <- capture.output(cat(missing_y, ' **Target values are missing.**\n\n', sep = ''))
+    verbose_cat(missing_y, red('\u2716'),  ' Target values are missing. \n', sep = '', verbose = verbose)
+    str <- capture.output(cat(missing_y, red('\u2716'), ' **Target values are missing.**\n\n', sep = ''))
 
   }
 
   if (missing_x == 0) {
-    verbose_cat('No predictor values are missing. \n', verbose = verbose)
-    str <- c(str, capture.output(cat('**No predictor values are missing. **\n')))
+    verbose_cat(green('\u2714'), 'No predictor values are missing. \n', verbose = verbose)
+    str <- c(str, capture.output(cat(green('\u2714'), '**No predictor values are missing. **\n')))
 
   } else {
-    verbose_cat(missing_x, ' observations have missing fields.\n', sep = '', verbose = verbose)
-    str <- c(str, capture.output(cat('**', missing_x, ' observations have missing fields.**\n', sep = '')))
+    verbose_cat(red('\u2716'), missing_x, ' observations have missing fields.\n', sep = '', verbose = verbose)
+    str <- c(str, capture.output(cat(red('\u2716'), '** ', missing_x, ' observations have missing fields.**\n', sep = '')))
 
   }
   verbose_cat('\n', verbose = verbose)
@@ -209,20 +209,20 @@ check_dim <- function(df, verbose = TRUE) {
   cols <- dim(df)[2]
 
   if (cols > 30) {
-    verbose_cat('Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
+    verbose_cat(red('\u2716'), 'Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
     str <- capture.output(
-      cat('**Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. **\n', sep = ''))
+      cat(red('\u2716'), '**Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. **\n', sep = ''))
 
   }
   if (cols >= rows) {
-    verbose_cat('More features than observations, try reducing dimensionality or add new observations. \n', verbose = verbose)
+    verbose_cat(red('\u2716'), 'More features than observations, try reducing dimensionality or add new observations. \n', verbose = verbose)
     str <- capture.output(
-      cat('**More features than observations, try reducing dimensionality or add new observations. **\n'))
+      cat(red('\u2716'), '**More features than observations, try reducing dimensionality or add new observations. **\n'))
 
   }
   if (cols < rows && cols <= 30) {
-    verbose_cat('No issues with dimensionality. \n', verbose = verbose)
-    str <- capture.output(cat('**No issues with dimensionality. **\n'))
+    verbose_cat(green('\u2714'), 'No issues with dimensionality. \n', verbose = verbose)
+    str <- capture.output(cat(green('\u2714'), '**No issues with dimensionality. **\n'))
 
   }
   verbose_cat('\n', verbose = verbose)
@@ -279,8 +279,8 @@ check_cor <- function(df, y, verbose = TRUE) {
 
         if (i != j && strong_Spearman_cor) {
           if (no_cor_num) {
-            verbose_cat('Strongly correlated, by Spearman rank, pairs of numerical values are: \n', verbose = verbose, '\n')
-            str <- capture.output(cat('**Strongly correlated, by Spearman rank, pairs of numerical values are: **\n\n'))
+            verbose_cat(red('\u2716'), 'Strongly correlated, by Spearman rank, pairs of numerical values are: \n', verbose = verbose, '\n')
+            str <- capture.output(cat(red('\u2716'), '**Strongly correlated, by Spearman rank, pairs of numerical values are: **\n\n'))
             no_cor_num <- FALSE
 
           }
@@ -291,8 +291,8 @@ check_cor <- function(df, y, verbose = TRUE) {
       }
     }
     if (no_cor_num) {
-      verbose_cat('No strongly correlated, by Spearman rank, pairs of numerical values. \n\n', verbose = verbose)
-      str <- capture.output(cat('**No strongly correlated, by Spearman rank, pairs of numerical values. **\n\n'))
+      verbose_cat(green('\u2714'), 'No strongly correlated, by Spearman rank, pairs of numerical values. \n\n', verbose = verbose)
+      str <- capture.output(cat(green('\u2714'), '**No strongly correlated, by Spearman rank, pairs of numerical values. **\n\n'))
     }
   }
 
@@ -315,9 +315,9 @@ check_cor <- function(df, y, verbose = TRUE) {
           cor_fct[i, j] <- round(rcompanion::cramerV(fct_tbl[, i], fct_tbl[, j]), 2)
         } else {
           cor_fct[i, j] <- NA
-          verbose_cat('\nWARNING! Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. \n', verbose = verbose)
+          verbose_cat(red('\nWARNING!'), ' Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. \n', verbose = verbose)
           str <- c(str, capture.output(
-            cat('\n**WARNING! Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. **\n')))
+            cat(red('\nWARNING!'), ' Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. **\n')))
         }
 
       }
@@ -335,8 +335,8 @@ check_cor <- function(df, y, verbose = TRUE) {
         }
         if (i != j && strong_V_cor) {
           if (no_cor_fct) {
-            verbose_cat('\nStrongly correlated, by Crammer V rank, pairs of categorical values are: \n', verbose = verbose)
-            str <- c(str, capture.output(cat('\n**Strongly correlated, by Crammer V rank, pairs of categorical values are: **\n\n')))
+            verbose_cat('\n', red('\u2716'), ' Strongly correlated, by Crammer V rank, pairs of categorical values are: \n', verbose = verbose)
+            str <- c(str, capture.output(cat('\n', red('\u2716'), '** Strongly correlated, by Crammer V rank, pairs of categorical values are: **\n\n')))
             no_cor_fct = FALSE
 
           }
@@ -346,9 +346,9 @@ check_cor <- function(df, y, verbose = TRUE) {
       }
     }
     if (no_cor_fct) {
-      verbose_cat('No strongly correlated, by Crammer V rank, pairs of categorical values. \n', verbose = verbose)
+      verbose_cat(green('\u2714'), 'No strongly correlated, by Crammer V rank, pairs of categorical values. \n', verbose = verbose)
       str <- c(str, capture.output(
-        cat('**No strongly correlated, by Crammer V rank, pairs of categorical values. **\n')))
+        cat(green('\u2714'), '**No strongly correlated, by Crammer V rank, pairs of categorical values. **\n')))
     }
   }
   verbose_cat('\n', verbose = verbose)
@@ -425,13 +425,13 @@ check_outliers <- function(df, verbose = TRUE) {
   outliers <- unique(outliers)
   outliers <- sort(outliers)
   if (length(outliers) == 0) {
-    verbose_cat('No outliers in the dataset. \n\n', verbose = verbose)
-    str <- capture.output(cat('**No outliers in the dataset. **\n'))
+    verbose_cat(green('\u2714'), 'No outliers in the dataset. \n\n', verbose = verbose)
+    str <- capture.output(cat(green('\u2714'), '**No outliers in the dataset. **\n'))
 
   } else {
-    verbose_cat('These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
+    verbose_cat(red('\u2716'), 'These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
     str <- capture.output(
-      cat('**These obserwation migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
+      cat(red('\u2716'), '**These obserwation migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
   }
   verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
@@ -458,13 +458,13 @@ check_y_balance <- function(df, y, verbose = TRUE) {
 
   if (type %in% c('binary_clf')) {
     if (table(target)[1] / table(target)[2] > 1.5 || table(target)[1] / table(target)[2] < 0.75) {
-      verbose_cat('Dataset is unbalanced with ', table(target)[1] / table(target)[2], ' proportion. \n', verbose = verbose)
+      verbose_cat(red('\u2716'), 'Dataset is unbalanced with ', table(target)[1] / table(target)[2], ' proportion. \n', verbose = verbose)
       str <- capture.output(
-        cat('**Dataset is unbalanced with: **', table(target)[1] / table(target)[2], ' proportion. \n'))
+        cat(red('\u2716'), '**Dataset is unbalanced with: **', table(target)[1] / table(target)[2], ' proportion. \n'))
 
     } else {
-      verbose_cat('Dataset is balanced. \n', verbose = verbose)
-      str <- capture.output(cat('**Dataset is balanced. **\n'))
+      verbose_cat(green('\u2714'), 'Dataset is balanced. \n', verbose = verbose)
+      str <- capture.output(cat(green('\u2714'), '**Dataset is balanced. **\n'))
     }
   } else if (type == 'regression') {
     Q1   <- summary(target)[2]
@@ -496,18 +496,18 @@ check_y_balance <- function(df, y, verbose = TRUE) {
     perc_bins <- round(bins / sum(bins), 2)
 
     if (balanced) {
-      verbose_cat('Target data is evenly distributed. \n', verbose = verbose)
-      str <- capture.output(cat('**Target data is evenly distributed. **\n'))
+      verbose_cat(green('\u2714'), 'Target data is evenly distributed. \n', verbose = verbose)
+      str <- capture.output(cat(green('\u2714'), '**Target data is evenly distributed. **\n'))
 
     } else {
-      verbose_cat('Target data is not evenly distributed with quantile bins:', perc_bins, '\n', verbose = verbose)
+      verbose_cat(red('\u2716'), 'Target data is not evenly distributed with quantile bins:', perc_bins, '\n', verbose = verbose)
       str <- capture.output(
-        cat('**Target data is not evenly distributed with quantile bins:**', perc_bins, '\n'))
+        cat(red('\u2716'), '**Target data is not evenly distributed with quantile bins:**', perc_bins, '\n'))
     }
 
   } else if (type == 'multi_clf') {
-    verbose_cat('Multilabel classification is not supported yet. \n', verbose = verbose)
-    str <- capture.output(cat('**Multilabel classification is not supported yet. **\n'))
+    verbose_cat(green('\u2714'), 'Multilabel classification is not supported yet. \n', verbose = verbose)
+    str <- capture.output(cat(green('\u2714'), '**Multilabel classification is not supported yet. **\n'))
   }
   verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
@@ -542,26 +542,26 @@ detect_id_columns <- function(data, verbose = TRUE) {
   }
 
   if (length(sus_names) > 0) {
-    verbose_cat('Columns names suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are:',
+    verbose_cat(red('\u2716'), 'Columns names suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are:',
         sus_names, '.\n\n', verbose = verbose)
     str <- capture.output(
-      cat('**Columns names suggest that some of them are IDs, removing them can improve the model. Suspicious columns are: **\n\n',
+      cat(red('\u2716'), '**Columns names suggest that some of them are IDs, removing them can improve the model. Suspicious columns are: **\n\n',
           sus_names, '\n\n'))
   } else {
-    verbose_cat('Columns names suggest that none of them are IDs. \n\n', verbose = verbose)
+    verbose_cat(green('\u2714'), 'Columns names suggest that none of them are IDs. \n\n', verbose = verbose)
     str <- capture.output(
-      cat('**Columns names suggest that none of them are IDs. **\n\n'))
+      cat(green('\u2714'), '**Columns names suggest that none of them are IDs. **\n\n'))
   }
   if (length(sus_data) > 0) {
-    verbose_cat('Columns data suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are:',
+    verbose_cat(red('\u2716'), 'Columns data suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are:',
         sus_data, '.\n', verbose = verbose)
     str <- c(str, capture.output(
-      cat('**Columns data suggest that some of them are IDs, removing them can improve the model. Suspicious columns are: **\n\n',
+      cat(red('\u2716'), '**Columns data suggest that some of them are IDs, removing them can improve the model. Suspicious columns are: **\n\n',
           sus_data, '\n\n')))
   } else {
-    verbose_cat('Columns data suggest that none of them are IDs. \n', verbose = verbose)
+    verbose_cat(green('\u2714'), 'Columns data suggest that none of them are IDs. \n', verbose = verbose)
     str <- c(str, capture.output(
-      cat('**Columns data suggest that none of them are IDs. **\n\n')))
+      cat(green('\u2714'), '**Columns data suggest that none of them are IDs. **\n\n')))
   }
 
   verbose_cat('\n', verbose = verbose)
