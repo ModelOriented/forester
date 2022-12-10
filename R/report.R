@@ -23,7 +23,19 @@ report <-
            output_format = 'pdf_document',
            output_dir = getwd(),
            check_data = TRUE) {
+
+    tryCatch({
+      find.package('tinytex')
+    },
+    error = function(cond) {
+      verbose_cat('Package not found: tinytex, to use it please follow guides for',
+                  'installation from GitHub repository README. The report() fucntion',
+                  'is unable to work properly wihtout it. \n\n', verbose = verbose)
+      return(NULL)
+    })
+
     input_file_path <- system.file('rmd', 'report.Rmd', package = 'forester')
+
     rmarkdown::render(
       input         = input_file_path,
       output_format = output_format,

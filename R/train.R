@@ -118,7 +118,7 @@
 train <- function(data,
                   y,
                   type = 'auto',
-                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
                   loss = 'default',
                   validation = 'default',
                   tuning = 'default',
@@ -133,10 +133,22 @@ train <- function(data,
                   metric_function_name = NULL,
                   metric_function_decreasing = TRUE,
                   best_model_number = 5) {
+  tryCatch({
+    if ('catboost' %in% engine){
+      find.package('catboost')
+    }
+  },
+  error = function(cond) {
+    verbose_cat('Package not found: catboost, to use it please follow guides for',
+                'installation from GitHub repository README. Otherwise remove it',
+                'from the engine \n\n', verbose = verbose)
+    return(NULL)
+  })
+
   if (type == 'auto') {
     type <- guess_type(data, y)
   }
-  verbose_cat('Type guessed as: ', type, '\n', verbose = verbose)
+  verbose_cat('Type guessed as: ', type, '\n\n', verbose = verbose)
 
   if (verbose) {
     check_report <- check_data(data, y, verbose)

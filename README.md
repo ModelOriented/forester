@@ -13,6 +13,35 @@ install.packages("devtools")
 devtools::install_github("ModelOriented/forester")
 ```
 
+## Additional features installation
+
+Some of the package dependencies are not present on CRAN, which means that the user has to follow the installation mentioned below. They should be especially helpful for macOS users:
+
+### catboost
+
+The catboost model is used in the `train()` function as an additional engine.
+
+``` r
+devtools::install_url('https://github.com/catboost/catboost/releases/download/v1.1.1/catboost-R-Darwin-1.1.1.tgz', INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-staged-install"))
+```
+
+### ggradar
+
+The ggradar is required for creating radar plot visualization in the report from `report()` function.
+
+``` r
+devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
+```
+
+### tinytex
+
+The tinytex is required for creating a report from `report()` function.
+
+``` r
+install.packages('tinytex')
+tinytex::install_tinytex()
+```
+
 ## How to build tree-based models in R?
 
 ![](misc/intro.png)
@@ -53,7 +82,7 @@ This package is created inside the MI2.AI (Warsaw University of Technology) as b
  
 Project co-ordinator and supervisor: [Anna Kozak](https://github.com/kozaka93)
 
-Auxiliary supervisor [Przemysław Biecek]( https://github.com/pbiecek)
+Auxiliary supervisor [Przemysław Biecek](https://github.com/pbiecek)
 
 The previous version of forester was created by:
 - Hoang Thien Ly
