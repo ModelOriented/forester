@@ -12,7 +12,7 @@ test_that('test-predict_new', {
     preds <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 15)
+  expect_true(length(preds) == 12)
   expect_true(length(preds[[1]]) == 1)
 
   new_obs['Bedrooms']      <- NULL
@@ -28,7 +28,7 @@ test_that('test-predict_new', {
     preds <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 15)
+  expect_true(length(preds) == 12)
   expect_true(length(preds[[1]]) == 30)
 
   # Tests for adult dataset.
@@ -45,7 +45,7 @@ test_that('test-predict_new', {
     preds <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 15)
+  expect_true(length(preds) == 12)
   expect_true(length(preds[[1]]) == 1)
 
   new_obs['education'] <- NULL
@@ -60,7 +60,7 @@ test_that('test-predict_new', {
     preds <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 15)
+  expect_true(length(preds) == 12)
   expect_true(length(preds[[1]]) == 30)
 
   # Tests for testing_data.
@@ -77,7 +77,7 @@ test_that('test-predict_new', {
     preds        <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 15)
+  expect_true(length(preds) == 12)
   expect_true(length(preds[[1]]) == 1)
 
   new_obs['X4']      <- NULL
@@ -91,6 +91,6 @@ test_that('test-predict_new', {
     preds            <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 15)
+  expect_true(length(preds) == 12)
   expect_true(length(preds[[1]]) == 30)
   })

@@ -21,6 +21,8 @@
 #' All models from this vector will be trained and the best one will be returned.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' training process, if FALSE gives none.
+#' @param train_test_split A 3 value vector, describing the proportions of train,
+#' test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).
 #' @param bayes_iter An integer value describing number of optimization rounds
 #' used by Bayesian optimization.
 #' @param random_evals An integer value describing number of trained models
@@ -106,6 +108,7 @@ train <- function(data,
                   type = 'auto',
                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
                   verbose = TRUE,
+                  train_test_split = c(0.6, 0.2, 0.2),
                   bayes_iter = 10,
                   random_evals = 10,
                   advanced_preprocessing = FALSE,
@@ -144,8 +147,8 @@ train <- function(data,
 
   verbose_cat('Data preprocessed. \n', verbose = verbose)
 
-  split_data        <- train_test_balance(preprocessed_data$data, y, type,
-                                   balance = TRUE)
+  split_data <- train_test_balance(preprocessed_data$data, y, type,
+                                   balance = TRUE, fractions = train_test_split)
   verbose_cat('Data split and balanced. \n', verbose = verbose)
 
   train_data <- prepare_data(split_data$train, y, engine)
@@ -279,7 +282,6 @@ train <- function(data,
         }
       }
     }
-    print('here')
     for (i in 1:length(predictions_best)) {
       for (j in 1:length(predictions_best[[i]])) {
         if (predictions_best[[i]][j] < 0.5) {

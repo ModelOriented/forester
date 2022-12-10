@@ -8,11 +8,7 @@ train(
   data,
   y,
   type = "auto",
-  engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
-  loss = "default",
-  validation = "default",
-  tuning = "default",
-  keep = FALSE,
+  engine = c("ranger", "xgboost", "decision_tree", "lightgbm"),
   verbose = TRUE,
   bayes_iter = 10,
   random_evals = 10,
@@ -43,24 +39,6 @@ in the `y` variable.}
 \item{engine}{A vector of tree-based models that shall be tested.
 Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
 All models from this vector will be trained and the best one will be returned.}
-
-\item{loss}{A character with the name of the loss function.
-If `default` then the default loss function for a given task will be used.}
-
-\item{validation}{A validation/model selection a character of
-data.frame. If `data.frame` then this data will be used for the model
-assessment and selection. If `character`, then it will be a name of
-the hyperparameter.}
-
-\item{tuning}{A character with the name of the tuning procedure.
-one out of `default`/`portfolio`/`bayesian`/`random search`.
-If `default` then no tuning, just default hyperparameteres are used.
-If `portfolio` then static portfolio of hyperparametes are tried.
-If `bayesian` then Bayesian optimization is performed.
-If `random search` then random search is performed.}
-
-\item{keep}{Shall all models be returned (`keep = FALSE`) or only the best one
-(`keep = FALSE`, default option)?}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 training process, if FALSE gives none.}
