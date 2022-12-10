@@ -127,6 +127,13 @@ f1, auc, recall, precision and accuracy.
 `y` The original target column name.
 `test_observed` Values of y column from the test dataset.
 `train_observed` Values of y column from the training dataset.
+`valid_observed` Values of y column from the validation dataset.
+`test_observed_labels` Values of y column from the test dataset as text labels
+(for classification task only).
+`train_observed_labels` Values of y column from the training dataset as text
+labels (for classification task only).
+`valid_observed_labels` Values of y column from the validation dataset as text
+labels (for classification task only).
 `best_models` Ranking list of top 10 trained models - with default
 parameters, with parameters optimized with the Bayesian optimization
 algorithm and with parameters optimized with the random search algorithm.
@@ -134,6 +141,10 @@ algorithm and with parameters optimized with the random search algorithm.
 values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
 `predictions_all` Predictions for all trained models.
 `predictions_best` Predictions for models from best_models list.
+`predictions_all_labels` Predictions for all trained models as text labels
+(for classification task only).
+`predictions_best_labels` Predictions for models from best_models list as
+labels (for classification task only).
 `raw_train` The another form of the training dataset (useful for creating
 VS plot and predicting on training dataset for catboost and lightgbm models).
 }

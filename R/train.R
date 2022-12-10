@@ -88,6 +88,13 @@
 #' `y` The original target column name.
 #' `test_observed` Values of y column from the test dataset.
 #' `train_observed` Values of y column from the training dataset.
+#' `valid_observed` Values of y column from the validation dataset.
+#' `test_observed_labels` Values of y column from the test dataset as text labels
+#' (for classification task only).
+#' `train_observed_labels` Values of y column from the training dataset as text
+#' labels (for classification task only).
+#' `valid_observed_labels` Values of y column from the validation dataset as text
+#' labels (for classification task only).
 #' `best_models` Ranking list of top 10 trained models - with default
 #' parameters, with parameters optimized with the Bayesian optimization
 #' algorithm and with parameters optimized with the random search algorithm.
@@ -95,6 +102,10 @@
 #' values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
 #' `predictions_all` Predictions for all trained models.
 #' `predictions_best` Predictions for models from best_models list.
+#' `predictions_all_labels` Predictions for all trained models as text labels
+#' (for classification task only).
+#' `predictions_best_labels` Predictions for models from best_models list as
+#' labels (for classification task only).
 #' `raw_train` The another form of the training dataset (useful for creating
 #' VS plot and predicting on training dataset for catboost and lightgbm models).
 #' @export
@@ -143,10 +154,10 @@ train <- function(data,
                                    balance = TRUE)
   verbose_cat('Data split and balanced. \n', verbose = verbose)
 
-  train_data        <- prepare_data(split_data$train, y, engine)
-  test_data         <- prepare_data(split_data$test, y, engine, predict = TRUE,
+  train_data <- prepare_data(split_data$train, y, engine)
+  test_data  <- prepare_data(split_data$test, y, engine, predict = TRUE,
                              split_data$train)
-  valid_data        <- prepare_data(split_data$valid, y, engine, predict = TRUE,
+  valid_data <- prepare_data(split_data$valid, y, engine, predict = TRUE,
                              split_data$train)
   # For creating VS plot and predicting on train (catboost, lgbm).
   raw_train         <- prepare_data(split_data$train, y, engine, predict = TRUE,
@@ -164,20 +175,20 @@ train <- function(data,
   train_observed   <- split_data$train[[y]]
   valid_observed   <- split_data$valid[[y]]
 
-  model_random      <- random_search(train_data,
+  model_random <- random_search(train_data,
                                test_data,
                                y = y,
                                engine = engine,
                                type = type,
                                max_evals = random_evals)
   if (!is.null(model_random)) {
-  preds_random      <- predict_models_all(model_random$models,
+  preds_random <- predict_models_all(model_random$models,
                                        test_data,
                                        y,
                                        type = type)
   }
 
-  model_bayes       <- train_models_bayesopt(train_data,
+  model_bayes <- train_models_bayesopt(train_data,
                                       y,
                                       test_data,
                                       engine = engine,
@@ -186,7 +197,7 @@ train <- function(data,
                                       verbose = verbose)
   preds_bayes <- NULL
   if (!is.null(model_bayes)) {
-    preds_bayes       <- predict_models_all(model_bayes, test_data, y, type)
+    preds_bayes <- predict_models_all(model_bayes, test_data, y, type)
   }
 
   models_all <- c(model_basic, model_random$models, model_bayes)
@@ -214,7 +225,36 @@ train <- function(data,
   if (type == 'binary_clf') {
     test_observed  <- test_observed - 1 # [0, 1]
     train_observed <- train_observed - 1
+    valid_observed <- valid_observed - 1
+
+    test_observed_labels  <- test_observed
+    train_observed_labels <- train_observed
+    valid_observed_labels <- valid_observed
+
+    # human-readable observed vaues with text labels
+    for (i in 1:length(test_observed)) {
+      if (test_observed[i] < 0.5) {
+        test_observed_labels[i] <- preprocessed_data$bin_labels[1]
+      } else {
+        test_observed_labels[i] <- preprocessed_data$bin_labels[2]
+      }
+    }
+    for (i in 1:length(train_observed)) {
+      if (train_observed[i] < 0.5) {
+        train_observed_labels[i] <- preprocessed_data$bin_labels[1]
+      } else {
+        train_observed_labels[i] <- preprocessed_data$bin_labels[2]
+      }
+    }
+    for (i in 1:length(valid_observed)) {
+      if (train_observed[i] < 0.5) {
+        valid_observed_labels[i] <- preprocessed_data$bin_labels[1]
+      } else {
+        valid_observed_labels[i] <- preprocessed_data$bin_labels[2]
+      }
+    }
   }
+
   best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
   predictions_best <- predict_models_all(best_models$models, test_data, y, type = type)
   predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
@@ -232,29 +272,88 @@ train <- function(data,
 
   verbose_cat('Best models list created. \n', verbose = verbose)
 
-  return(
-    list(
-      type              = type,
-      deleted_columns   = preprocessed_data$colnames,
-      preprocessed_data = preprocessed_data$data,
-      bin_labels        = preprocessed_data$bin_labels,
-      train_data        = train_data,
-      test_data         = test_data,
-      valid_data        = valid_data,
-      predictions       = predictions_all,
-      score_test        = score,
-      score_valid       = score_valid,
-      models_list       = models_all,
-      data              = data,
-      y                 = y,
-      test_observed     = test_observed,
-      train_observed    = train_observed,
-      best_models       = best_models,
-      engine            = engine,
-      predictions_all   = predictions_all,
-      predictions_best  = predictions_best,
-      raw_train         = raw_train,
-      check_report      = check_report
+  # Easy human-readable predictions
+  if (type == 'binary_clf') {
+    predictions_all_labels  <- predictions_all
+    predictions_best_labels <- predictions_best
+    for (i in 1:length(predictions_all)) {
+      for (j in 1:length(predictions_all[[i]])) {
+        if (predictions_all[[i]][j] < 0.5) {
+          predictions_all_labels[[i]][j] <- preprocessed_data$bin_labels[1]
+        } else {
+          predictions_all_labels[[i]][j] <- preprocessed_data$bin_labels[2]
+        }
+      }
+    }
+    print('here')
+    for (i in 1:length(predictions_best)) {
+      for (j in 1:length(predictions_best[[i]])) {
+        if (predictions_best[[i]][j] < 0.5) {
+          predictions_best_labels[[i]][j] <- preprocessed_data$bin_labels[1]
+        } else {
+          predictions_best_labels[[i]][j] <- preprocessed_data$bin_labels[2]
+        }
+      }
+    }
+  }
+  if (type == 'binary_clf') {
+    return(
+      list(
+        type                    = type,
+        deleted_columns         = preprocessed_data$colnames,
+        preprocessed_data       = preprocessed_data$data,
+        bin_labels              = preprocessed_data$bin_labels,
+        train_data              = train_data,
+        test_data               = test_data,
+        valid_data              = valid_data,
+        predictions             = predictions_all,
+        score_test              = score,
+        score_valid             = score_valid,
+        models_list             = models_all,
+        data                    = data,
+        y                       = y,
+        test_observed           = test_observed,
+        train_observed          = train_observed,
+        valid_observed          = valid_observed,
+        test_observed_labels    = test_observed_labels,
+        train_observed_labels   = train_observed_labels,
+        valid_observed_labels   = valid_observed_labels,
+        best_models             = best_models,
+        engine                  = engine,
+        predictions_all         = predictions_all,
+        predictions_best        = predictions_best,
+        predictions_all_labels  = predictions_all_labels,
+        predictions_best_labels = predictions_best_labels,
+        raw_train               = raw_train,
+        check_report            = check_report
+      )
     )
-  )
+  } else {
+    return(
+      list(
+        type                    = type,
+        deleted_columns         = preprocessed_data$colnames,
+        preprocessed_data       = preprocessed_data$data,
+        bin_labels              = preprocessed_data$bin_labels,
+        train_data              = train_data,
+        test_data               = test_data,
+        valid_data              = valid_data,
+        predictions             = predictions_all,
+        score_test              = score,
+        score_valid             = score_valid,
+        models_list             = models_all,
+        data                    = data,
+        y                       = y,
+        test_observed           = test_observed,
+        train_observed          = train_observed,
+        valid_observed          = valid_observed,
+        best_models             = best_models,
+        engine                  = engine,
+        predictions_all         = predictions_all,
+        predictions_best        = predictions_best,
+        raw_train               = raw_train,
+        check_report            = check_report
+      )
+    )
+  }
 }
