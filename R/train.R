@@ -19,20 +19,6 @@
 #' @param engine A vector of tree-based models that shall be tested.
 #' Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
 #' All models from this vector will be trained and the best one will be returned.
-#' @param loss A character with the name of the loss function.
-#' If `default` then the default loss function for a given task will be used.
-#' @param validation A validation/model selection a character of
-#' data.frame. If `data.frame` then this data will be used for the model
-#' assessment and selection. If `character`, then it will be a name of
-#' the hyperparameter.
-#' @param tuning A character with the name of the tuning procedure.
-#' one out of `default`/`portfolio`/`bayesian`/`random search`.
-#' If `default` then no tuning, just default hyperparameteres are used.
-#' If `portfolio` then static portfolio of hyperparametes are tried.
-#' If `bayesian` then Bayesian optimization is performed.
-#' If `random search` then random search is performed.
-#' @param keep Shall all models be returned (`keep = FALSE`) or only the best one
-#' (`keep = FALSE`, default option)?
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' training process, if FALSE gives none.
 #' @param bayes_iter An integer value describing number of optimization rounds
@@ -119,10 +105,6 @@ train <- function(data,
                   y,
                   type = 'auto',
                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
-                  loss = 'default',
-                  validation = 'default',
-                  tuning = 'default',
-                  keep = FALSE,
                   verbose = TRUE,
                   bayes_iter = 10,
                   random_evals = 10,
