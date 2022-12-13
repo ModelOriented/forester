@@ -28,10 +28,10 @@ report <-
       find.package('tinytex')
     },
     error = function(cond) {
-      verbose_cat(red('\u2716'), 'Package not found: tinytex, to use it please follow',
+      verbose_cat(crayon::red('\u2716'), 'Package not found: tinytex, to use it please follow',
                   'guides for installation from GitHub repository README. The',
                   'report() fucntion is unable to work properly wihtout it. \n\n',
-                  verbose = verbose)
+                  verbose = TRUE)
       return(NULL)
     })
 

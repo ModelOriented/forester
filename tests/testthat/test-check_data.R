@@ -47,8 +47,8 @@ test_that('test-check_data', {
   expect_output(check_duplicate_col(df_adult), no_duplicate)
   expect_output(check_duplicate_col(df_test), no_duplicate)
 
-  no_missing   <- 'No target values are missing. \n\nNo predictor values are missing. \n'
-  missing_test <- 'No target values are missing. \n\n943 observations have missing fields.\n'
+  no_missing   <- '<U\\+2714> No target values are missing. \n\n<U\\+2714> No predictor values are missing. \n'
+  missing_test <- '<U\\+2714> No target values are missing. \n\n<U\\+2716> 943 observations have missing fields.\n'
 
   expect_output(check_missing(df_iris, y_iris), no_missing)
   expect_output(check_missing(df_lisbon, y_lisbon), no_missing)
@@ -68,10 +68,10 @@ test_that('test-check_data', {
   expect_output(check_dim(df_adult), no_dim_issues)
   expect_output(check_dim(df_test), no_dim_issues)
 
-  no_cor     <- 'No strongly correlated, by Spearman rank, pairs of numerical values. \n\nNo strongly correlated, by Crammer V rank, pairs of categorical values. \n'
-  cor_iris   <- 'Strongly correlated, by Spearman rank, pairs of numerical values are: \n \nSepal.Length - Petal.Length: 0.81;\nSepal.Length - Petal.Width: 0.79;\nPetal.Length - Petal.Width: 0.98;\n'
-  cor_lisbon <- 'Strongly correlated, by Spearman rank, pairs of numerical values are: \n \nBedrooms - AreaNet: 0.77;\nBedrooms - AreaGross: 0.77;\nBathrooms - AreaNet: 0.78;\nBathrooms - AreaGross: 0.78;\nAreaNet - AreaGross: 1;\n\nStrongly correlated, by Crammer V rank, pairs of categorical values are: \nPropertyType - PropertySubType: 1;\n'
-  cor_iris2  <- 'Strongly correlated, by Spearman rank, pairs of numerical values are: \n \nSepal.Length - Petal.Length: 0.87;\nSepal.Length - Petal.Width: 0.82;\nPetal.Length - Petal.Width: 0.96;\n'
+  no_cor     <- '<U\\+2714> No strongly correlated, by Spearman rank, pairs of numerical values. \n\n<U\\+2714> No strongly correlated, by Crammer\'s V rank, pairs of categorical values. \n'
+  cor_iris   <- '<U\\+2716> Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Sepal.Length - Petal.Length: 0.81;\n Sepal.Length - Petal.Width: 0.79;\n Petal.Length - Petal.Width: 0.98;\n'
+  cor_lisbon <- '<U\\+2716> Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Bedrooms - AreaNet: 0.77;\n Bedrooms - AreaGross: 0.77;\n Bathrooms - AreaNet: 0.78;\n Bathrooms - AreaGross: 0.78;\n AreaNet - AreaGross: 1;\n\n<U\\+2716> Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: \n PropertyType - PropertySubType: 1;\n'
+  cor_iris2  <- '<U\\+2716> Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Sepal.Length - Petal.Length: 0.87;\n Sepal.Length - Petal.Width: 0.82;\n Petal.Length - Petal.Width: 0.96;\n'
   cor_test   <- 'No strongly correlated, by Spearman rank, pairs of numerical values.'
 
   expect_output(check_cor(df_iris, y_iris), cor_iris)
@@ -107,8 +107,8 @@ test_that('test-check_data', {
   expect_output(check_y_balance(df_adult, y_adult), balance_adult)
   expect_output(check_y_balance(df_test, y_test), balance_test)
 
-  no_id     <- 'Columns names suggest that none of them are IDs. \n\nColumns data suggest that none of them are IDs. \n'
-  id_lisbon <- 'Columns names suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n\nColumns data suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n'
+  no_id     <- '<U\\+2714> Columns names suggest that none of them are IDs. \n\n<U\\+2714> Columns data suggest that none of them are IDs. \n'
+  id_lisbon <- '<U\\+2716> Columns names suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n\n<U\\+2716> Columns data suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n'
 
   expect_output(detect_id_columns(df_iris), no_id)
   suppressWarnings(expect_output(detect_id_columns(df_lisbon), id_lisbon))

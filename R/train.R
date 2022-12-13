@@ -124,7 +124,7 @@ train <- function(data,
     }
   },
   error = function(cond) {
-    verbose_cat(red('\u2716'), 'Package not found: catboost, to use it please ',
+    verbose_cat(crayon::red('\u2716'), 'Package not found: catboost, to use it please ',
                 'follow guides for installation from GitHub repository README.',
                 'Otherwise remove it from the engine \n\n', verbose = verbose)
     return(NULL)
@@ -133,7 +133,7 @@ train <- function(data,
   if (type == 'auto') {
     type <- guess_type(data, y)
   }
-  verbose_cat(green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
 
   if (verbose) {
     check_report <- check_data(data, y, verbose)
@@ -144,16 +144,16 @@ train <- function(data,
  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
 
  if (advanced_preprocessing) {
-   verbose_cat(red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
+   verbose_cat(crayon::red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
                preprocessed_data$colnames, '\n\n', verbose = verbose)
  }
 
 
-  verbose_cat(green('\u2714'), 'Data preprocessed. \n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Data preprocessed. \n', verbose = verbose)
 
   split_data <- train_test_balance(preprocessed_data$data, y, type,
                                    balance = TRUE, fractions = train_test_split)
-  verbose_cat(green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
 
   train_data <- prepare_data(split_data$train, y, engine)
   test_data  <- prepare_data(split_data$test, y, engine, predict = TRUE,
@@ -164,13 +164,13 @@ train <- function(data,
   raw_train         <- prepare_data(split_data$train, y, engine, predict = TRUE,
                                     split_data$train)
 
-  verbose_cat(green('\u2714'), 'Correct formats prepared. \n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Correct formats prepared. \n', verbose = verbose)
 
   model_basic       <- train_models(train_data, y, engine, type)
-  verbose_cat(green('\u2714'), 'Models successfully trained. \n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Models successfully trained. \n', verbose = verbose)
 
   preds_basic       <- predict_models_all(model_basic, test_data, y, type)
-  verbose_cat(green('\u2714'), 'Predicted successfully. \n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Predicted successfully. \n', verbose = verbose)
 
   test_observed    <- split_data$test[[y]]
   train_observed   <- split_data$train[[y]]
@@ -221,7 +221,7 @@ train <- function(data,
                          engine = engine_all,
                          tuning = tuning)
   predictions_all  <- predict_models_all(models_all, test_data, y, type)
-  verbose_cat(green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
 
   if (type == 'binary_clf') {
     test_observed  <- test_observed - 1 # [0, 1]
@@ -271,7 +271,7 @@ train <- function(data,
                                    engine = engine_all,
                                    tuning = tuning)
 
-  verbose_cat(green('\u2714'), 'Best models list created. \n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Best models list created. \n', verbose = verbose)
 
   # Easy human-readable predictions
   if (type == 'binary_clf') {

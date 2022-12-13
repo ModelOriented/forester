@@ -10,6 +10,7 @@ train(
   type = "auto",
   engine = c("ranger", "xgboost", "decision_tree", "lightgbm"),
   verbose = TRUE,
+  train_test_split = c(0.6, 0.2, 0.2),
   bayes_iter = 10,
   random_evals = 10,
   advanced_preprocessing = FALSE,
@@ -42,6 +43,9 @@ All models from this vector will be trained and the best one will be returned.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 training process, if FALSE gives none.}
+
+\item{train_test_split}{A 3 value vector, describing the proportions of train,
+test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).}
 
 \item{bayes_iter}{An integer value describing number of optimization rounds
 used by Bayesian optimization.}
