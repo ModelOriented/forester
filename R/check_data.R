@@ -18,6 +18,8 @@
 #' @importFrom stats IQR cor median sd
 #' @importFrom utils capture.output
 check_data <- function(data, y, verbose = TRUE) {
+  options(warn = -1)
+
   if (!y %in% colnames(data)) {
     stop('Target column name not found!')
   }
@@ -96,10 +98,10 @@ check_static <- function(df, verbose = TRUE) {
     str <- capture.output(cat(green('\u2713'), '**No static columns. **\n\n'))
 
   } else {
-    verbose_cat(red('\u2716'), 'Static columns are: \n', dominator_cols, '\n\n', sep = '', verbose = verbose)
-    verbose_cat('With dominating values: \n', dominator_vals, '\n', sep = '', verbose = verbose)
-    str <- capture.output(cat('**Static columns are: **', dominator_cols, '\n\n', sep = ''))
-    str <- c(str, capture.output(cat(red('\u2716'), '**With dominating values: **', dominator_vals,
+    verbose_cat(red('\u2716'), ' Static columns are: \n ', dominator_cols, '\n\n', sep = '', verbose = verbose)
+    verbose_cat(red('\u2716'), ' With dominating values: \n', ' ',  dominator_vals, '\n ', sep = '', verbose = verbose)
+    str <- capture.output(cat(red('\u2716'), '** Static columns are: **', dominator_cols, '\n\n', sep = ''))
+    str <- c(str, capture.output(cat('**With dominating values: **', dominator_vals,
                                      '\n\n', sep = '')))
   }
   verbose_cat('\n', verbose = verbose)
@@ -134,7 +136,7 @@ check_duplicate_col <- function(df, verbose = TRUE) {
     str <- capture.output(cat(green('\u2714'), '**No duplicate columns.**\n'))
 
   } else {
-    verbose_cat(red('\u2716'), 'These column pairs are duplicate:\n ', pairs, '\n', sep = '', verbose = verbose)
+    verbose_cat(red('\u2716'), ' These column pairs are duplicate:\n ', pairs, '\n', sep = '', verbose = verbose)
     str <- capture.output(cat(red('\u2716'), '**These column pairs are duplicate: **\n', pairs, '\n\n',
                               sep = ''))
   }
@@ -183,7 +185,7 @@ check_missing <- function(df, y, verbose = TRUE) {
     str <- c(str, capture.output(cat(green('\u2714'), '**No predictor values are missing. **\n')))
 
   } else {
-    verbose_cat(red('\u2716'), missing_x, ' observations have missing fields.\n', sep = '', verbose = verbose)
+    verbose_cat(red('\u2716'), ' ', missing_x, ' observations have missing fields.\n', sep = '', verbose = verbose)
     str <- c(str, capture.output(cat(red('\u2716'), '** ', missing_x, ' observations have missing fields.**\n', sep = '')))
 
   }
@@ -284,14 +286,14 @@ check_cor <- function(df, y, verbose = TRUE) {
             no_cor_num <- FALSE
 
           }
-          verbose_cat(num_names[i], ' - ', num_names[j], ': ', cor_num[i, j], ';\n', sep = '', verbose = verbose)
+          verbose_cat(' ', num_names[i], ' - ', num_names[j], ': ', cor_num[i, j], ';\n', sep = '', verbose = verbose)
           str <- c(str, capture.output(
-            cat(num_names[i], ' - ', num_names[j], ': ', cor_num[i, j], ';\n', sep = '')))
+            cat(' ', num_names[i], ' - ', num_names[j], ': ', cor_num[i, j], ';\n', sep = '')))
         }
       }
     }
     if (no_cor_num) {
-      verbose_cat(green('\u2714'), 'No strongly correlated, by Spearman rank, pairs of numerical values. \n\n', verbose = verbose)
+      verbose_cat(green('\u2714'), 'No strongly correlated, by Spearman rank, pairs of numerical values. \n', verbose = verbose)
       str <- capture.output(cat(green('\u2714'), '**No strongly correlated, by Spearman rank, pairs of numerical values. **\n\n'))
     }
   }
@@ -335,20 +337,22 @@ check_cor <- function(df, y, verbose = TRUE) {
         }
         if (i != j && strong_V_cor) {
           if (no_cor_fct) {
-            verbose_cat('\n', red('\u2716'), ' Strongly correlated, by Crammer V rank, pairs of categorical values are: \n', verbose = verbose)
-            str <- c(str, capture.output(cat('\n', red('\u2716'), '** Strongly correlated, by Crammer V rank, pairs of categorical values are: **\n\n')))
+            verbose_cat('\n', verbose = verbose)
+            verbose_cat(red('\u2716'), 'Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: \n', verbose = verbose)
+            str <- c(str, capture.output(cat('\n', red('\u2716'), '** Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: **\n\n')))
             no_cor_fct = FALSE
 
           }
-          verbose_cat(fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '', verbose = verbose)
-          str <- c(str, capture.output(cat(fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '')))
+          verbose_cat(' ', fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '', verbose = verbose)
+          str <- c(str, capture.output(cat(' ', fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '')))
         }
       }
     }
     if (no_cor_fct) {
-      verbose_cat(green('\u2714'), 'No strongly correlated, by Crammer V rank, pairs of categorical values. \n', verbose = verbose)
+      verbose_cat('\n', verbose = verbose)
+      verbose_cat(green('\u2714'), 'No strongly correlated, by Crammer\'s V rank, pairs of categorical values. \n', verbose = verbose)
       str <- c(str, capture.output(
-        cat(green('\u2714'), '**No strongly correlated, by Crammer V rank, pairs of categorical values. **\n')))
+        cat(green('\u2714'), '**No strongly correlated, by Crammer\'s V rank, pairs of categorical values. **\n')))
     }
   }
   verbose_cat('\n', verbose = verbose)
@@ -425,7 +429,7 @@ check_outliers <- function(df, verbose = TRUE) {
   outliers <- unique(outliers)
   outliers <- sort(outliers)
   if (length(outliers) == 0) {
-    verbose_cat(green('\u2714'), 'No outliers in the dataset. \n\n', verbose = verbose)
+    verbose_cat(green('\u2714'), 'No outliers in the dataset. \n', verbose = verbose)
     str <- capture.output(cat(green('\u2714'), '**No outliers in the dataset. **\n'))
 
   } else {
@@ -458,9 +462,14 @@ check_y_balance <- function(df, y, verbose = TRUE) {
 
   if (type %in% c('binary_clf')) {
     if (table(target)[1] / table(target)[2] > 1.5 || table(target)[1] / table(target)[2] < 0.75) {
-      verbose_cat(red('\u2716'), 'Dataset is unbalanced with ', table(target)[1] / table(target)[2], ' proportion. \n', verbose = verbose)
+      if (table(target)[1] > table(target)[2]) {
+        dominating <- rownames(table(target))[1]
+      } else {
+        dominating <- rownames(table(target))[2]
+      }
+      verbose_cat(red('\u2716'), 'Dataset is unbalanced with ', table(target)[1] / table(target)[2], ' proportion with', dominating, 'being a dominating class.\n', verbose = verbose)
       str <- capture.output(
-        cat(red('\u2716'), '**Dataset is unbalanced with: **', table(target)[1] / table(target)[2], ' proportion. \n'))
+        cat(red('\u2716'), '**Dataset is unbalanced with: **', table(target)[1] / table(target)[2], ' proportion with', dominating, 'being a dominating class.\n'))
 
     } else {
       verbose_cat(green('\u2714'), 'Dataset is balanced. \n', verbose = verbose)
