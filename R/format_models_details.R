@@ -55,14 +55,14 @@ format_models_details <- function(models) {
     }
     if (grepl('xgboost', names(models[i]))) {
       # Functions for getting params of xgboost model are not implementented!
-      if (!is.null(models[[i]]$evaluation_log$train_rmse)){
+      if (!is.null(models[[i]]$evaluation_log$train_rmse)) {
         eval_log <- '    iter : train_rmse\n'
       } else {
         eval_log <- '    iter : train_auc\n'
       }
 
       for (j in 1:length(models[[i]]$evaluation_log$iter)) {
-        if (!is.null(models[[i]]$evaluation_log$train_rmse)){
+        if (!is.null(models[[i]]$evaluation_log$train_rmse)) {
           eval_log <- paste(eval_log, '    ', models[[i]]$evaluation_log$iter[j], ': ', models[[i]]$evaluation_log$train_rmse[j], '\n')
         } else {
           eval_log <- paste(eval_log, '    ', models[[i]]$evaluation_log$iter[j], ': ', models[[i]]$evaluation_log$train_auc[j], '\n')

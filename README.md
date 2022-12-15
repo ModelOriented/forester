@@ -27,7 +27,7 @@ devtools::install_url('https://github.com/catboost/catboost/releases/download/v1
 
 ### ggradar
 
-The ggradar is required for creating radar plot visualization in the report from `report()` function.
+The ggradar is required for creating radar plot visualization in the report from the `report()` function.
 
 ``` r
 devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
@@ -35,7 +35,7 @@ devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
 
 ### tinytex
 
-The tinytex is required for creating a report from `report()` function.
+The tinytex is required for creating a report from the `report()` function.
 
 ``` r
 install.packages('tinytex')

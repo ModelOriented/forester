@@ -1,20 +1,20 @@
 # forester 1.1.3
 * In the `train()` function:
-  * Added objects to output of the function: 
-    * valid_observed 
-    * train_observed_labels, test_observed_labels, valid_observed_labels, predictions_all_labels predictions_best_best as labels for binary classification task.
-  * removed catboost from default engines
-  * added check if catboost is installed
-  * removed parameters: loss, validation, tuning, keep, because they weren't used
-  * added train_test_split parameter that determines proportions of train, test and validation subsets
-  * conditioned the message about columns deleted during the advanced preprocessing
+  * Added objects to the output of the function: 
+    * Vector: valid_observed.
+    * Vectors: train_observed_labels, test_observed_labels, valid_observed_labels, predictions_all_labels predictions_best_best as labels for binary classification task.
+  * Removed catboost from default engines.
+  * Added check if catboost is installed.
+  * Removed parameters: loss, validation, tuning, keep, because they weren't used.
+  * Added train_test_split parameter that determines proportions of train, test and validation subsets.
+  * Conditioned the message about columns deleted during the advanced preprocessing.
 * In the `check_data()` function:
-  * Fixed an issue of too much unique values for Crammer V's correlation. If the number of combinations exceeds 2^29, the correlation is not calculated and the user is informed about it (it is caused by R limitations). 
-  * Fixed an issue with omitting strong correlations that are negative
-  * Added ticks and crosses that indicate whether something is of high or low quality.
+  * Fixed an issue of too much unique values for the Crammer V's correlation. If the number of combinations exceeds 2^29, the correlation is not calculated and the user is informed about it (it is caused by R limitations). 
+  * Fixed an issue with omitting strong correlations that are negative.
+  * Added ticks and crosses that indicate whether something is of the high or low quality.
   * Added the information which class is the dominating one in the unbalanced classification data set.
 * In the `preprocessing()` function: 
-  * Added a factorization of the target at the beginning of `binarize_target()` sub function. 
+  * Added a factorization of the target at the beginning of the `binarize_target()` sub function. 
   * Resolved issues with data frames where columns are not saved as factors.
 * The `report()` function:
   * If tinytex is not installed raises an error.

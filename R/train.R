@@ -119,7 +119,7 @@ train <- function(data,
                   metric_function_decreasing = TRUE,
                   best_model_number = 5) {
   tryCatch({
-    if ('catboost' %in% engine){
+    if ('catboost' %in% engine) {
       find.package('catboost')
     }
   },
