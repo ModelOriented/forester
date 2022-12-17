@@ -163,11 +163,11 @@ score_models <- function(models,
                                engine[i],
                                tuning[i],
                                if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[1]], observed - 1)},
-                               model_performance_mse(unlist(predictions[i], use.names = FALSE), observed),
-                               model_performance_rmse(unlist(predictions[i], use.names = FALSE), observed),
-                               model_performance_r2(unlist(predictions[i], use.names = FALSE), observed),
-                               model_performance_mad(unlist(predictions[i], use.names = FALSE), observed),
-                               model_performance_mae(unlist(predictions[i], use.names = FALSE), observed)
+                               model_performance_mse(unlist(predictions[[i]], use.names = FALSE), observed),
+                               model_performance_rmse(unlist(predictions[[i]], use.names = FALSE), observed),
+                               model_performance_r2(unlist(predictions[[i]], use.names = FALSE), observed),
+                               model_performance_mad(unlist(predictions[[i]], use.names = FALSE), observed),
+                               model_performance_mae(unlist(predictions[[i]], use.names = FALSE), observed)
                                )
     }
   } else if (type == 'binary_clf') {
@@ -176,17 +176,16 @@ score_models <- function(models,
 
       observed <- as.numeric(observed)
       for (i in 1:length(models)) {
-        tp = sum((observed == 2) * (as.numeric(unlist(predictions[i])) >= 0.5))
-        fp = sum((observed == 1) * (as.numeric(unlist(predictions[i])) >= 0.5))
-        tn = sum((observed == 1) * (as.numeric(unlist(predictions[i])) < 0.5))
-        fn = sum((observed == 2) * (as.numeric(unlist(predictions[i])) < 0.5))
-
+        tp = sum((observed == 2) * (as.numeric(unlist(predictions[[i]])) >= 0.5))
+        fp = sum((observed == 1) * (as.numeric(unlist(predictions[[i]])) >= 0.5))
+        tn = sum((observed == 1) * (as.numeric(unlist(predictions[[i]])) < 0.5))
+        fn = sum((observed == 2) * (as.numeric(unlist(predictions[[i]])) < 0.5))
         models_frame[i, ] <- c(i,
                                names(models[i]),
                                engine[i],
                                tuning[i],
                                if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed - 1)},
-                               model_performance_auc(predictions[i], observed - 1),
+                               model_performance_auc(predictions[[i]], observed - 1),
                                model_performance_f1(tp, fp, tn, fn),
                                model_performance_recall(tp, fp, tn, fn),
                                model_performance_precision(tp, fp, tn, fn),

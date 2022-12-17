@@ -108,13 +108,25 @@ train_models <- function(data, y, engine, type) {
       capture.output(catboost_model <- catboost::catboost.train(data$catboost_data, params = params))
     }
   }
-  return(
-    list(
-      ranger_model        = ranger_model,
-      xgboost_model       = xgboost_model,
-      decision_tree_model = decision_tree_model,
-      lightgbm_model      = lightgbm_model,
-      catboost_model      = catboost_model
-    )
+
+  # To remove models that are NULL.
+  return_list <- list(
+    ranger_model        = ranger_model,
+    xgboost_model       = xgboost_model,
+    decision_tree_model = decision_tree_model,
+    lightgbm_model      = lightgbm_model,
+    catboost_model      = catboost_model
   )
+
+  to_rm <- c()
+  for (i in 1:length(return_list)) {
+    if (is.null(return_list[[i]])) {
+      to_rm <- c(to_rm, i)
+    }
+  }
+  if (!is.null(to_rm)) {
+    return_list <- return_list[-to_rm]
+  }
+
+  return(return_list)
 }

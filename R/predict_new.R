@@ -55,23 +55,7 @@ predict_new <- function(train_out, data, verbose = TRUE) {
   }
   data <- prepare_data(data, y, engine, TRUE, train_data)
 
-  engine2 <- c()
-  for (i in 1:length(train_out$models_list)) {
-    m_class <- class(train_out$models_list[[i]])
-    if ('ranger' %in% m_class) {
-      eng <- 'ranger'
-    } else if ('xgb.Booster' %in% m_class) {
-      eng <- 'xgboost'
-    } else if ('constparty' %in% m_class) {
-      eng <- 'decision_tree'
-    } else if ('lgb.Booster' %in% m_class) {
-      eng <- 'lightgbm'
-    } else if ('catboost.Model' %in% m_class) {
-      eng <- 'catboost'
-    }
-    engine2 <- c(engine2, eng)
-  }
-  preds <- predict_models_all(model, data, y, engine2, type)
+  preds <- predict_models_all(model, data, y, type)
   names(preds) <- names(train_out$models_list)
 
   return(preds)

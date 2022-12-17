@@ -3,8 +3,6 @@
 #' @param models A list of models trained by `train_models()` function.
 #' @param data A test data for models created by `prepare_data()` function.
 #' @param y A string that indicates a target column name.
-#' @param engine A vector of tree-based models that shall be created. Possible
-#' values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`.
 #' @param type A string that determines if Machine Learning task is the
 #' `classification` or `regression` task.
 #'
@@ -42,12 +40,22 @@
 #'   predict_models_all(model,
 #'                  test_data,
 #'                  'Species',
-#'                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
 #'                  type = type)
-predict_models_all <- function(models, data, y, engine, type) {
+predict_models_all <- function(models, data, y, type) {
   predictions <- list(1:length(models))
-
   engine_all <- c()
+
+  to_rm <- c()
+  # Elimination of null models (artifacts of not selected engines).
+  for (i in 1:length(models)) {
+    if (is.null(models[[i]])) {
+      to_rm <- c(to_rm, i)
+    }
+  }
+  if (!is.null(to_rm)) {
+    models <- models[-to_rm]
+  }
+
   for (i in 1:length(models)) {
     m_class <- class(models[[i]])
     if ('ranger' %in% m_class) {
@@ -64,7 +72,6 @@ predict_models_all <- function(models, data, y, engine, type) {
     engine_all <- c(engine_all, eng)
   }
   engine <- engine_all
-
   if (type == 'regression') {
     for (i in 1:length(models)) {
       if (engine[i] == 'ranger') {

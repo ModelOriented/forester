@@ -1,7 +1,7 @@
 Package: forester
 Type: Package
 Title: Quick and Simple Tools for Training and Testing of Tree-based Models
-Version: 1.1.0
+Version: 1.1.3
 Authors@R:
     c(person("Anna", "Kozak", role = c("aut", "cre"), email = "anna1993kozak@gmail.com"),
     person("Hubert", "Ruczyński", role = c("aut"), email = "hruczynski21@interia.pl"),
@@ -22,7 +22,6 @@ License: GPL-3
 Imports:
     ranger,
     xgboost,
-    catboost,
     lightgbm,
     ParBayesianOptimization,
     partykit,
@@ -35,11 +34,11 @@ Imports:
     rmarkdown,
     Boruta,
     ggplot2,
-    ggradar,
     ggrepel,
     pROC,
     stats,
-    tibble
+    tibble,
+    crayon
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
@@ -47,7 +46,10 @@ URL: https://github.com/ModelOriented/forester
 BugReports: https://github.com/ModelOriented/forester/issues
 Suggests: 
     testthat (>= 3.0.0),
+    catboost,
     DALEX,
+    ggradar,
+    tinytex,
     knitr
 Config/testthat/edition: 3
 VignetteBuilder:

@@ -83,10 +83,10 @@ pre_rm_static_cols <- function(data, y) {
 binarize_target <- function(data, y) {
   if (guess_type(data, y) == 'binary_clf') {
     #cat('Binarizing the target column. \n \n')
-
-    bin_data <- data
+    bin_data      <- data
+    data[[y]]     <- as.factor(data[[y]])
     bin_data[[y]] <- as.integer(data[[y]])
-    labels <- c('1', '2')
+    labels        <- c('1', '2')
 
     for (i in 1:nrow(bin_data)) {
       if (bin_data[[y]][i] == 1) {

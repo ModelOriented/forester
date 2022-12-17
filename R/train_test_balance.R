@@ -22,6 +22,11 @@ train_test_balance <-
   function(data, y, type, balance = TRUE, fractions = c(0.6, 0.2, 0.2), seed = NULL) {
     #Balancing / stratifying classes.
     target <- data[[y]]
+
+    if (sum(fractions) != 1) {
+      stop('ERROR: Elements of fraction vector dont sum up to 1!')
+    }
+
     if (balance == TRUE) {
       inds  <- splitTools::partition(target, p = c(train = fractions[1],
                                                    test  = fractions[2],

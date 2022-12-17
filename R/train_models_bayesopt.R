@@ -550,26 +550,48 @@ train_models_bayesopt <- function(train_data,
   }
 
   if (return_params == TRUE) {
-    return(
-      list(
-        ranger_bayes        = ranger_model,
-        xgboost_bayes       = xgboost_model,
-        decision_tree_bayes = decision_tree_model,
-        lightgbm_bayes      = lightgbm_model,
-        catboost_bayes      = catboost_model,
-        models_params       = models_params
-      )
+    # To remove models that are NULL.
+    return_list <- list(
+      ranger_bayes        = ranger_model,
+      xgboost_bayes       = xgboost_model,
+      decision_tree_bayes = decision_tree_model,
+      lightgbm_bayes      = lightgbm_model,
+      catboost_bayes      = catboost_model,
+      models_params       = models_params
     )
+
+    to_rm <- c()
+    for (i in 1:length(return_list)) {
+      if (is.null(return_list[[i]])) {
+        to_rm <- c(to_rm, i)
+      }
+    }
+    if (!is.null(to_rm)) {
+      return_list <- return_list[-to_rm]
+    }
+
+    return(return_list)
   }
   else {
-    return(
-      list(
-        ranger_bayes        = ranger_model,
-        xgboost_bayes       = xgboost_model,
-        decision_tree_bayes = decision_tree_model,
-        lightgbm_bayes      = lightgbm_model,
-        catboost_bayes      = catboost_model
-      )
+    # To remove models that are NULL.
+    return_list <- list(
+      ranger_bayes        = ranger_model,
+      xgboost_bayes       = xgboost_model,
+      decision_tree_bayes = decision_tree_model,
+      lightgbm_bayes      = lightgbm_model,
+      catboost_bayes      = catboost_model
     )
+
+    to_rm <- c()
+    for (i in 1:length(return_list)) {
+      if (is.null(return_list[[i]])) {
+        to_rm <- c(to_rm, i)
+      }
+    }
+    if (!is.null(to_rm)) {
+      return_list <- return_list[-to_rm]
+    }
+
+    return(return_list)
   }
 }

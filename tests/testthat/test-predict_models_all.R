@@ -35,7 +35,6 @@ test_that('test-predict_models_all', {
     predict_models_all(model,
                    test_data,
                    y = 'Species',
-                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                    type = type)
 
   expect_true(length(predictions) == 5)
@@ -78,7 +77,6 @@ test_that('test-predict_models_all', {
       predict_models_all(model,
                      test_data,
                      y = 'Two_yr_Recidivism',
-                     engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
                      type = type)
   )
 
@@ -122,7 +120,6 @@ test_that('test-predict_models_all', {
       predict_models_all(model,
                      test_data,
                      y = 'Price',
-                     engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
                      type = type)
   )
 

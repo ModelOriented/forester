@@ -124,7 +124,6 @@ test_that('regresion scoring compas', {
       predict_models_all(model,
                          test_data,
                          y = 'Two_yr_Recidivism',
-                         engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
                          type = type)
   )
 
