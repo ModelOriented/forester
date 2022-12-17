@@ -21,10 +21,10 @@
 #' All models from this vector will be trained and the best one will be returned.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' training process, if FALSE gives none.
-#' @param train_test_split A 3 value vector, describing the proportions of train,
+#' @param train_test_split A 3-value vector, describing the proportions of train,
 #' test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).
 #' @param bayes_iter An integer value describing number of optimization rounds
-#' used by Bayesian optimization.
+#' used by the Bayesian optimization.
 #' @param random_evals An integer value describing number of trained models
 #' with different parameters by random search.
 #' @param advanced_preprocessing A logical value describing, whether the user wants to use
