@@ -186,10 +186,10 @@ train <- function(data,
                                type = type,
                                max_evals = random_evals)
   if (!is.null(model_random)) {
-  preds_random <- predict_models_all(model_random$models,
-                                       test_data,
-                                       y,
-                                       type = type)
+    preds_random <- predict_models_all(model_random$models,
+                                         test_data,
+                                         y,
+                                         type = type)
   }
 
   model_bayes <- train_models_bayesopt(train_data,

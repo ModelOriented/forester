@@ -44,11 +44,11 @@ All models from this vector will be trained and the best one will be returned.}
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 training process, if FALSE gives none.}
 
-\item{train_test_split}{A 3 value vector, describing the proportions of train,
+\item{train_test_split}{A 3-value vector, describing the proportions of train,
 test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).}
 
 \item{bayes_iter}{An integer value describing number of optimization rounds
-used by Bayesian optimization.}
+used by the Bayesian optimization.}
 
 \item{random_evals}{An integer value describing number of trained models
 with different parameters by random search.}
@@ -129,6 +129,7 @@ values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
 labels (for classification task only).
 `raw_train` The another form of the training dataset (useful for creating
 VS plot and predicting on training dataset for catboost and lightgbm models).
+`outliers` The vector of possible outliers detected by the `check_data()`.
 }
 \description{
 The `train()` function is the core function of this package.
