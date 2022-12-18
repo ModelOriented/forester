@@ -1,3 +1,8 @@
+# forester 1.1.4
+* In the `report()` function:
+  * Removed engine and tuning columns from the ranked list table,
+  * Explained how the model name is created, so the columns engine and tuning are not needed,
+
 # forester 1.1.3
 * In the `train()` function:
   * Added objects to the output of the function: 
