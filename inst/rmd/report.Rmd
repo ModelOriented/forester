@@ -161,8 +161,8 @@ if (engine != c('catboost') && !is.null(engine)) { # For catboost there is an er
 ## Details about data
 ```{r check_data, results = 'asis'}
 checked_data <- check_data(params$data, params$y, verbose = FALSE)
-for (i in 1:length(checked_data)) {
-  cat(checked_data[i])
+for (i in 1:length(checked_data$str)) {
+  cat(checked_data$str[i])
   cat('\n')
 }
 ```

@@ -96,6 +96,7 @@
 #' labels (for classification task only).
 #' `raw_train` The another form of the training dataset (useful for creating
 #' VS plot and predicting on training dataset for catboost and lightgbm models).
+#' `outliers` The vector of possible outliers detected by the `check_data()`.
 #' @export
 #'
 #' @examples
@@ -138,7 +139,9 @@ train <- function(data,
   if (verbose) {
     check_report <- check_data(data, y, verbose)
   } else {
-    check_report <- NULL
+    check_report          <- c()
+    check_report$str      <- NULL
+    check_report$outliers <- NULL
   }
 
  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
@@ -325,7 +328,8 @@ train <- function(data,
         predictions_all_labels  = predictions_all_labels,
         predictions_best_labels = predictions_best_labels,
         raw_train               = raw_train,
-        check_report            = check_report
+        check_report            = check_report$str,
+        outliers                = check_report$outliers
       )
     )
   } else {
@@ -352,7 +356,8 @@ train <- function(data,
         predictions_all         = predictions_all,
         predictions_best        = predictions_best,
         raw_train               = raw_train,
-        check_report            = check_report
+        check_report            = check_report,
+        outliers                = check_report$outliers
       )
     )
   }

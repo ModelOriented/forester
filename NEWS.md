@@ -7,6 +7,11 @@
   * Fixed radar plots, so the models are named correctly (by model names, not engines),
   * Fixed issue where the plot for binary classification had an empty observation name,
   * Removed unnecessary and invalid Metric names (the ones that are not used and engine, name, tuning).
+* In the `check_data()` function:
+  * Added a vector of possible outliers to the output,
+  * The outliers indexes are printed if there are less than 50 of them.
+* In the `train()` function:
+  * Added a vector of possible outliers to the output.
 
 # forester 1.1.3
 * In the `train()` function:
