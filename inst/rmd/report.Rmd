@@ -71,7 +71,8 @@ test_predictions  <- predict_models_all(params$models, params$test_data, params$
 ```{r radar_plot, out.width = '90%'}
 tryCatch({
       find.package('ggradar')
-      draw_radar_plot(params$score[1:10, ], params$type)
+      score_radar <- params$score[1:10, ]
+      draw_radar_plot(score_radar, params$type)
     },
     error = function(cond) {
       verbose_cat('Package not found: ggradar, to use it please follow guides for',

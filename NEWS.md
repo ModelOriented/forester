@@ -2,6 +2,11 @@
 * In the `report()` function:
   * Removed engine and tuning columns from the ranked list table,
   * Explained how the model name is created, so the columns engine and tuning are not needed,
+  * Fixed the radar plot issues,
+* In the `draw_radar_plot()` function:
+  * Fixed radar plots, so the models are named correctly (by model names, not engines),
+  * Fixed issue where the plot for binary classification had an empty observation name,
+  * Removed unnecessary and invalid Metric names (the ones that are not used and engine, name, tuning).
 
 # forester 1.1.3
 * In the `train()` function:

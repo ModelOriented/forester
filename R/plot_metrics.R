@@ -161,7 +161,7 @@ draw_radar_plot <- function(score_frame, type) {
     }
 
     data  <- rbind(f1_row, recall_row, precision_row, accuracy_row, auc_row)
-    data  <- data.frame(names(score_frame[-c(1)]), data)
+    data  <- data.frame(names(score_frame[-c(1, 2, 3, 4)]), data)
     title <- 'Model comparison'
 
   } else {
@@ -173,7 +173,7 @@ draw_radar_plot <- function(score_frame, type) {
     title <- 'R2 comparison'
   }
 
-  colnames(data) <- score_frame$engine
+  colnames(data) <- c('Metric', score_frame$name)
 
   ggradar::ggradar(plot.data                = data,
                    base.size                = 10,
