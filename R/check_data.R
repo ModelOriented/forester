@@ -6,7 +6,7 @@
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
-#' @return A list with every line of the report.
+#' @return A list with two vectors: lines of the report (str) and the outliers (outliers).
 #' @export
 #'
 #' @examples
@@ -34,13 +34,19 @@ check_data <- function(data, y, verbose = TRUE) {
   df  <- manage_missing(df, y)
   str <- c(str, check_dim(df, verbose))
   str <- c(str, check_cor(df, y, verbose)$str)
-  str <- c(str, check_outliers(df, verbose))
+  rtr <- check_outliers(df, verbose)
+  str <- c(str, rtr$str)
   str <- c(str, check_y_balance(df, y, verbose))
   str <- c(str, detect_id_columns(df, verbose))
   verbose_cat(' -------------------- CHECK DATA REPORT END -------------------- \n \n', verbose = verbose)
   str <- c(str,
            capture.output(cat(' -------------------- **CHECK DATA REPORT END** -------------------- \n \n')))
-  return(str)
+
+  ret <- list(
+    str      = str,
+    outliers = rtr$outliers
+  )
+  return(ret)
 }
 
 
@@ -428,19 +434,31 @@ check_outliers <- function(df, verbose = TRUE) {
 
   outliers <- unique(outliers)
   outliers <- sort(outliers)
+
   if (length(outliers) == 0) {
     verbose_cat(crayon::green('\u2714'), 'No outliers in the dataset. \n', verbose = verbose)
     str <- capture.output(cat('**No outliers in the dataset. **\n'))
 
-  } else {
+  } else if (length(outliers) < 50) {
     verbose_cat(crayon::red('\u2716'), 'These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
     str <- capture.output(
       cat('**These obserwation migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
+  } else {
+    verbose_cat(crayon::red('\u2716'), 'There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \n', verbose = verbose)
+    str <- capture.output(
+      cat('**There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. **\n'))
   }
   verbose_cat('\n', verbose = verbose)
-  str <- c(str, capture.output(cat('\n')))
 
-  return(str)
+  str      <- c(str, capture.output(cat('\n')))
+  outliers <- as.numeric(outliers)
+
+  rtr <- list(
+    str       = str,
+    outliers  = outliers
+  )
+
+  return(rtr)
 }
 
 

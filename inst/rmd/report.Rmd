@@ -40,8 +40,15 @@ This is the **`r params$type`** task.
 The best model is: 
 **`r paste(names(params$best_models[1]), sep="' '", collapse=", ")`**.
 
-*More details about bests models are present at the end of the report.*
+The names of the models were created by a pattern *Engine_TuningMethod_Id*, where:
 
+- Engine describes the engine used for the training (random_forest, xgboost, decision_tree, lightgbm, catboost),
+
+- TuningMethod describes how the model was tuned (basic for basic parameters, RS for random search, bayes for Bayesian optimization),
+
+- Id for separating the random search parameters sets.
+
+*More details about the best model are present at the end of the report.*
 
 
 ```{r table}
@@ -50,6 +57,7 @@ score_rounded        <- score_frame
 for(i in 5:ncol(score_rounded)) {
   score_rounded[, i] <- round(as.numeric(score_rounded[, i]), 4)
 }
+score_rounded <- score_rounded[-c(3, 4)]
 knitr::kable(score_rounded)
 ```
 
@@ -63,7 +71,8 @@ test_predictions  <- predict_models_all(params$models, params$test_data, params$
 ```{r radar_plot, out.width = '90%'}
 tryCatch({
       find.package('ggradar')
-      draw_radar_plot(params$score[1:10, ], params$type)
+      score_radar <- params$score[1:10, ]
+      draw_radar_plot(score_radar, params$type)
     },
     error = function(cond) {
       verbose_cat('Package not found: ggradar, to use it please follow guides for',
@@ -152,8 +161,8 @@ if (engine != c('catboost') && !is.null(engine)) { # For catboost there is an er
 ## Details about data
 ```{r check_data, results = 'asis'}
 checked_data <- check_data(params$data, params$y, verbose = FALSE)
-for (i in 1:length(checked_data)) {
-  cat(checked_data[i])
+for (i in 1:length(checked_data$str)) {
+  cat(checked_data$str[i])
   cat('\n')
 }
 ```

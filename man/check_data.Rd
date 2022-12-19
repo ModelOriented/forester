@@ -16,7 +16,7 @@ matrix, and so on.}
 the process, if FALSE gives none.}
 }
 \value{
-A list with every line of the report.
+A list with two vectors: lines of the report (str) and the outliers (outliers).
 }
 \description{
 Run data check pipeline to seek for potential problems with the data
