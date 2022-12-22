@@ -135,7 +135,7 @@ output1 <- train(data = lisbon,
                  verbose = FALSE,
                  random_evals = 5)
 
-output1$ranked_list
+output1$score_test
 ```
 </details>
 
@@ -170,7 +170,7 @@ output2 <- train(data = lisbon,
                  verbose = TRUE,
                  random_evals = 3)
 
-output2$ranked_list
+output2$score_test
 ```
 </details>
 
@@ -266,10 +266,10 @@ in the chart (`plot()` function).
 <details>
 <summary>Answers:</summary>
 ```{r explain, eval=FALSE, echo=TRUE}
-exp_list <- forester::explain(models = output2$best_models[1],
+exp_list <- forester::explain(models = output2$best_models[[1]],
                test_data = output2$test_data,
                y = output2$y)
-exp <- exp_list$ranger_RS_1
+exp <- exp_list$xgboost_bayes
 p1 <- DALEX::model_parts(exp)
 plot(p1)
 ```
@@ -326,7 +326,7 @@ output4 <- train(data = lisbon,
                  metric_function_name = 'Max Error',
                  metric_function_decreasing = FALSE)
 
-output4$ranked_list
+output4$score_test
 ```
 </details>
 
