@@ -185,6 +185,7 @@ train <- function(data,
                                engine = engine,
                                type = type,
                                max_evals = random_evals)
+  preds_random <- NULL
   if (!is.null(model_random)) {
     preds_random <- predict_models_all(model_random$models,
                                          test_data,
