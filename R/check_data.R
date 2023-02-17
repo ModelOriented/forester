@@ -440,9 +440,9 @@ check_outliers <- function(df, verbose = TRUE) {
     str <- capture.output(cat('**No outliers in the dataset. **\n'))
 
   } else if (length(outliers) < 50) {
-    verbose_cat(crayon::red('\u2716'), 'These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), 'These observation might be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
     str <- capture.output(
-      cat('**These obserwation migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
+      cat('**These observation might be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
   } else {
     verbose_cat(crayon::red('\u2716'), 'There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \n', verbose = verbose)
     str <- capture.output(

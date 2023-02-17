@@ -81,10 +81,10 @@ test_that('test-check_data', {
   expect_output(check_cor(df_test, y_test), cor_test)
 
   no_outliers  <- '<U\\+2714> No outliers in the dataset.'
-  out_lisbon   <- '<U\\+2716> These obserwation migth be outliers due to their numerical columns values: \n 145 146 196 44 5 51 57 58 59 60 61 62 63 64 69 75 76 77 78 ;'
+  out_lisbon   <- '<U\\+2716> These observation might be outliers due to their numerical columns values: \n 145 146 196 44 5 51 57 58 59 60 61 62 63 64 69 75 76 77 78 ;'
   out_over_50  <- '<U\\+2716> There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector.'
-  out_iris2    <- '<U\\+2716> These obserwation migth be outliers due to their numerical columns values: \n 16 ;'
-  out_test     <- '<U\\+2716> These obserwation migth be outliers due to their numerical columns values: \n 160 209 365 369 395 434 481 491 559 6 791 795 796 804 82 ;'
+  out_iris2    <- '<U\\+2716> These observation might be outliers due to their numerical columns values: \n 16 ;'
+  out_test     <- '<U\\+2716> These observation might be outliers due to their numerical columns values: \n 160 209 365 369 395 434 481 491 559 6 791 795 796 804 82 ;'
 
   expect_output(check_outliers(df_iris), no_outliers)
   expect_output(check_outliers(df_lisbon), out_lisbon)
