@@ -12,7 +12,7 @@
 #' (1) a vector of the same number of observations as `data` or
 #' (2) a character name of variable in the `data` that contains
 #' the target variable.
-#' @param type A character, one of `classification`/`regression`/`guess` that
+#' @param type A character, one of `binary_clf`/`regression`/`guess` that
 #' sets the type of the task. If `guess` (the default option) then
 #' forester will figure out `type` based on the number of unique values
 #' in the `y` variable.
@@ -133,8 +133,13 @@ train <- function(data,
 
   if (type == 'auto') {
     type <- guess_type(data, y)
+    verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
+  } else if (!type %in% c('regression', 'binary_clf')) {
+    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, and `auto` for automatic task identification \n\n', verbose = verbose)
+  } else {
+    verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
   }
-  verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
+
 
   if (verbose) {
     check_report <- check_data(data, y, verbose)
@@ -154,18 +159,19 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Data preprocessed. \n', verbose = verbose)
 
-  split_data <- train_test_balance(preprocessed_data$data, y, type,
-                                   balance = TRUE, fractions = train_test_split)
+  split_data <- train_test_balance(preprocessed_data$data, y, balance = TRUE,
+                                   fractions = train_test_split)
   verbose_cat(crayon::green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
 
   train_data <- prepare_data(split_data$train, y, engine)
+
   test_data  <- prepare_data(split_data$test, y, engine, predict = TRUE,
                              split_data$train)
   valid_data <- prepare_data(split_data$valid, y, engine, predict = TRUE,
                              split_data$train)
   # For creating VS plot and predicting on train (catboost, lgbm).
-  raw_train         <- prepare_data(split_data$train, y, engine, predict = TRUE,
-                                    split_data$train)
+  raw_train  <- prepare_data(split_data$train, y, engine, predict = TRUE,
+                             split_data$train)
 
   verbose_cat(crayon::green('\u2714'), 'Correct formats prepared. \n', verbose = verbose)
 
@@ -187,18 +193,18 @@ train <- function(data,
                                max_evals = random_evals)
   if (!is.null(model_random)) {
     preds_random <- predict_models_all(model_random$models,
-                                         test_data,
-                                         y,
-                                         type = type)
+                                       test_data,
+                                       y,
+                                       type = type)
   }
 
   model_bayes <- train_models_bayesopt(train_data,
-                                      y,
-                                      test_data,
-                                      engine = engine,
-                                      type = type,
-                                      iters.n = bayes_iter,
-                                      verbose = verbose)
+                                       y,
+                                       test_data,
+                                       engine = engine,
+                                       type = type,
+                                       iters.n = bayes_iter,
+                                       verbose = verbose)
   preds_bayes <- NULL
   if (!is.null(model_bayes)) {
     preds_bayes <- predict_models_all(model_bayes, test_data, y, type)
