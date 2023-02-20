@@ -5,7 +5,7 @@
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`.
 #' @param type A string that determines if Machine Learning task is the
-#' `classification` or `regression`.
+#' `binary_clf` or `regression`.
 #'
 #' @return A list of models for every engine.
 #' @export

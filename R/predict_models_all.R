@@ -4,7 +4,7 @@
 #' @param data A test data for models created by `prepare_data()` function.
 #' @param y A string that indicates a target column name.
 #' @param type A string that determines if Machine Learning task is the
-#' `classification` or `regression` task.
+#' `binary_clf` or `regression` task.
 #'
 #' @return A list of predictions for every engine without names.
 #' @export

@@ -9,7 +9,7 @@
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`, `decision tree`, `lightgbm`, `catboost`.
 #' @param type A string that determines if Machine Learning task is the
-#' `classification` or `regression` task.
+#' `binary_clf` or `regression` task.
 #' @param probability A logical value that determines whether the output for
 #' classification task should be 0/1 or described by probability.
 #'
