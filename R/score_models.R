@@ -162,7 +162,7 @@ score_models <- function(models,
                                names(models)[i],
                                engine[i],
                                tuning[i],
-                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[1]], observed - 1)},
+                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[1]], observed)}, # czemu tu było -1?
                                model_performance_mse(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_rmse(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_r2(unlist(predictions[[i]], use.names = FALSE), observed),
@@ -174,6 +174,7 @@ score_models <- function(models,
       models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_binary_clf) + nr_add_col))
       colnames(models_frame) <- c(colnames_basic, metrics_binary_clf)
 
+      set.seed(1)
       observed <- as.numeric(observed)
       for (i in 1:length(models)) {
         tp = sum((observed == 2) * (as.numeric(unlist(predictions[[i]])) >= 0.5))
