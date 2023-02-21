@@ -149,12 +149,12 @@ train <- function(data,
     check_report$outliers <- NULL
   }
 
- preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
+  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
 
- if (advanced_preprocessing) {
-   verbose_cat(crayon::red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
-               preprocessed_data$colnames, '\n\n', verbose = verbose)
- }
+  if (advanced_preprocessing) {
+    verbose_cat(crayon::red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
+                preprocessed_data$colnames, '\n\n', verbose = verbose)
+  }
 
 
   verbose_cat(crayon::green('\u2714'), 'Data preprocessed. \n', verbose = verbose)
@@ -175,22 +175,22 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Correct formats prepared. \n', verbose = verbose)
 
-  model_basic       <- train_models(train_data, y, engine, type)
+  model_basic    <- train_models(train_data, y, engine, type)
   verbose_cat(crayon::green('\u2714'), 'Models successfully trained. \n', verbose = verbose)
 
-  preds_basic       <- predict_models_all(model_basic, test_data, y, type)
+  preds_basic    <- predict_models_all(model_basic, test_data, y, type)
   verbose_cat(crayon::green('\u2714'), 'Predicted successfully. \n', verbose = verbose)
 
-  test_observed    <- split_data$test[[y]]
-  train_observed   <- split_data$train[[y]]
-  valid_observed   <- split_data$valid[[y]]
+  test_observed  <- split_data$test[[y]]
+  train_observed <- split_data$train[[y]]
+  valid_observed <- split_data$valid[[y]]
 
-  model_random <- random_search(train_data,
-                               test_data,
-                               y = y,
-                               engine = engine,
-                               type = type,
-                               max_evals = random_evals)
+  model_random   <- random_search(train_data,
+                                  test_data,
+                                  y = y,
+                                  engine = engine,
+                                  type = type,
+                                  max_evals = random_evals)
   if (!is.null(model_random)) {
     preds_random <- predict_models_all(model_random$models,
                                        test_data,
@@ -268,10 +268,22 @@ train <- function(data,
   best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
   predictions_best <- predict_models_all(best_models$models, test_data, y, type = type)
   predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
+  predict_train    <- predict_models_all(models_all, raw_train, y, type = type)
 
   score_valid      <- score_models(models_all,
                                    predict_valid,
                                    valid_data$ranger_data[[y]],
+                                   type,
+                                   metrics = metrics,
+                                   sort_by = sort_by,
+                                   metric_function = metric_function,
+                                   metric_function_decreasing = metric_function_decreasing,
+                                   engine = engine_all,
+                                   tuning = tuning)
+
+  score_train      <- score_models(models_all,
+                                   predict_train,
+                                   train_data$ranger_data[[y]],
                                    type,
                                    metrics = metrics,
                                    sort_by = sort_by,
@@ -317,6 +329,7 @@ train <- function(data,
         valid_data              = valid_data,
         predictions             = predictions_all,
         score_test              = score,
+        score_train             = score_train,
         score_valid             = score_valid,
         models_list             = models_all,
         data                    = data,
@@ -333,6 +346,7 @@ train <- function(data,
         predictions_best        = predictions_best,
         predictions_all_labels  = predictions_all_labels,
         predictions_best_labels = predictions_best_labels,
+        predictions_train       = predict_train,
         raw_train               = raw_train,
         check_report            = check_report$str,
         outliers                = check_report$outliers
@@ -350,6 +364,7 @@ train <- function(data,
         valid_data              = valid_data,
         predictions             = predictions_all,
         score_test              = score,
+        score_train             = score_train,
         score_valid             = score_valid,
         models_list             = models_all,
         data                    = data,
@@ -361,6 +376,7 @@ train <- function(data,
         engine                  = engine,
         predictions_all         = predictions_all,
         predictions_best        = predictions_best,
+        predictions_train       = predict_train,
         raw_train               = raw_train,
         check_report            = check_report,
         outliers                = check_report$outliers
