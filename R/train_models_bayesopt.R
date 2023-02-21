@@ -301,9 +301,9 @@ train_models_bayesopt <- function(train_data,
       }
     }
     else if (engine[i] == 'decision_tree') {
-
+      form        <- as.formula(paste0(y, ' ~.'))
       fitness_fun <- function(minsplit, minprob, maxdepth, nresample) {
-        form     <- as.formula(paste0(y, ' ~.'))
+
         model    <- partykit::ctree(form, data = train_data$decision_tree_data,
                                     minsplit   = minsplit,
                                     minprob    = minprob,
@@ -376,14 +376,14 @@ train_models_bayesopt <- function(train_data,
       fitness_fun <- function(learning_rate, num_leaves, num_iterations) {
 
         if (type == 'binary_clf') {
-          obj = 'binary'
-          metric = 'accuracy'
+          obj    <- 'binary'
+          metric <- 'accuracy'
           params <- list(objective = obj, metric = metric, boosting = 'gbdt')
         } else if (type == 'multi_clf') {
-          obj = 'multiclass'
+          obj    <- 'multiclass'
           params <- list(objective = obj)
         } else if (type == 'regression') {
-          obj = 'regression'
+          obj    <- 'regression'
           params <- list(objective = obj)
         }
 
