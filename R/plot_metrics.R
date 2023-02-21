@@ -168,8 +168,6 @@ draw_radar_plot <- function(score_frame, type) {
 
   } else {
     r2_row <- NULL
-    print(names(score_frame))
-    print(score_frame)
     if ('r2' %in% names(score_frame)) {
       r2_row <- as.data.frame(t(as.numeric(unlist(score_frame['r2']))))
     }
@@ -178,7 +176,6 @@ draw_radar_plot <- function(score_frame, type) {
 
     colnames(data) <- score_frame$name
   }
-  print(data)
   #colnames(data) <- c('Metric', score_frame$name)
 
   ggradar::ggradar(plot.data                = data,
