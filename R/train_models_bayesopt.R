@@ -166,7 +166,7 @@ train_models_bayesopt <- function(train_data,
           }
         },
         error = function(e) {
-
+          print(e)
         }
       )
 
