@@ -131,6 +131,13 @@ train <- function(data,
     return(NULL)
   })
 
+  if ('tbl' %in% class(data)) {
+    data <- as.data.frame(data)
+    verbose_cat(crayon::red('\u2716'), 'Provided dataset is a tibble and not a',
+                'data.frame or matrix. Casting the dataset to data.frame format. \n\n',
+                verbose = verbose)
+  }
+
   if (type == 'auto') {
     type <- guess_type(data, y)
     verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
