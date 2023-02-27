@@ -25,6 +25,12 @@ The catboost model is used in the `train()` function as an additional engine.
 devtools::install_url('https://github.com/catboost/catboost/releases/download/v1.1.1/catboost-R-Darwin-1.1.1.tgz', INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-staged-install"))
 ```
 
+Alternatively one can do a longer installation, where whole repository will be downloaded.
+
+``` r
+devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')
+```
+
 ### ggradar
 
 The ggradar is required for creating radar plot visualization in the report from the `report()` function.
