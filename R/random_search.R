@@ -86,7 +86,7 @@ random_search <- function(train_data,
     minprob      = c(0.01, 0.1),
     maxsurrogate = c(0, 1, 2),
     maxdepth     = c(5, 10, Inf),
-    nresample    = c(100L, 9999L)
+    nresample    = c(100, 9999)
   )
 
   lightgbm_grid <- list(
@@ -96,10 +96,11 @@ random_search <- function(train_data,
   )
 
   catboost_grid <- list(
-    iterations    = c(20, 100, 300),
-    border_count  = c(1, 10, 100),
-    depth         = c(4, 7, 10),
-    learning_rate = c(0.05, 0.1, 0.3)
+    iterations       = c(100, 100, 1000),
+    border_count     = c(64, 256, 1024),
+    depth            = c(2, 8, 16),
+    learning_rate    = c(0.01, 0.1, 0.9),
+    min_data_in_leaf = c(1, 3, 10)
   )
 
   search_models <- list()
