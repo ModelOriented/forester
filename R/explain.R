@@ -54,7 +54,8 @@ explain <- function(models, test_data, y, verbose = FALSE) {
 
     if ('ranger' == engine) {
       exp_data   <- test_data$ranger_data
-      target     <- test_data$ranger_data[[y]]
+      target     <- as.numeric(test_data$ranger_data[[y]])
+      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (single_model) {
         explainer <- DALEX::explain(model = models,
@@ -70,7 +71,8 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     }
     if ('xgboost' == engine) {
       exp_data <- test_data$xgboost_data
-      target   <- test_data$ranger_data[[y]]
+      target   <- as.numeric(test_data$ranger_data[[y]])
+      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (type == 'binary_clf') {
         target <- as.integer(target)
@@ -90,7 +92,8 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     }
     if ('decision_tree' == engine) {
       exp_data <- test_data$decision_tree_data
-      target   <- test_data$ranger_data[[y]]
+      target   <- as.numeric(test_data$ranger_data[[y]])
+      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (single_model) {
         explainer <- DALEX::explain(model = models,
@@ -106,7 +109,8 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     }
     if ('lightgbm' == engine) {
       exp_data <- test_data$lightgbm_data
-      target   <- test_data$ranger_data[[y]]
+      target   <- as.numeric(test_data$ranger_data[[y]])
+      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (type == 'binary_clf') {
         target <- as.integer(target) - 1
@@ -126,7 +130,8 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     }
     if ('catboost' == engine) {
       exp_data <- test_data$catboost_data
-      target   <- test_data$ranger_data[[y]]
+      target   <- as.numeric(test_data$ranger_data[[y]])
+      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (type == 'binary_clf') {
         if (max(target) > 1) {
