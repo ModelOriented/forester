@@ -26,13 +26,11 @@ train_test_balance <-
     }
 
     if (balance == TRUE) {
-      set.seed(3)# testing
       inds  <- splitTools::partition(target, p = c(train = fractions[1],
                                                    test  = fractions[2],
                                                    valid = fractions[3]),
                                      seed = seed)
     } else {
-      set.seed(3)
       inds  <- splitTools::partition(target, p = c(train = fractions[1],
                                                    test  = fractions[2],
                                                    valid = fractions[3]),

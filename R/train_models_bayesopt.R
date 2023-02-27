@@ -212,7 +212,7 @@ train_models_bayesopt <- function(train_data,
         capture.output(
           model <- xgboost::xgboost(
             train_data$xgboost_data,
-            label     = as.vector(train_data$ranger_data[[y]]) - 1,
+            label     = as.vector(as.numeric(train_data$ranger_data[[y]])) - 1,
             objective = obj,
             nrounds   = nrounds,
             verbose   = 1,
@@ -274,7 +274,7 @@ train_models_bayesopt <- function(train_data,
 
       if (is.null(bayes)) {
         capture.output(xgboost_model <- xgboost::xgboost(train_data$xgboost_data,
-                                                        label     = as.vector(train_data$ranger_data[[y]]) - 1,
+                                                        label     = as.vector(as.numeric(train_data$ranger_data[[y]])) - 1,
                                                         objective = obj,
                                                         nrounds   = 5000,
                                                         verbose   = 1))
@@ -289,7 +289,7 @@ train_models_bayesopt <- function(train_data,
         }
         capture.output(
           xgboost_model <- xgboost::xgboost(train_data$xgboost_data,
-                                            label     = as.vector(train_data$ranger_data[[y]]) - 1,
+                                            label     = as.vector(as.numeric(train_data$ranger_data[[y]])) - 1,
                                             verbose   = 1,
                                             objective = obj,
                                             nrounds   = as.integer(ParBayesianOptimization::getBestPars(bayes)$nrounds),

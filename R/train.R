@@ -156,7 +156,7 @@ train <- function(data,
     check_report$outliers <- NULL
   }
 
-  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
+  preprocessed_data <- preprocessing(data, y, type, advanced = advanced_preprocessing)
 
   if (advanced_preprocessing) {
     verbose_cat(crayon::red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
@@ -198,6 +198,7 @@ train <- function(data,
                                   engine = engine,
                                   type = type,
                                   max_evals = random_evals)
+  preds_random <- NULL
   if (!is.null(model_random)) {
     preds_random <- predict_models_all(model_random$models,
                                        test_data,
@@ -240,9 +241,9 @@ train <- function(data,
   verbose_cat(crayon::green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
 
   if (type == 'binary_clf') {
-    test_observed  <- test_observed - 1 # [0, 1]
-    train_observed <- train_observed - 1
-    valid_observed <- valid_observed - 1
+    test_observed  <- as.numeric(test_observed) - 1 # [0, 1]
+    train_observed <- as.numeric(train_observed) - 1
+    valid_observed <- as.numeric(valid_observed) - 1
 
     test_observed_labels  <- test_observed
     train_observed_labels <- train_observed
@@ -324,6 +325,7 @@ train <- function(data,
       }
     }
   }
+
   if (type == 'binary_clf') {
     return(
       list(
