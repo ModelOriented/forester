@@ -32,7 +32,7 @@ on all columns in the `data`.}
 (2) a character name of variable in the `data` that contains
 the target variable.}
 
-\item{type}{A character, one of `classification`/`regression`/`guess` that
+\item{type}{A character, one of `binary_clf`/`regression`/`guess` that
 sets the type of the task. If `guess` (the default option) then
 forester will figure out `type` based on the number of unique values
 in the `y` variable.}
@@ -141,5 +141,5 @@ validation strategy, tested model families, and so on.
 library(forester)
 data('lisbon')
 train_output <- train(lisbon, 'Price')
-train_output$ranked_list
+train_output$score_valid
 }

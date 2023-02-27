@@ -103,7 +103,7 @@
 #' library(forester)
 #' data('lisbon')
 #' train_output <- train(lisbon, 'Price')
-#' train_output$ranked_list
+#' train_output$score_valid
 train <- function(data,
                   y,
                   type = 'auto',

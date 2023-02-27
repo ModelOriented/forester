@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' data(lisbon)
-#' b_lisbon <- train_test_balance(lisbon, 'Price', balance = FALSE, 'regression',
+#' b_lisbon <- train_test_balance(lisbon, 'Price', balance = FALSE,
 #'                                fractions = c(train = 0.6, valid = 0.2, test = 0.2))
 train_test_balance <-
   function(data, y, balance = TRUE, fractions = c(0.6, 0.2, 0.2), seed = NULL) {

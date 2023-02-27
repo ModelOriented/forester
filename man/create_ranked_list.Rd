@@ -24,7 +24,7 @@ create_ranked_list(
 \item{Bayes}{A data.frame with ranked list of Bayes Optimization models.}
 
 \item{type}{A string which determines if Machine Learning task is the
-`classification` or `regression`.}
+`binary_clf` or `regression`.}
 
 \item{score}{A data frame with metrics values for given models, by `score_models`.}
 

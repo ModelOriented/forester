@@ -14,7 +14,7 @@ predict_models_all(models, data, y, type)
 \item{y}{A string that indicates a target column name.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`classification` or `regression` task.}
+`binary_clf` or `regression` task.}
 }
 \value{
 A list of predictions for every engine without names.
@@ -26,12 +26,11 @@ Predictions for a list of models with multiple occurrences of the same types of 
 data(iris)
 iris_bin          <- iris[1:100, ]
 type              <- guess_type(iris_bin, 'Species')
-preprocessed_data <- preprocessing(iris_bin, 'Species')
+preprocessed_data <- preprocessing(iris_bin, 'Species', type)
 preprocessed_data <- preprocessed_data$data
 split_data <-
   train_test_balance(preprocessed_data,
                      'Species',
-                     type = type,
                      balance = FALSE)
 train_data <-
   prepare_data(split_data$train,

@@ -18,7 +18,7 @@ They will be compered with models trained with different hiperparameters.}
 values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`classification` or `regression` task.}
+`binary_clf` or `regression` task.}
 
 \item{max_evals}{The number of trained models for each model type in `engine`.}
 }
@@ -33,12 +33,11 @@ Random optimalization of hiperparameters
 data(iris)
 iris_bin          <- iris[1:100, ]
 type              <- guess_type(iris_bin, 'Species')
-preprocessed_data <- preprocessing(iris_bin, 'Species')
+preprocessed_data <- preprocessing(iris_bin, 'Species', type)
 preprocessed_data <- preprocessed_data$data
 split_data <-
   train_test_balance(preprocessed_data,
                      'Species',
-                     type = type,
                      balance = FALSE)
 train_data <-
   prepare_data(split_data$train,

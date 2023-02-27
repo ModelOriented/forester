@@ -26,10 +26,10 @@
 #' data(iris)
 #' iris_bin          <- iris[1:100, ]
 #' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species')
+#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
-#'   train_test_balance(preprocessed_data, 'Species', type = type, balance = FALSE)
+#'   train_test_balance(preprocessed_data, 'Species', balance = FALSE)
 #' train_data <-
 #'   prepare_data(split_data$train,
 #'                'Species',
@@ -51,12 +51,11 @@
 #'
 #' # Regression
 #' type              <- guess_type(lisbon, 'Price')
-#' preprocessed_data <- preprocessing(lisbon, 'Price')
+#' preprocessed_data <- preprocessing(lisbon, 'Price', type)
 #' preprocessed_data <- preprocessed_data$data
 #' split_data2 <-
 #'   train_test_balance(preprocessed_data,
 #'                      y = 'Price',
-#'                      type = type,
 #'                      balance = FALSE)
 #' train_data2 <- prepare_data(split_data2$train,
 #'                      y = 'Price',

@@ -15,7 +15,7 @@
 #'
 #' @examples
 #' data(compas)
-#' prep_data <- preprocessing(compas,'Two_yr_Recidivism')
+#' prep_data <- preprocessing(compas,'Two_yr_Recidivism', 'binary_clf')
 preprocessing <- function(data, y, type, advanced = FALSE, verbose = FALSE) {
   # cat(' -------------------- PREPROCESSING REPORT --------------------- \n \n')
   pre_data   <- pre_rm_static_cols(data, y)
