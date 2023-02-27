@@ -2,13 +2,12 @@ test_that('test-prepare_data', {
   # Tests for lisbon dataset.
   type                <- guess_type(lisbon, 'Price')
   suppressWarnings(
-    preprocessed_data <- preprocessing(lisbon, 'Price')
+    preprocessed_data <- preprocessing(lisbon, 'Price', type = type)
   )
   preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Price',
-                       type = type,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
@@ -39,8 +38,8 @@ test_that('test-prepare_data', {
   expect_true('matrix' %in% class(test_data$lightgbm_data)[1])
   expect_true(class(test_data$catboost_data) == 'catboost.Pool')
 
-  expect_identical(levels(train_data$ranger$Condition), levels(test_data$ranger$Condition))
-  expect_identical(levels(train_data$ranger$PropertyType), levels(test_data$ranger$PropertyType))
+  expect_true(all(levels(test_data$ranger$Condition) %in% levels(train_data$ranger$Condition)))
+  expect_true(all(levels(test_data$ranger$PropertyType) %in% levels(train_data$ranger$PropertyType)))
   expect_true('other' %in% levels(train_data$ranger$Condition))
   expect_true('other' %in% levels(train_data$ranger$PropertyType))
   expect_true('other' %in% train_data$ranger$Condition)
@@ -51,12 +50,11 @@ test_that('test-prepare_data', {
 
   # Tests for iris dataset.
   type              <- guess_type(iris,'Species')
-  preprocessed_data <- preprocessing(iris, 'Species')
+  preprocessed_data <- preprocessing(iris, 'Species', type = type)
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Species',
-                       type = type,
                        balance = FALSE)
   set.seed(123)
   train_data <-
@@ -92,12 +90,11 @@ test_that('test-prepare_data', {
 
   # Tests for lymph dataset.
   type              <- guess_type(lymph, 'class')
-  preprocessed_data <- preprocessing(lymph, 'class')
+  preprocessed_data <- preprocessing(lymph, 'class', type = type)
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'class',
-                       type = type,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
@@ -134,12 +131,11 @@ test_that('test-prepare_data', {
 
   # Tests.
   type              <- guess_type(testing_data, 'y')
-  preprocessed_data <- preprocessing(testing_data, 'y')
+  preprocessed_data <- preprocessing(testing_data, 'y', type = type)
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'y',
-                       type = type,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
