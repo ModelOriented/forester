@@ -1,4 +1,4 @@
-# forester 1.1.5
+# forester 1.2.0
 
 -   In the `check_data()` function:
     -   Fixed typos.
