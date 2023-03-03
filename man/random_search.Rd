@@ -2,7 +2,7 @@
 % Please edit documentation in R/random_search.R
 \name{random_search}
 \alias{random_search}
-\title{Random optimalization of hiperparameters}
+\title{Random optimization of hyperparameters}
 \usage{
 random_search(train_data, y, models = NULL, engine, type, max_evals = 10)
 }
@@ -12,7 +12,7 @@ random_search(train_data, y, models = NULL, engine, type, max_evals = 10)
 \item{y}{A string that indicates a target column name.}
 
 \item{models}{A list of models trained by `train_models()` function.
-They will be compered with models trained with different hiperparameters.}
+They will be compered with models trained with different hyperparameters}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
 values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
@@ -27,7 +27,7 @@ A list consisting of models created via random search and ranked list
 of models scores.
 }
 \description{
-Random optimalization of hiperparameters
+Random optimization of hyperparameters
 }
 \examples{
 data(iris)

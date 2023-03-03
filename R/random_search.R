@@ -1,9 +1,9 @@
-#' Random optimalization of hiperparameters
+#' Random optimization of hyperparameters
 #'
 #' @param train_data A training data for models created by `prepare_data()` function.
 #' @param y A string that indicates a target column name.
 #' @param models A list of models trained by `train_models()` function.
-#' They will be compered with models trained with different hiperparameters.
+#' They will be compered with models trained with different hyperparameters
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.
 #' @param type A string that determines if Machine Learning task is the
@@ -278,5 +278,5 @@ random_search <- function(train_data,
   return(list(
       models = search_models,
       engine = search_engine
-      ))
+  ))
 }

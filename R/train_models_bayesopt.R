@@ -126,7 +126,11 @@ train_models_bayesopt <- function(train_data,
           probability     = probability
         )
 
-        preds      <- predict(model, test_data$ranger_data)$predictions[, 2]
+        if (type == 'regression') {
+          preds    <- ranger::predictions(predict(model, test_data$ranger_data))
+        } else if (type == 'binary_clf') {
+          preds    <- predict(model, test_data$ranger_data)$predictions[, 2]
+        }
         observed   <- test_data$ranger_data[, y]
         max_metric <- NULL
 

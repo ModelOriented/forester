@@ -406,7 +406,7 @@ check_outliers <- function(df, verbose = TRUE) {
     return (which(x < Tmin | x > Tmax))
   }
 
-  inter_quntile_range <- function(x) {
+  inter_quantile_range <- function(x) {
     Tmin = summary(x)[2] - (1.5 * IQR(x))
     Tmax = summary(x)[4] + (1.5 * IQR(x))
     return (which(x < Tmin | x > Tmax))
@@ -427,7 +427,7 @@ check_outliers <- function(df, verbose = TRUE) {
     outliers_tmp <- c()
     outliers_tmp <- c(outliers_tmp, mean_standard_deviation(data_num[, i]))
     outliers_tmp <- c(outliers_tmp, median_absolute_deviation(data_num[, i]))
-    outliers_tmp <- c(outliers_tmp, inter_quntile_range(data_num[, i]))
+    outliers_tmp <- c(outliers_tmp, inter_quantile_range(data_num[, i]))
     bool_outlier <- table(outliers_tmp)
     outliers     <- c(outliers, names(bool_outlier[bool_outlier == 3]))
   }

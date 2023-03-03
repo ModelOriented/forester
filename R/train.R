@@ -68,9 +68,13 @@
 #' datasets.
 #' `predictions` Prediction list for all trained models based on the training
 #' dataset.
-#' `ranked_list` The list of metrics for all trained models. For regression task
-#' there are: mse, r2 and mad metrics. For the classification task there are:
-#' f1, auc, recall, precision and accuracy.
+#' `score_test` The list of metrics for all trained models calculated on a test
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
+#' classification task there are: f1, auc, recall, precision and accuracy.
+#' `score_train` The list of metrics for all trained models calculated on a train
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
+#' `score_valid` The list of metrics for all trained models calculated on a validation
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
 #' `models_list` The list of all trained models.
 #' `data` The original data.
 #' `y` The original target column name.
@@ -88,14 +92,17 @@
 #' algorithm and with parameters optimized with the random search algorithm.
 #' `engine` The list of names of all types of trained models. Possible
 #' values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
-#' `predictions_all` Predictions for all trained models.
-#' `predictions_best` Predictions for models from best_models list.
-#' `predictions_all_labels` Predictions for all trained models as text labels
-#' (for classification task only).
-#' `predictions_best_labels` Predictions for models from best_models list as
-#' labels (for classification task only).
+#' `predictions_all` Predictions for all trained models on a test dataset.
+#' `predictions_best` Predictions for models on a test dataset from best_models list.
+#' `predictions_all_labels` Predictions for all trained models on a test dataset
+#' as text labels for classification task only).
+#' `predictions_best_labels` Predictions for models on a test dataset from
+#' best_models list as labels (for classification task only).
+#' `predictions_train` Predictions for all trained models on a train dataset.
 #' `raw_train` The another form of the training dataset (useful for creating
 #' VS plot and predicting on training dataset for catboost and lightgbm models).
+#' `check_report` Data check report held as a list of strings. It is used
+#' by the `report()` function.
 #' `outliers` The vector of possible outliers detected by the `check_data()`.
 #' @export
 #'
@@ -148,13 +155,7 @@ train <- function(data,
   }
 
 
-  if (verbose) {
-    check_report <- check_data(data, y, verbose)
-  } else {
-    check_report          <- c()
-    check_report$str      <- NULL
-    check_report$outliers <- NULL
-  }
+  check_report <- check_data(data, y, verbose)
 
   preprocessed_data <- preprocessing(data, y, type, advanced = advanced_preprocessing)
 
@@ -237,6 +238,7 @@ train <- function(data,
                          metric_function_decreasing = metric_function_decreasing,
                          engine = engine_all,
                          tuning = tuning)
+
   predictions_all  <- predict_models_all(models_all, test_data, y, type)
   verbose_cat(crayon::green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
 
@@ -275,8 +277,11 @@ train <- function(data,
 
   best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
   predictions_best <- predict_models_all(best_models$models, test_data, y, type = type)
-  predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
+
   predict_train    <- predict_models_all(models_all, raw_train, y, type = type)
+  predict_test     <- predict_models_all(models_all, test_data, y, type = type)
+  predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
+
 
   score_valid      <- score_models(models_all,
                                    predict_valid,
