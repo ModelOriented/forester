@@ -44,7 +44,7 @@
     -   Fixed the Bayesian Optimization. Before hand it didn't work at all for models other than ranger,
     -   Changed tuned hyperparameters and their values for all models, which increased the performance of the method.
 -   Updated the majority of `tests` so they match the current version.
--   Added alternative catboost installation in the `README`
+-   Added alternative catboost installation in the `README`.
     
 
 # forester 1.1.4
