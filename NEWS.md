@@ -18,7 +18,7 @@
 -   In the `draw_radar_plot()` function:
     -   Updated the documentation,
     -   Deleted unnecessary prints.
--   In the prepare_data()` function:
+-   In the `prepare_data()` function:
     -   Updated the documentation,
     -   Fixed the process of creating an 'other' label during the preparation of train / test splits.
 -   In the `preprocessing()` function:
