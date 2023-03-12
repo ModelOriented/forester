@@ -17,14 +17,12 @@
 #'
 #' @examples
 #' data(iris)
-#'
 #' type              <- guess_type(lisbon, 'Price')
-#' preprocessed_data <- preprocessing(lisbon, 'Price')
+#' preprocessed_data <- preprocessing(lisbon, 'Price', type)
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
 #'   train_test_balance(preprocessed_data,
 #'                      'Price',
-#'                      type = type,
 #'                      balance = FALSE)
 #' set.seed(123)
 #' train_data <-
@@ -61,14 +59,18 @@ prepare_data <- function(data,
       if ('factor' %in% class(data[, i]) && names(data[i]) != y) {
         levels(data[, i]) <- c(levels(data[, i]), 'other')
         data[1, i] <- 'other'
+        data[, i] <- droplevels(data[, i])
       }
     }
+
   } else {
-    # If it is a test dataset we perform otherisation of levels for the train again.
+    # If it is a test or validation dataset we perform otherisation of levels for the train again.
     train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
     for (i in 1:ncol(train)) {
-      if ('factor' %in% class(train[, i]) && names(data[i]) != y) {
+      if ('factor' %in% class(train[, i]) && names(train[i]) != y) {
         levels(train[, i]) <- c(levels(train[, i]), 'other')
+        train[1, i] <- 'other'
+        train[, i] <- droplevels(train[, i])
       }
     }
     # Then we change all factors unseen in the train to category other.
@@ -80,22 +82,23 @@ prepare_data <- function(data,
             data[j, i] <- 'other'
           }
         }
+        data[, i] <- droplevels(data[, i])
       }
     }
-    data <- droplevels(data) # We have to drop levels that were changed to other
-    # and insert all levels from the train (for OHE in the xgboost model).
+  }
+
+  # Ranger data is always needed as *almost* the unprocessed one.
+  ranger_data <- data.frame(data)
+  # We have to drop levels that were changed to other and insert all levels
+  # from the train (for OHE in the xgboost model).
+  if ('xgboost' %in% engine) {
+    # The xgboost model works on numerical data only, so we have to perform OHE
     for (i in 1:ncol(data)) {
       if ('factor' %in% class(data[, i])) {
         levels(data[, i]) <- c(levels(data[, i]), levels(train[, i]))
       }
     }
-  }
 
-  if ('ranger' %in% engine) {
-    ranger_data <- data.frame(data)
-  }
-  if ('xgboost' %in% engine) {
-    # The xgboost model works on numerical data only, so we have to perform OHE - OHE NOT WORKING.
     ohe_feats = c()
     xgboost_data  <- data
     for (i in 1:ncol(data)) {

@@ -4,7 +4,7 @@
 #' @param random A data.frame with ranked list of random search models.
 #' @param Bayes A data.frame with ranked list of Bayes Optimization models.
 #' @param type A string which determines if Machine Learning task is the
-#' `classification` or `regression`.
+#' `binary_clf` or `regression`.
 #' @param score A data frame with metrics values for given models, by `score_models`.
 #' @param sort_by String with name of metric to sort by.
 #' For `auto` models going to be sorted by `mse` for regression and `f1` for classification.

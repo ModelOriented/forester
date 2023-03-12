@@ -6,12 +6,11 @@ test_that('test-predict_models_all', {
   # Iris dataset for classification.
   iris_bin          <- iris[1:100, ]
   type              <- guess_type(iris_bin, 'Species')
-  preprocessed_data <- preprocessing(iris_bin, 'Species')
+  preprocessed_data <- preprocessing(iris_bin, 'Species', type = type)
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Species',
-                       type = type,
                        balance = FALSE)
   train_data <-
     prepare_data(split_data$train,
@@ -45,13 +44,12 @@ test_that('test-predict_models_all', {
 
   # Compas dataset for classification.
   type              <- guess_type(compas, 'Two_yr_Recidivism')
-  preprocessed_data <- preprocessing(compas, 'Two_yr_Recidivism')
+  preprocessed_data <- preprocessing(compas, 'Two_yr_Recidivism', type = type)
   preprocessed_data <- preprocessed_data$data
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Two_yr_Recidivism',
-                       type = type,
                        balance = FALSE)
   suppressWarnings(
     train_data <-
@@ -81,6 +79,7 @@ test_that('test-predict_models_all', {
   )
 
   expect_true(length(predictions) == 5)
+  lapply(predictions, length)
   expect_true(all(lapply(predictions, length) == 1235))
   expect_true(range(predictions)[1] >= 0)
   # expect_true(range(predictions)[2] <= 1)
@@ -89,13 +88,12 @@ test_that('test-predict_models_all', {
   # Tests for lisbon dataset.
   type                <- guess_type(lisbon, 'Price')
   suppressWarnings(
-    preprocessed_data <- preprocessing(lisbon, 'Price')
+    preprocessed_data <- preprocessing(lisbon, 'Price', type = type)
   )
   preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Price',
-                       type = type,
                        balance = FALSE)
   suppressWarnings(
     train_data <-

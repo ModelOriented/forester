@@ -26,7 +26,7 @@ train_models_bayesopt(
 values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.}
 
 \item{type}{A string which determines if Machine Learning task is the
-`classification` or `regression`.}
+`binary_clf` or `regression`.}
 
 \item{iters.n}{The number of iterations of BayesOpt function.}
 
@@ -50,10 +50,10 @@ Also the bigger dataset, the more time takes Bayesian Optimization.
 data(iris)
 iris_bin          <- iris[1:100, ]
 type              <- guess_type(iris_bin, 'Species')
-preprocessed_data <- preprocessing(iris_bin, 'Species')
+preprocessed_data <- preprocessing(iris_bin, 'Species', type)
 preprocessed_data <- preprocessed_data$data
 split_data <-
-  train_test_balance(preprocessed_data, 'Species', type = type, balance = FALSE)
+  train_test_balance(preprocessed_data, 'Species', balance = FALSE)
 train_data <-
   prepare_data(split_data$train,
                'Species',
@@ -75,12 +75,11 @@ models <- train_models_bayesopt(train_data,
 
 # Regression
 type              <- guess_type(lisbon, 'Price')
-preprocessed_data <- preprocessing(lisbon, 'Price')
+preprocessed_data <- preprocessing(lisbon, 'Price', type)
 preprocessed_data <- preprocessed_data$data
 split_data2 <-
   train_test_balance(preprocessed_data,
                      y = 'Price',
-                     type = type,
                      balance = FALSE)
 train_data2 <- prepare_data(split_data2$train,
                      y = 'Price',

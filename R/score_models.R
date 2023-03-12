@@ -26,12 +26,11 @@
 #' iris_bin          <- iris[1:100, ]
 #' iris_bin$Species  <- factor(iris_bin$Species)
 #' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species')
+#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
 #'   train_test_balance(preprocessed_data,
 #'                      'Species',
-#'                      type = type,
 #'                      balance = FALSE)
 #' train_data <-
 #'   prepare_data(split_data$train,
@@ -108,11 +107,11 @@ score_models <- function(models,
   if ('auto' %in% metrics) {
     if (type == 'regression') {
       metrics <- c(if (!is.null(metric_function)) {'metric_function'},
-                   'mse', 'r2', 'mae')
+                   'rmse', 'mse', 'r2', 'mae')
     }
     else if (type == 'binary_clf') {
       metrics <- c(if (!is.null(metric_function)) {'metric_function'},
-                   'auc', 'f1', 'accuracy')
+                   'accuracy', 'auc', 'f1')
     }
   } else if ('all' %in% metrics) {
     if (type == 'regression') {
@@ -131,11 +130,11 @@ score_models <- function(models,
     }
     if (!(sort_by %in% metrics_reggresion)) {
       if (sort_by != 'auto') {
-        warning(paste('sort_by need to by one of regression metrics. Default metric applied : mse.
+        warning(paste('sort_by need to by one of regression metrics. Default metric applied : rmse.
                       Choose one of the them: auto, metric_function (in case of usage custom function) ',
                       paste(metrics_reggresion, collapse = ', ')))
       }
-      sort_by <- 'mse'
+      sort_by <- 'rmse'
     }
   } else if (type == 'binary_clf') {
     is_valid_metrics <- metrics %in% metrics_binary_clf
@@ -145,11 +144,11 @@ score_models <- function(models,
     }
     if (!(sort_by %in% metrics_binary_clf)) {
       if (sort_by != 'auto') {
-        warning(paste('sort_by need to by one of binary classification metrics. Default metric applied : auc.
+        warning(paste('sort_by need to by one of binary classification metrics. Default metric applied : accuracy.
                       You can choose one of the them: auto, metric_function (in case of usage custom function) ',
                       paste(metrics_binary_clf, collapse = ', ')))
       }
-        sort_by <- 'auc'
+        sort_by <- 'accuracy'
     }
   }
   if (type == 'regression') {
@@ -162,7 +161,7 @@ score_models <- function(models,
                                names(models)[i],
                                engine[i],
                                tuning[i],
-                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed - 1)},
+                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[1]], observed)}, # czemu tu było -1?
                                model_performance_mse(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_rmse(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_r2(unlist(predictions[[i]], use.names = FALSE), observed),
@@ -174,6 +173,7 @@ score_models <- function(models,
       models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_binary_clf) + nr_add_col))
       colnames(models_frame) <- c(colnames_basic, metrics_binary_clf)
 
+      set.seed(1)
       observed <- as.numeric(observed)
       for (i in 1:length(models)) {
         tp = sum((observed == 2) * (as.numeric(unlist(predictions[[i]])) >= 0.5))
@@ -185,11 +185,11 @@ score_models <- function(models,
                                engine[i],
                                tuning[i],
                                if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed - 1)},
+                               model_performance_accuracy(tp, fp, tn, fn),
                                model_performance_auc(predictions[[i]], observed - 1),
                                model_performance_f1(tp, fp, tn, fn),
                                model_performance_recall(tp, fp, tn, fn),
-                               model_performance_precision(tp, fp, tn, fn),
-                               model_performance_accuracy(tp, fp, tn, fn)
+                               model_performance_precision(tp, fp, tn, fn)
                                )
     }
   }
@@ -197,7 +197,6 @@ score_models <- function(models,
   models_frame            <- models_frame[order(models_frame[, sort_by],
                                           decreasing = unname(metrics_decreasing[sort_by])),
                                           c(colnames_basic, metrics)]
-
   if (!is.null(metric_function)) {
     colnames(models_frame)[colnames(models_frame) == 'metric_function'] <- metric_function_name
   }

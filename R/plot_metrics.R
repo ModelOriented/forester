@@ -127,12 +127,6 @@ best_model_predict <- function(best_models, test_data) {
 #' `classification` or `regression`.
 #'
 #' @export
-#'
-#' @examples
-#'
-#' train_out <- train(lisbon, 'Price', bayes_iter = 2, random_evals = 2,
-#' verbose = FALSE, best_model_number = 10)
-#' draw_radar_plot(train_out$score_test[1:10, ], train_out$type)
 draw_radar_plot <- function(score_frame, type) {
   data <- NULL
 
@@ -168,8 +162,6 @@ draw_radar_plot <- function(score_frame, type) {
 
   } else {
     r2_row <- NULL
-    print(names(score_frame))
-    print(score_frame)
     if ('r2' %in% names(score_frame)) {
       r2_row <- as.data.frame(t(as.numeric(unlist(score_frame['r2']))))
     }
@@ -178,7 +170,6 @@ draw_radar_plot <- function(score_frame, type) {
 
     colnames(data) <- score_frame$name
   }
-  print(data)
   #colnames(data) <- c('Metric', score_frame$name)
 
   ggradar::ggradar(plot.data                = data,
@@ -253,39 +244,6 @@ draw_boxplot <- function(observed, predictions, models) {
 #' @param test_predictions A vector of predicted values for test data.
 #'
 #' @export
-#'
-#' @examples
-#' type              <- guess_type(lisbon, 'Price')
-#' preprocessed_data <- preprocessing(lisbon, 'Price')
-#' split_data <-
-#'   train_test_balance(preprocessed_data$data,
-#'                      y = 'Price',
-#'                      type = type,
-#'                      balance = FALSE)
-#' train_data <- prepare_data(split_data$train,
-#'                      y = 'Price',
-#'                      engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
-#' )
-#' test_data <-
-#'   prepare_data(split_data$test,
-#'                'Price',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                predict = TRUE,
-#'                train = split_data$train)
-#'
-#'
-#' models <-  train_models(train_data,
-#'                        'Price',
-#'                        engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                        type = type)
-#'predictions <-
-#' predict_models(models,
-#'                test_data,
-#'                'Price',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                type = type)
-#' draw_scatterplot(split_data$train$Price, models$ranger_model$predictions,
-#' split_data$test$Price, predictions$ranger_preds)
 draw_scatterplot <- function(train_observed, train_predictions, test_observed, test_predictions) {
   Observed   <- NULL
   Prediction <- NULL

@@ -37,14 +37,12 @@ Prepare data into format correct for the selected model engine
 }
 \examples{
 data(iris)
-
 type              <- guess_type(lisbon, 'Price')
-preprocessed_data <- preprocessing(lisbon, 'Price')
+preprocessed_data <- preprocessing(lisbon, 'Price', type)
 preprocessed_data <- preprocessed_data$data
 split_data <-
   train_test_balance(preprocessed_data,
                      'Price',
-                     type = type,
                      balance = FALSE)
 set.seed(123)
 train_data <-

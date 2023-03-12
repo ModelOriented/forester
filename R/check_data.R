@@ -406,7 +406,7 @@ check_outliers <- function(df, verbose = TRUE) {
     return (which(x < Tmin | x > Tmax))
   }
 
-  inter_quntile_range <- function(x) {
+  inter_quantile_range <- function(x) {
     Tmin = summary(x)[2] - (1.5 * IQR(x))
     Tmax = summary(x)[4] + (1.5 * IQR(x))
     return (which(x < Tmin | x > Tmax))
@@ -427,7 +427,7 @@ check_outliers <- function(df, verbose = TRUE) {
     outliers_tmp <- c()
     outliers_tmp <- c(outliers_tmp, mean_standard_deviation(data_num[, i]))
     outliers_tmp <- c(outliers_tmp, median_absolute_deviation(data_num[, i]))
-    outliers_tmp <- c(outliers_tmp, inter_quntile_range(data_num[, i]))
+    outliers_tmp <- c(outliers_tmp, inter_quantile_range(data_num[, i]))
     bool_outlier <- table(outliers_tmp)
     outliers     <- c(outliers, names(bool_outlier[bool_outlier == 3]))
   }
@@ -440,9 +440,9 @@ check_outliers <- function(df, verbose = TRUE) {
     str <- capture.output(cat('**No outliers in the dataset. **\n'))
 
   } else if (length(outliers) < 50) {
-    verbose_cat(crayon::red('\u2716'), 'These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), 'These observations migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
     str <- capture.output(
-      cat('**These obserwation migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
+      cat('**These observations migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
   } else {
     verbose_cat(crayon::red('\u2716'), 'There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \n', verbose = verbose)
     str <- capture.output(

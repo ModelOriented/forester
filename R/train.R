@@ -12,7 +12,7 @@
 #' (1) a vector of the same number of observations as `data` or
 #' (2) a character name of variable in the `data` that contains
 #' the target variable.
-#' @param type A character, one of `classification`/`regression`/`guess` that
+#' @param type A character, one of `binary_clf`/`regression`/`guess` that
 #' sets the type of the task. If `guess` (the default option) then
 #' forester will figure out `type` based on the number of unique values
 #' in the `y` variable.
@@ -68,9 +68,13 @@
 #' datasets.
 #' `predictions` Prediction list for all trained models based on the training
 #' dataset.
-#' `ranked_list` The list of metrics for all trained models. For regression task
-#' there are: mse, r2 and mad metrics. For the classification task there are:
-#' f1, auc, recall, precision and accuracy.
+#' `score_test` The list of metrics for all trained models calculated on a test
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
+#' classification task there are: f1, auc, recall, precision and accuracy.
+#' `score_train` The list of metrics for all trained models calculated on a train
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
+#' `score_valid` The list of metrics for all trained models calculated on a validation
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
 #' `models_list` The list of all trained models.
 #' `data` The original data.
 #' `y` The original target column name.
@@ -88,14 +92,17 @@
 #' algorithm and with parameters optimized with the random search algorithm.
 #' `engine` The list of names of all types of trained models. Possible
 #' values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
-#' `predictions_all` Predictions for all trained models.
-#' `predictions_best` Predictions for models from best_models list.
-#' `predictions_all_labels` Predictions for all trained models as text labels
-#' (for classification task only).
-#' `predictions_best_labels` Predictions for models from best_models list as
-#' labels (for classification task only).
+#' `predictions_all` Predictions for all trained models on a test dataset.
+#' `predictions_best` Predictions for models on a test dataset from best_models list.
+#' `predictions_all_labels` Predictions for all trained models on a test dataset
+#' as text labels for classification task only).
+#' `predictions_best_labels` Predictions for models on a test dataset from
+#' best_models list as labels (for classification task only).
+#' `predictions_train` Predictions for all trained models on a train dataset.
 #' `raw_train` The another form of the training dataset (useful for creating
 #' VS plot and predicting on training dataset for catboost and lightgbm models).
+#' `check_report` Data check report held as a list of strings. It is used
+#' by the `report()` function.
 #' `outliers` The vector of possible outliers detected by the `check_data()`.
 #' @export
 #'
@@ -103,7 +110,7 @@
 #' library(forester)
 #' data('lisbon')
 #' train_output <- train(lisbon, 'Price')
-#' train_output$ranked_list
+#' train_output$score_valid
 train <- function(data,
                   y,
                   type = 'auto',
@@ -131,75 +138,82 @@ train <- function(data,
     return(NULL)
   })
 
+  if ('tbl' %in% class(data)) {
+    data <- as.data.frame(data)
+    verbose_cat(crayon::red('\u2716'), 'Provided dataset is a tibble and not a',
+                'data.frame or matrix. Casting the dataset to data.frame format. \n\n',
+                verbose = verbose)
+  }
+
   if (type == 'auto') {
     type <- guess_type(data, y)
-  }
-  verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
-
-  if (verbose) {
-    check_report <- check_data(data, y, verbose)
+    verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
+  } else if (!type %in% c('regression', 'binary_clf')) {
+    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, and `auto` for automatic task identification \n\n', verbose = verbose)
   } else {
-    check_report          <- c()
-    check_report$str      <- NULL
-    check_report$outliers <- NULL
+    verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
   }
 
- preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
 
- if (advanced_preprocessing) {
-   verbose_cat(crayon::red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
-               preprocessed_data$colnames, '\n\n', verbose = verbose)
- }
+  check_report <- check_data(data, y, verbose)
+
+  preprocessed_data <- preprocessing(data, y, type, advanced = advanced_preprocessing)
+
+  if (advanced_preprocessing) {
+    verbose_cat(crayon::red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
+                preprocessed_data$colnames, '\n\n', verbose = verbose)
+  }
 
 
   verbose_cat(crayon::green('\u2714'), 'Data preprocessed. \n', verbose = verbose)
 
-  split_data <- train_test_balance(preprocessed_data$data, y, type,
-                                   balance = TRUE, fractions = train_test_split)
+  split_data <- train_test_balance(preprocessed_data$data, y, balance = TRUE,
+                                   fractions = train_test_split)
   verbose_cat(crayon::green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
 
   train_data <- prepare_data(split_data$train, y, engine)
+
   test_data  <- prepare_data(split_data$test, y, engine, predict = TRUE,
                              split_data$train)
   valid_data <- prepare_data(split_data$valid, y, engine, predict = TRUE,
                              split_data$train)
   # For creating VS plot and predicting on train (catboost, lgbm).
-  raw_train         <- prepare_data(split_data$train, y, engine, predict = TRUE,
-                                    split_data$train)
+  raw_train  <- prepare_data(split_data$train, y, engine, predict = TRUE,
+                             split_data$train)
 
   verbose_cat(crayon::green('\u2714'), 'Correct formats prepared. \n', verbose = verbose)
 
-  model_basic       <- train_models(train_data, y, engine, type)
+  model_basic    <- train_models(train_data, y, engine, type)
   verbose_cat(crayon::green('\u2714'), 'Models successfully trained. \n', verbose = verbose)
 
-  preds_basic       <- predict_models_all(model_basic, test_data, y, type)
+  preds_basic    <- predict_models_all(model_basic, test_data, y, type)
   verbose_cat(crayon::green('\u2714'), 'Predicted successfully. \n', verbose = verbose)
 
-  test_observed    <- split_data$test[[y]]
-  train_observed   <- split_data$train[[y]]
-  valid_observed   <- split_data$valid[[y]]
+  test_observed  <- split_data$test[[y]]
+  train_observed <- split_data$train[[y]]
+  valid_observed <- split_data$valid[[y]]
 
-  model_random <- random_search(train_data,
-                               test_data,
-                               y = y,
-                               engine = engine,
-                               type = type,
-                               max_evals = random_evals)
+  model_random   <- random_search(train_data,
+                                  test_data,
+                                  y = y,
+                                  engine = engine,
+                                  type = type,
+                                  max_evals = random_evals)
   preds_random <- NULL
   if (!is.null(model_random)) {
     preds_random <- predict_models_all(model_random$models,
-                                         test_data,
-                                         y,
-                                         type = type)
+                                       test_data,
+                                       y,
+                                       type = type)
   }
 
   model_bayes <- train_models_bayesopt(train_data,
-                                      y,
-                                      test_data,
-                                      engine = engine,
-                                      type = type,
-                                      iters.n = bayes_iter,
-                                      verbose = verbose)
+                                       y,
+                                       test_data,
+                                       engine = engine,
+                                       type = type,
+                                       iters.n = bayes_iter,
+                                       verbose = verbose)
   preds_bayes <- NULL
   if (!is.null(model_bayes)) {
     preds_bayes <- predict_models_all(model_bayes, test_data, y, type)
@@ -224,13 +238,14 @@ train <- function(data,
                          metric_function_decreasing = metric_function_decreasing,
                          engine = engine_all,
                          tuning = tuning)
+
   predictions_all  <- predict_models_all(models_all, test_data, y, type)
   verbose_cat(crayon::green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
 
   if (type == 'binary_clf') {
-    test_observed  <- test_observed - 1 # [0, 1]
-    train_observed <- train_observed - 1
-    valid_observed <- valid_observed - 1
+    test_observed  <- as.numeric(test_observed) - 1 # [0, 1]
+    train_observed <- as.numeric(train_observed) - 1
+    valid_observed <- as.numeric(valid_observed) - 1
 
     test_observed_labels  <- test_observed
     train_observed_labels <- train_observed
@@ -262,11 +277,26 @@ train <- function(data,
 
   best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
   predictions_best <- predict_models_all(best_models$models, test_data, y, type = type)
+
+  predict_train    <- predict_models_all(models_all, raw_train, y, type = type)
+  predict_test     <- predict_models_all(models_all, test_data, y, type = type)
   predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
+
 
   score_valid      <- score_models(models_all,
                                    predict_valid,
                                    valid_data$ranger_data[[y]],
+                                   type,
+                                   metrics = metrics,
+                                   sort_by = sort_by,
+                                   metric_function = metric_function,
+                                   metric_function_decreasing = metric_function_decreasing,
+                                   engine = engine_all,
+                                   tuning = tuning)
+
+  score_train      <- score_models(models_all,
+                                   predict_train,
+                                   train_data$ranger_data[[y]],
                                    type,
                                    metrics = metrics,
                                    sort_by = sort_by,
@@ -300,6 +330,7 @@ train <- function(data,
       }
     }
   }
+
   if (type == 'binary_clf') {
     return(
       list(
@@ -312,6 +343,7 @@ train <- function(data,
         valid_data              = valid_data,
         predictions             = predictions_all,
         score_test              = score,
+        score_train             = score_train,
         score_valid             = score_valid,
         models_list             = models_all,
         data                    = data,
@@ -328,6 +360,7 @@ train <- function(data,
         predictions_best        = predictions_best,
         predictions_all_labels  = predictions_all_labels,
         predictions_best_labels = predictions_best_labels,
+        predictions_train       = predict_train,
         raw_train               = raw_train,
         check_report            = check_report$str,
         outliers                = check_report$outliers
@@ -345,6 +378,7 @@ train <- function(data,
         valid_data              = valid_data,
         predictions             = predictions_all,
         score_test              = score,
+        score_train             = score_train,
         score_valid             = score_valid,
         models_list             = models_all,
         data                    = data,
@@ -356,6 +390,7 @@ train <- function(data,
         engine                  = engine,
         predictions_all         = predictions_all,
         predictions_best        = predictions_best,
+        predictions_train       = predict_train,
         raw_train               = raw_train,
         check_report            = check_report,
         outliers                = check_report$outliers
