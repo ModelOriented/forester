@@ -25,7 +25,7 @@
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy" class="external-link">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/" class="external-link">MI^2 DataLab</a> </span>
-          <span class="version version-default">1.0.0</span>
+          <span class="version version-default">1.2.0</span>
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Tutorial.html">forester tutorial</a>
+      <a href="../articles/Knowledge_check.html">Knowledge Check</a>
     </li>
   </ul></li>
 <li>
@@ -66,17 +66,168 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.0.0" id="forester-100">forester 1.0.0<a class="anchor" aria-label="anchor" href="#forester-100"></a></h2>
-<ul><li>General code quality and readability improvements as well as improving the quality of the documentation.</li>
+<h2 class="page-header" data-toc-text="1.2.0" id="forester-120">forester 1.2.0<a class="anchor" aria-label="anchor" href="#forester-120"></a></h2>
+<ul><li>In the <code><a href="../reference/check_data.html">check_data()</a></code> function:
+<ul><li>Fixed typos.</li>
+</ul></li>
+<li>Updated the documentation or examples in:
+<ul><li>
+<code>choose_best_model()</code>,</li>
+<li>
+<code><a href="../reference/create_ranked_list.html">create_ranked_list()</a></code>,</li>
+<li>
+<code><a href="../reference/format_models_details.html">format_models_details()</a></code>,</li>
+<li>
+<code>draw_scatter_plot()</code>,</li>
+<li>
+<code><a href="../reference/predict_models.html">predict_models()</a></code>,</li>
+<li>
+<code><a href="../reference/predict_models_all.html">predict_models_all()</a></code>,</li>
+<li>
+<code><a href="../reference/save.html">save()</a></code>,</li>
+<li>
+<code><a href="../reference/train_models.html">train_models()</a></code>,</li>
+<li>
+<code><a href="../reference/train_test_balance.html">train_test_balance()</a></code>.</li>
+</ul></li>
+<li>In the <code><a href="../reference/explain.html">explain()</a></code> function:
+<ul><li>Updated the documentation and the examples,</li>
+<li>Fixed the handling of the factors.</li>
+</ul></li>
+<li>In the <code><a href="../reference/draw_radar_plot.html">draw_radar_plot()</a></code> function:
+<ul><li>Updated the documentation,</li>
+<li>Deleted unnecessary prints.</li>
+</ul></li>
+<li>In the <code><a href="../reference/prepare_data.html">prepare_data()</a></code> function:
+<ul><li>Updated the documentation,</li>
+<li>Fixed the process of creating an ‘other’ label during the preparation of train / test splits.</li>
+</ul></li>
+<li>In the <code><a href="../reference/preprocessing.html">preprocessing()</a></code> function:
+<ul><li>Updated the documentation,</li>
+<li>Removed unused parameter type,</li>
+<li>Added a factorization of the target for binary classification task.</li>
+</ul></li>
+<li>In the <code><a href="../reference/random_search.html">random_search()</a></code> function:
+<ul><li>Updated the documentation,</li>
+<li>Fixed the method for the ranger model,</li>
+<li>Unified the grid with the Bayesian Optimization grid.</li>
+</ul></li>
+<li>In the <code><a href="../reference/score_models.html">score_models()</a></code> function:
+<ul><li>Updated the documentation,</li>
+<li>Added RMSE as a main metric for the regression task,</li>
+<li>Added accuracy as a main metric for the binary classification task,</li>
+<li>Fixed the scoring method for the regression.</li>
+</ul></li>
+<li>In the <code><a href="../reference/train.html">train()</a></code> function:
+<ul><li>Updated the documentation,</li>
+<li>Enabled providing the tibble as a data parameter (with warning),</li>
+<li>Added a warning if the user tries to use incorrect task type,</li>
+<li>Added score_train and predictions train to the output of the function.</li>
+</ul></li>
+<li>In the <code><a href="../reference/train_models_bayesopt.html">train_models_bayesopt()</a></code> function:
+<ul><li>Updated the documentation,</li>
+<li>Fixed the Bayesian Optimization. Before hand it didn’t work at all for models other than ranger,</li>
+<li>Changed tuned hyperparameters and their values for all models, which increased the performance of the method.</li>
+</ul></li>
+<li>Updated the majority of <code>tests</code> so they match the current version.</li>
+<li>Added alternative catboost installation in the <code>README</code>.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="1.1.4" id="forester-114">forester 1.1.4<a class="anchor" aria-label="anchor" href="#forester-114"></a></h2>
+<ul><li>In the <code><a href="../reference/report.html">report()</a></code> function:
+<ul><li>Removed engine and tuning columns from the ranked list table,</li>
+<li>Explained how the model name is created, so the columns engine and tuning are not needed,</li>
+<li>Fixed the radar plot issues,</li>
+</ul></li>
+<li>In the <code><a href="../reference/draw_radar_plot.html">draw_radar_plot()</a></code> function:
+<ul><li>Fixed radar plots, so the models are named correctly (by model names, not engines),</li>
+<li>Fixed issue where the plot for binary classification had an empty observation name,</li>
+<li>Removed unnecessary and invalid Metric names (the ones that are not used and engine, name, tuning).</li>
+</ul></li>
+<li>In the <code><a href="../reference/check_data.html">check_data()</a></code> function:
+<ul><li>Added a vector of possible outliers to the output,</li>
+<li>The outliers indexes are printed if there are less than 50 of them.</li>
+</ul></li>
+<li>In the <code><a href="../reference/train.html">train()</a></code> function:
+<ul><li>Added a vector of possible outliers to the output.</li>
+</ul></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="1.1.3" id="forester-113">forester 1.1.3<a class="anchor" aria-label="anchor" href="#forester-113"></a></h2>
+<ul><li>In the <code><a href="../reference/train.html">train()</a></code> function:
+<ul><li>Added objects to the output of the function:
+<ul><li>Vector: valid_observed.</li>
+<li>Vectors: train_observed_labels, test_observed_labels, valid_observed_labels, predictions_all_labels predictions_best_best as labels for binary classification task.</li>
+</ul></li>
+<li>Removed catboost from default engines.</li>
+<li>Added check if catboost is installed.</li>
+<li>Removed parameters: loss, validation, tuning, keep, because they weren’t used.</li>
+<li>Added train_test_split parameter that determines proportions of train, test and validation subsets.</li>
+<li>Conditioned the message about columns deleted during the advanced preprocessing.</li>
+</ul></li>
+<li>In the <code><a href="../reference/check_data.html">check_data()</a></code> function:
+<ul><li>Fixed an issue of too much unique values for the Crammer V’s correlation. If the number of combinations exceeds 2^29, the correlation is not calculated and the user is informed about it (it is caused by R limitations).</li>
+<li>Fixed an issue with omitting strong correlations that are negative.</li>
+<li>Added ticks and crosses that indicate whether something is of the high or low quality.</li>
+<li>Added the information which class is the dominating one in the unbalanced classification data set.</li>
+</ul></li>
+<li>In the <code><a href="../reference/preprocessing.html">preprocessing()</a></code> function:
+<ul><li>Added a factorization of the target at the beginning of the <code><a href="../reference/binarize_target.html">binarize_target()</a></code> sub function.</li>
+<li>Resolved issues with data frames where columns are not saved as factors.</li>
+</ul></li>
+<li>The <code><a href="../reference/report.html">report()</a></code> function:
+<ul><li>If tinytex is not installed raises an error.</li>
+<li>If ggradar is not installed, there will be no error, no plot, and a note about installing the ggradar package.</li>
+</ul></li>
+<li>Removed engine parameter from <code><a href="../reference/predict_models_all.html">predict_models_all()</a></code>.</li>
+<li>Removed misspelled function <code>predcit_models_all()</code>.</li>
+<li>The <code><a href="../reference/train_models.html">train_models()</a></code> function no longer returns NULL objects if engine is not selected.</li>
+<li>The <code><a href="../reference/train_models_bayesopt.html">train_models_bayesopt()</a></code> function no longer returns NULL objects if engine is not selected.</li>
+<li>For the <code><a href="../reference/format_models_details.html">format_models_details()</a></code> function fixed a bug with the method not working for a classification task for an xgboost model.</li>
+<li>In the <code>DESCRIPTION</code> catboost, ggradar and tinytex dependencies moved from Suggests to Imports and added crayon to Import.</li>
+<li>Added installation guides for catboost, ggradar and tinytex in the <code>README.md</code>, which solves installation issues on macOS.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="1.1.2" id="forester-112">forester 1.1.2<a class="anchor" aria-label="anchor" href="#forester-112"></a></h2>
+<ul><li>Cleared typos and inconsistent notation in the <code><a href="../reference/train.html">train()</a></code> function.</li>
+<li>Added info that the <em>Bayesian Optimization</em> takes a lot of time.</li>
+<li>Fixed <em>‘The best model details’</em> section in the report to be seen.</li>
+<li>Added info about deleted columns during <code><a href="../reference/preprocessing.html">preprocessing()</a></code>.</li>
+<li>Added more details of the <code><a href="../reference/train.html">train()</a></code> function output.</li>
+<li>Added parameter <em>‘seed’</em> to keep the data division comparable.</li>
+<li>Cleared structure of the <code><a href="../reference/predict_new.html">predict_new()</a></code> function.</li>
+<li>Kept numeric values of <em>model</em><span class="math inline"><em>r</em><em>a</em><em>w</em><sub><em>d</em></sub><em>a</em><em>t</em><em>a</em></span>lightgbm_data as numeric, and not string values.</li>
+<li>Used different parameters for the xgboost model to remove the warnings.</li>
+<li>Changed [1,2] target values to [0,1] for the regression task.</li>
+<li>Added info about the type of correlation used between columns.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="1.1.1" id="forester-111">forester 1.1.1<a class="anchor" aria-label="anchor" href="#forester-111"></a></h2>
+<ul><li>In the <code><a href="../reference/save.html">save()</a></code> the file name has a right month.</li>
+<li>The <code><a href="../reference/train.html">train()</a></code> function returns table with metrics on validation subset.</li>
+<li>The <code>score()</code> function returns tables with additional columns: <code>engine</code> and <code>tuning</code>.</li>
+<li>Added a new vignette ‘Knowledge Check’ with extended use cases.</li>
+<li>Setting <code>bayes_iter = 0</code> causes that <code>Bayestian_opt()</code> is not ran anymore.</li>
+<li>Changed the parameter name from <code>random_iter</code> to <code>random_evals</code>.</li>
+<li>Setting <code>verbose = FALSE</code> disables the <code>check_data</code> entirely.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="1.1.0" id="forester-110">forester 1.1.0<a class="anchor" aria-label="anchor" href="#forester-110"></a></h2>
+<ul><li>Changes in a <code><a href="../reference/train.html">train()</a></code> function by adding parameters to:
+<ul><li>Choose metrics.</li>
+<li>Choose metric to sort model.</li>
+<li>Add self-created metric function. # forester 1.0.0</li>
+</ul></li>
+<li>General code quality and readability improvements as well as improving the quality of the documentation.</li>
 <li>
 <code><a href="../reference/check_data.html">check_data()</a></code> added detection of id columns and reformatted the outputs.</li>
 <li>
 <code><a href="../reference/create_ranked_list.html">create_ranked_list()</a></code> able to work with missing values.</li>
-<li>Improved datasets documentation.</li>
+<li>Improved data sets documentation.</li>
 <li>
 <code><a href="../reference/explain.html">explain()</a></code> function redesigned to work on single and multiple models.</li>
 <li>
-<code><a href="../reference/plot_metrics.html">plot_metrics()</a></code> improved all plots and changed them into <code>ggplot</code> visualizations, added a <code>feature importance</code> plot.</li>
+<code>plot_metrics()</code> improved all plots and changed them into <code>ggplot</code> visualizations, added a <code>feature importance</code> plot.</li>
 <li>Renamed <code>predcit_models_all()</code> into <code><a href="../reference/predict_models_all.html">predict_models_all()</a></code> and enabled prediction on non-fixed, larger amount of models.</li>
 <li>Added <code><a href="../reference/predict_new.html">predict_new()</a></code> function for new observations.</li>
 <li>Expanded <code><a href="../reference/preprocessing.html">preprocessing()</a></code> function by optional, advanced preprocessing consisting of deleting correlated values, deleting id columns, selecting only the most important features via the BORUTA algorithm.</li>
@@ -85,9 +236,9 @@
 <li>Redesigned a <code><a href="../reference/score_models.html">score_models()</a></code> function, so that the user can add their own metric function for scoring models.</li>
 <li>Redesigned a <code><a href="../reference/train.html">train()</a></code> function by:
 <ul><li>Adding a verbose parameter for silent runs.</li>
-<li>Adding parameters for limiting the iterations of random search and bayesian optimization.</li>
+<li>Adding parameters for limiting the iterations of random search and Bayesian optimization.</li>
 <li>Turning on the advanced preprocessing.</li>
-<li>Increased the output information by adding engine, predictions of all models, predictions of the best models and raw_training dataset (unprocessed by <code><a href="../reference/prepare_data.html">prepare_data()</a></code>).</li>
+<li>Increased the output information by adding engine, predictions of all models, predictions of the best models and raw_training data set (unprocessed by <code><a href="../reference/prepare_data.html">prepare_data()</a></code>).</li>
 </ul></li>
 <li>Added a <code><a href="../reference/verbose_cat.html">verbose_cat()</a></code> function for optional messages.</li>
 </ul></div>

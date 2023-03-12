@@ -25,7 +25,7 @@
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy" class="external-link">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/" class="external-link">MI^2 DataLab</a> </span>
-          <span class="version version-default">1.0.0</span>
+          <span class="version version-default">1.2.0</span>
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Tutorial.html">forester tutorial</a>
+      <a href="../articles/Knowledge_check.html">Knowledge Check</a>
     </li>
   </ul></li>
 <li>
@@ -71,13 +71,18 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">choose_best_models</span><span class="op">(</span><span class="va">models</span>, <span class="va">score</span>, <span class="va">number</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">choose_best_models</span><span class="op">(</span><span class="va">models</span>, <span class="va">engine</span>, <span class="va">score</span>, <span class="va">number</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>models</dt>
 <dd><p>A list of models trained by `train_models()` function.</p></dd>
+
+
+<dt>engine</dt>
+<dd><p>A vector of tree-based models that shall be tested.
+Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.</p></dd>
 
 
 <dt>score</dt>
@@ -101,44 +106,52 @@
 <span class="r-in"><span><span class="va">iris_bin</span>          <span class="op">&lt;-</span> <span class="va">iris</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">iris_bin</span><span class="op">$</span><span class="va">Species</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">iris_bin</span><span class="op">$</span><span class="va">Species</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">type</span>              <span class="op">&lt;-</span> <span class="fu"><a href="guess_type.html">guess_type</a></span><span class="op">(</span><span class="va">iris_bin</span>, <span class="st">'Species'</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">preprocessed_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="preprocessing.html">preprocessing</a></span><span class="op">(</span><span class="va">iris_bin</span>, <span class="st">'Species'</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">preprocessed_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="preprocessing.html">preprocessing</a></span><span class="op">(</span><span class="va">iris_bin</span>, <span class="st">'Species'</span>, <span class="va">type</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (advanced) {    del_cor &lt;- delete_correlated_values(pre_data, y, verbose = verbose)    pre_data &lt;- del_cor$data    pre_data &lt;- delete_id_columns(pre_data)    pre_data &lt;- boruta_selection(pre_data, y)}:</span> argument is not interpretable as logical</span>
 <span class="r-in"><span><span class="va">preprocessed_data</span> <span class="op">&lt;-</span> <span class="va">preprocessed_data</span><span class="op">$</span><span class="va">data</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'preprocessed_data' not found</span>
 <span class="r-in"><span><span class="va">split_data</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="train_test_balance.html">train_test_balance</a></span><span class="op">(</span><span class="va">preprocessed_data</span>,</span></span>
 <span class="r-in"><span>                     <span class="st">'Species'</span>,</span></span>
-<span class="r-in"><span>                     type <span class="op">=</span> <span class="va">type</span>,</span></span>
 <span class="r-in"><span>                     balance <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in train_test_balance(preprocessed_data, "Species", balance = FALSE):</span> object 'preprocessed_data' not found</span>
 <span class="r-in"><span><span class="va">train_data</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="prepare_data.html">prepare_data</a></span><span class="op">(</span><span class="va">split_data</span><span class="op">$</span><span class="va">train</span>,</span></span>
 <span class="r-in"><span>               <span class="st">'Species'</span>,</span></span>
 <span class="r-in"><span>               engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'ranger'</span>, <span class="st">'xgboost'</span>, <span class="st">'decision_tree'</span>, <span class="st">'lightgbm'</span>, <span class="st">'catboost'</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in as.data.frame(unclass(data), stringsAsFactors = TRUE):</span> object 'split_data' not found</span>
 <span class="r-in"><span><span class="va">test_data</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="prepare_data.html">prepare_data</a></span><span class="op">(</span><span class="va">split_data</span><span class="op">$</span><span class="va">test</span>,</span></span>
 <span class="r-in"><span>               <span class="st">'Species'</span>,</span></span>
 <span class="r-in"><span>               engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'ranger'</span>, <span class="st">'xgboost'</span>, <span class="st">'decision_tree'</span>, <span class="st">'lightgbm'</span>, <span class="st">'catboost'</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>               predict <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>               train <span class="op">=</span> <span class="va">split_data</span><span class="op">$</span><span class="va">train</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in as.data.frame(unclass(data), stringsAsFactors = TRUE):</span> object 'split_data' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="train_models.html">train_models</a></span><span class="op">(</span><span class="va">train_data</span>,</span></span>
 <span class="r-in"><span>               <span class="st">'Species'</span>,</span></span>
 <span class="r-in"><span>               engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'ranger'</span>, <span class="st">'xgboost'</span>, <span class="st">'decision_tree'</span>, <span class="st">'lightgbm'</span>, <span class="st">'catboost'</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>               type <span class="op">=</span> <span class="va">type</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ranger::ranger(dependent.variable.name = y, data = data$ranger_data,     classification = TRUE, probability = TRUE):</span> object 'train_data' not found</span>
 <span class="r-in"><span><span class="va">predictions</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="predict_models.html">predict_models</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                 <span class="va">test_data</span>,</span></span>
 <span class="r-in"><span>                 <span class="st">'Species'</span>,</span></span>
 <span class="r-in"><span>                 engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'ranger'</span>, <span class="st">'xgboost'</span>, <span class="st">'decision_tree'</span>, <span class="st">'lightgbm'</span>, <span class="st">'catboost'</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 type <span class="op">=</span> <span class="va">type</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in predict(models[[i]], data$ranger_data):</span> object 'model' not found</span>
 <span class="r-in"><span><span class="va">score</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="score_models.html">score_models</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>               <span class="va">predictions</span>,</span></span>
 <span class="r-in"><span>               observed <span class="op">=</span> <span class="va">split_data</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">Species</span>,</span></span>
 <span class="r-in"><span>               type <span class="op">=</span> <span class="va">type</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in matrix(nrow = length(models), ncol = length(metrics_binary_clf) +     nr_add_col):</span> object 'model' not found</span>
 <span class="r-in"><span><span class="va">best_models</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu">choose_best_models</span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                     score <span class="op">=</span> <span class="va">score</span>,</span></span>
 <span class="r-in"><span>                     number <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in choose_best_models(model, score = score, number = 3):</span> object 'model' not found</span>
 </code></pre></div>
     </div>
   </div>

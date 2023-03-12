@@ -50,7 +50,7 @@ tinytex::install_tinytex()
 
 ## How to build tree-based models in R?
 
-![](misc/intro.png)
+![](man/figures/intro.png)
 
 ## What is the *forester*?
 
@@ -69,7 +69,7 @@ The *forester* package is **an AutoML tool in R** that wraps up all machine lear
 - **evaluating** them and providing a ranked list.
 
 
-![](misc/graph_forester.png)
+![](man/figures/graph_forester.png)
 
 ## For whom is this package created?
 

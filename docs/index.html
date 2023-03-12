@@ -53,7 +53,7 @@
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy" class="external-link">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/" class="external-link">MI^2 DataLab</a> </span>
-          <span class="version version-default">1.0.0</span>
+          <span class="version version-default">1.2.0</span>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="articles/Tutorial.html">forester tutorial</a>
+      <a href="articles/Knowledge_check.html">Knowledge Check</a>
     </li>
   </ul>
 </li>
@@ -97,129 +97,99 @@
   <div class="contents col-md-9">
 
 <div class="section level2">
-<h2 id="forester-automated-partner-for-planting-transparent-tree-based-models">
-<strong>forester: automated partner for planting transparent tree-based models</strong><a class="anchor" aria-label="anchor" href="#forester-automated-partner-for-planting-transparent-tree-based-models"></a>
+<h2 id="forester-quick-and-simple-tools-for-training-and-testing-of-tree-based-models">
+<strong>forester: Quick and Simple Tools for Training and Testing of Tree-based Models</strong><a class="anchor" aria-label="anchor" href="#forester-quick-and-simple-tools-for-training-and-testing-of-tree-based-models"></a>
 </h2>
 <p>A significant amount of time is spent on building models with high performance. Selecting the appropriate model structures, optimizing hyperparameters and explainability are only part of the process of creating a machine learning-based solution. Despite the wide range of structures considered, tree-based models are champions in competitions or hackathons. So, aren’t tree-based models enough?</p>
 <p>They definitely are and that’s why we want to fully automate the machine learning process for them, so everyone will be able to use the computational power of the trees.</p>
 </div>
 <div class="section level2">
-<h2 id="authors">Authors<a class="anchor" aria-label="anchor" href="#authors"></a>
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>This package is created inside the MI2 Data Lab as both scientific research and Bachelor thesis by:</p>
-<ul>
-<li>Adrianna Grudzień, Warsaw University of Technology, Bachelor Degree student</li>
-<li>Hubert Ruczyński, Warsaw University of Technology, Bachelor Degree student</li>
-<li>Patryk Słowakiewicz, Warsaw University of Technology, Bachelor Degree student</li>
-<li>MSc Anna Kozak, Warsaw University of Technology, project co-ordinator and supervisor</li>
-<li>PhD. Przemysław Biecek, Warsaw University of Technology, auxiliary supervisor</li>
-</ul>
-<p>The previous version of forester was created by:</p>
-<ul>
-<li>Hoang Thien Ly, Warsaw University of Technology, Bachelor Degree</li>
-<li>Szymon Szmajdziński, Warsaw University of Technology, Bachelor Degree student</li>
-</ul>
+<p>From GitHub</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"ModelOriented/forester"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="what-is-the-forester">What is the forester?<a class="anchor" aria-label="anchor" href="#what-is-the-forester"></a>
+<h2 id="additional-features-installation">Additional features installation<a class="anchor" aria-label="anchor" href="#additional-features-installation"></a>
 </h2>
-<p>The forester is an autoML tool that wraps up all ML processes into a single <code><a href="reference/train.html">train()</a></code> function, which includes:</p>
+<p>Some of the package dependencies are not present on CRAN, which means that the user has to follow the installation mentioned below. They should be especially helpful for macOS users:</p>
+<div class="section level3">
+<h3 id="catboost">catboost<a class="anchor" aria-label="anchor" href="#catboost"></a>
+</h3>
+<p>The catboost model is used in the <code><a href="reference/train.html">train()</a></code> function as an additional engine.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_url.html" class="external-link">install_url</a></span><span class="op">(</span><span class="st">'https://github.com/catboost/catboost/releases/download/v1.1.1/catboost-R-Darwin-1.1.1.tgz'</span>, INSTALL_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"--no-multiarch"</span>, <span class="st">"--no-test-load"</span>, <span class="st">"--no-staged-install"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Alternatively one can do a longer installation, where whole repository will be downloaded.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'catboost/catboost'</span>, subdir <span class="op">=</span> <span class="st">'catboost/R-package'</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="ggradar">ggradar<a class="anchor" aria-label="anchor" href="#ggradar"></a>
+</h3>
+<p>The ggradar is required for creating radar plot visualization in the report from the <code><a href="reference/report.html">report()</a></code> function.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'ricardo-bion/ggradar'</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="tinytex">tinytex<a class="anchor" aria-label="anchor" href="#tinytex"></a>
+</h3>
+<p>The tinytex is required for creating a report from the <code><a href="reference/report.html">report()</a></code> function.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'tinytex'</span><span class="op">)</span></span>
+<span><span class="fu">tinytex</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tinytex/man/install_tinytex.html" class="external-link">install_tinytex</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="how-to-build-tree-based-models-in-r">How to build tree-based models in R?<a class="anchor" aria-label="anchor" href="#how-to-build-tree-based-models-in-r"></a>
+</h2>
+<p><img src="reference/figures/intro.png"></p>
+</div>
+<div class="section level2">
+<h2 id="what-is-the-forester">What is the <em>forester</em>?<a class="anchor" aria-label="anchor" href="#what-is-the-forester"></a>
+</h2>
+<p><span class="emoji" data-emoji="bulb">💡</span> full automation of the process of training tree-based models</p>
+<p><span class="emoji" data-emoji="bulb">💡</span> no demand for ML expertise</p>
+<p><span class="emoji" data-emoji="bulb">💡</span> powerful tool for making high-quality baseline models for experienced users</p>
+<p>The <em>forester</em> package is <strong>an AutoML tool in R</strong> that wraps up all machine learning processes into a single <code><a href="reference/train.html">train()</a></code> function, which includes:</p>
 <ul>
-<li>Rendering a brief data check report,</li>
-<li>Preprocessing the initial dataset enough for models to be trained,</li>
-<li>Training 5 tree-based models with default parameters, random search and Bayesian optimization,</li>
-<li>Evaluating them and providing a ranked list.</li>
+<li>rendering a brief <strong>data check</strong> report,</li>
+<li>
+<strong>preprocessing</strong> initial dataset enough for models to be trained,</li>
+<li>
+<strong>training</strong> 5 tree-based models with default parameters, random search and Bayesian optimisation,</li>
+<li>
+<strong>evaluating</strong> them and providing a ranked list.</li>
 </ul>
-<p>However, that’s not everything that the forester has to offer. Via additional functions, the user can easily explain created models with the usage of DALEX or generate one of the predefined reports including:</p>
-<ul>
-<li>Data Check report - information about the dataset: correlation, outliers, missing values, …</li>
-<li>Detailed information about best models (parameters)</li>
-<li>Visualizations comparing the best models</li>
-<li>Explanations of the aforementioned models</li>
-</ul>
+<p><img src="reference/figures/graph_forester.png"></p>
 </div>
 <div class="section level2">
 <h2 id="for-whom-is-this-package-created">For whom is this package created?<a class="anchor" aria-label="anchor" href="#for-whom-is-this-package-created"></a>
 </h2>
-<p>The forester aims for both experienced and inexperienced users. The major advantage of this package is simple syntax and the ability to train plenty of highly effective models in just a few lines. It is really handy for the newcomers, because they don’t have to fully understand what stays behind the training process and they have to read only short documentation to train their first, yet highly effective models.</p>
-<p>More experienced users are handed an easy-to-use tool that might be used for preparing high-quality baseline models for comparison with more advanced methods or a set of starting parameters for more thorough optimization.</p>
+<p>The forester package is designed for beginners in data science, but also for more experienced users. They get an easy-to-use tool that can be used to prepare high-quality baseline models for comparison with more advanced methods or a set of output parameters for more thorough optimisations.</p>
 </div>
 <div class="section level2">
-<h2 id="preprocessing-and-data-preparation">Preprocessing and data preparation<a class="anchor" aria-label="anchor" href="#preprocessing-and-data-preparation"></a>
+<h2 id="introductory-blogs">Introductory blogs<a class="anchor" aria-label="anchor" href="#introductory-blogs"></a>
 </h2>
-<p>The first and probably most important step in the forester pipeline is preprocessing. It is so crucial because it enables the user to build models on all types of datasets, regardless of the data quality. This pipeline consists of:</p>
 <ul>
-<li>Guessing the type of ml task</li>
-<li>Rendering a check data report</li>
-<li>Preprocessing</li>
-<li>Balancing and splitting the dataset</li>
-<li>Preparation for different models</li>
+<li>forester: an R package for automated building of tree-based models: <a href="https://medium.com/responsibleml/forester-an-r-package-for-automated-building-of-tree-based-models-5e683c7489c" class="external-link uri">https://medium.com/responsibleml/forester-an-r-package-for-automated-building-of-tree-based-models-5e683c7489c</a>
+</li>
+<li>forester: what makes the package special?: <a href="https://medium.com/responsibleml/forester-what-makes-the-package-special-9ece9b8a64d" class="external-link uri">https://medium.com/responsibleml/forester-what-makes-the-package-special-9ece9b8a64d</a>
+</li>
+<li>forester: predicting house prices use case: <a href="https://medium.com/responsibleml/forester-predicting-house-prices-use-case-b537253b6142" class="external-link uri">https://medium.com/responsibleml/forester-predicting-house-prices-use-case-b537253b6142</a>
+</li>
+<li>forester: the simplicity of AutoML: <a href="https://medium.com/responsibleml/forester-the-simplicity-of-automl-98d9272f3ea" class="external-link uri">https://medium.com/responsibleml/forester-the-simplicity-of-automl-98d9272f3ea</a>
+</li>
 </ul>
-<div class="section level3">
-<h3 id="guessing-type-of-ml-task">Guessing type of ml task<a class="anchor" aria-label="anchor" href="#guessing-type-of-ml-task"></a>
-</h3>
-<p>The first point of the pipeline determines which type of ml task are we facing via the data analysis of the target column. For now supported tasks are binary classification and regression, however, in the future support for multilabel classification will be provided.</p>
-</div>
-<div class="section level3">
-<h3 id="data-check-report">Data Check report<a class="anchor" aria-label="anchor" href="#data-check-report"></a>
-</h3>
-<p>The forester is designed for training models on data of even the lowest quality, however, in data science, we know that with poor quality input we will get poor output. That’s why to counter this issue we provide a data check report, which prints out issues present in our data. The report contains:</p>
-<ul>
-<li>Basic information about the dataset: number of observations, columns, their names and which one is a target value</li>
-<li>Information if there are static columns (with at least 99% same values)</li>
-<li>Information if there are duplicate columns</li>
-<li>Information about missing values in predictors and target</li>
-<li>Information about dimensionality issues (more features than observations, too big dimensionality for tree-based models)</li>
-<li>Information about strongly correlated categorical (Crammer’s V) and numerical (Pearson) values</li>
-<li>Information about outliers detected by 3 methods: mean standard deviation, median absolute deviation and inter quantile range</li>
-<li>Information about balance in target column (even distribution in quantiles for regression task)</li>
-</ul>
-<p>With such a detailed report the user is aware of data quality and thus the quality of the models. Advanced users can address those issues if they want better-performing models.</p>
-</div>
-<div class="section level3">
-<h3 id="preprocessing">Preprocessing<a class="anchor" aria-label="anchor" href="#preprocessing"></a>
-</h3>
-<p>However not all of the aforementioned problems we can pass to the training phase, that’s why we had to address 3 of them in preprocessing stage. We always remove static columns, because the decision tree cannot grow with such data. We also binarize the target column into numerical values for unified predictions. In the end, we have to manage missing values. To do that, we remove columns with more than 50% missing values and impute the rest via the MICE algorithm (Multivariate Imputation by Chained Equations).</p>
-</div>
-<div class="section level3">
-<h3 id="balanced-data-splits">Balanced data splits<a class="anchor" aria-label="anchor" href="#balanced-data-splits"></a>
-</h3>
-<p>As the main task of the forester is training and predicting ml models we have to divide given datasets into train, test and validation subsets. To affirm the best possible results, we assure that given sets will be balanced in terms of target values.</p>
-</div>
-<div class="section level3">
-<h3 id="data-preparation-for-different-models">Data preparation for different models<a class="anchor" aria-label="anchor" href="#data-preparation-for-different-models"></a>
-</h3>
-<p>There are plenty of problems regarding different models because they need different input data types for training and predicting. Moreover, some of them (e.g. xgboost) needs only numerical data (which means one hot encoding is needed) or factors for all possible values in both training and testing dataset. To face these issues we had to add group ‘other’ for every categorical value and map all level values into the training dataset, so it can make all possible predictions. Moreover, we create separate datasets for every model type, which enables us to train them and make predictions easily.</p>
-</div>
 </div>
 <div class="section level2">
-<h2 id="training-process">Training process<a class="anchor" aria-label="anchor" href="#training-process"></a>
+<h2 id="authors">Authors<a class="anchor" aria-label="anchor" href="#authors"></a>
 </h2>
-<p>After the data preparation phase, the forester conducts a training process on the training subset, which consists of creating 5 models:</p>
-<ul>
-<li>Random Forest (package: ranger)</li>
-<li>XGBoost (xgboost)</li>
-<li>Decision Tree (partykit)</li>
-<li>LightGBM (lightgbm)</li>
-<li>CatBoost (catboost)</li>
-</ul>
-<p>These models are later trained with: default parameters, random search parameters, and Bayesian Optimization parameters, so in the end at least 15 models are trained. After the training phase, we are making predictions on the test subset and evaluate every model to make a ranked list of all models with calculated metrics (regression: MSE, R2, MAD; binary classification: F1, accuracy AUC), where they are sorted from the best one to the worst, by selected metric (MSE, AUC). The user can easily retrieve the parameters of the best models.</p>
-</div>
-<div class="section level2">
-<h2 id="auto-generated-reports">Auto-generated reports<a class="anchor" aria-label="anchor" href="#auto-generated-reports"></a>
-</h2>
-<p>One of the extensional features which are great is an option to automatically generate reports from the training process. At this point there is only one predefined report which consists of:</p>
-<ul>
-<li>Data Check report</li>
-<li>Training report: Metrics for best models</li>
-<li>Radar plot comparing the best models by their metrics</li>
-<li>Train vs test plot, to control overfitting</li>
-<li>Training parameters</li>
-<li>Confusion matrix</li>
-<li>Boxplots for residuals</li>
-<li>Feature importance plot for the best model</li>
-</ul>
-<p>In the end, we want to create more report templates, with the current one set as a default one. There might be reports more focused on: EDA, visualization of the training process, outcomes of the model with metrics and Explainable Artificial Intelligence (XAI).</p>
+<p>This package is created inside the MI2.AI (Warsaw University of Technology) as both scientific research and Bachelor thesis by: - <a href="https://github.com/grudzienAda" class="external-link">Adrianna Grudzień</a>, - <a href="https://github.com/HubertR21" class="external-link">Hubert Ruczyński</a>, - <a href="https://github.com/PSlowakiewicz" class="external-link">Patryk Słowakiewicz</a>.</p>
+<p>Project co-ordinator and supervisor: <a href="https://github.com/kozaka93" class="external-link">Anna Kozak</a></p>
+<p>Auxiliary supervisor <a href="https://github.com/pbiecek" class="external-link">Przemysław Biecek</a></p>
+<p>The previous version of forester was created by: - Hoang Thien Ly - Szymon Szmajdziński</p>
 </div>
 
   </div>
