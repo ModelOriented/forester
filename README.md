@@ -75,9 +75,12 @@ The *forester* package is **an AutoML tool in R** that wraps up all machine lear
 
 The  forester  package is designed for beginners in data science, but also for more  experienced users. They get an easy-to-use tool that can be used to prepare high-quality baseline models for comparison with more advanced methods or a set of output parameters for more thorough optimisations.
 
-## Notes
+## Introductory blogs
 
-
+- forester: an R package for automated building of tree-based models: https://medium.com/responsibleml/forester-an-r-package-for-automated-building-of-tree-based-models-5e683c7489c
+- forester: what makes the package special?: https://medium.com/responsibleml/forester-what-makes-the-package-special-9ece9b8a64d
+- forester: predicting house prices use case: https://medium.com/responsibleml/forester-predicting-house-prices-use-case-b537253b6142
+- forester: the simplicity of AutoML: https://medium.com/responsibleml/forester-the-simplicity-of-automl-98d9272f3ea
 
 ## Authors
 
