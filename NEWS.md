@@ -1,3 +1,10 @@
+# forester 1.2.1
+-   In the `train()` function:
+    -   Added the `split_seed` parameter which enables the user to set the seed for the train-test split method,
+    -   Added the `train_inds`, `test_inds`, and `valid_inds` vectors to the train output, which enable the user to recover the information which observation went to the train, test, and validation sets.
+-   In the `train_models_bayesopt()` function:
+    -   Removed unwanted seeds before starting the Bayesian optimization.
+
 # forester 1.2.0
 
 -   In the `check_data()` function:

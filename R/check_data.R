@@ -240,7 +240,7 @@ check_dim <- function(df, verbose = TRUE) {
 }
 
 
-#' Search for strongly correlated values (Spearman for numerical, Crammer V for
+#' Search for strongly correlated values (Spearman's rank for numerical, Crammer's V for
 #' categorical)
 #'
 #' @param df A data source, that is one of the major R formats: data.table, data.frame,

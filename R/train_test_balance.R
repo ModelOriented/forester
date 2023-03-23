@@ -39,8 +39,11 @@ train_test_balance <-
     }
 
     return(list(
-      train = data[inds$train, ],
-      test  = data[inds$valid, ],
-      valid = data[inds$test, ]
+      train      = data[inds$train, ],
+      test       = data[inds$test, ],
+      valid      = data[inds$valid, ],
+      train_inds = inds$train,
+      test_inds  = inds$test,
+      valid_inds = inds$valid
     ))
   }

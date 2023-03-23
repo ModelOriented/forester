@@ -3,7 +3,7 @@ test_that('test-preprocessing', {
   suppressWarnings(
     prep_lisbon  <- preprocessing(lisbon, 'Price', type = 'regression')
     )
-  prep_iris      <- preprocessing(iris[1:100, ], 'Species')
+  prep_iris      <- preprocessing(iris[1:100, ], 'Species', type = 'binary_clf')
   prep_adult     <- preprocessing(adult[1:1000, ], 'salary', type = 'binary_clf')
   prep_lymph     <- preprocessing(lymph, 'class', type = 'binary_clf')
   prep_test      <- preprocessing(testing_data, 'y', type = 'regression')

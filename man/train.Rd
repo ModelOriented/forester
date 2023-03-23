@@ -11,6 +11,7 @@ train(
   engine = c("ranger", "xgboost", "decision_tree", "lightgbm"),
   verbose = TRUE,
   train_test_split = c(0.6, 0.2, 0.2),
+  split_seed = NULL,
   bayes_iter = 10,
   random_evals = 10,
   advanced_preprocessing = FALSE,
@@ -46,6 +47,10 @@ training process, if FALSE gives none.}
 
 \item{train_test_split}{A 3-value vector, describing the proportions of train,
 test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).}
+
+\item{split_seed}{An integer value describing the seed for the split into
+train, test, and validation datasets. By default no seed is set and the split
+is performed randomly. Default value is NULL.}
 
 \item{bayes_iter}{An integer value describing number of optimization rounds
 used by the Bayesian optimization.}
@@ -137,6 +142,12 @@ VS plot and predicting on training dataset for catboost and lightgbm models).
 `check_report` Data check report held as a list of strings. It is used
 by the `report()` function.
 `outliers` The vector of possible outliers detected by the `check_data()`.
+`train_inds` The vector of integers describing the observation indexes from
+the original data frame that went to the training set.
+`test_inds` The vector of integers describing the observation indexes from
+the original data frame that went to the testing set.
+`valid_inds` The vector of integers describing the observation indexes from
+the original data frame that went to the validation set.
 }
 \description{
 The `train()` function is the core function of this package.
