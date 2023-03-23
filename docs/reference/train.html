@@ -28,7 +28,7 @@ validation strategy, tested model families, and so on."><meta name="robots" cont
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy" class="external-link">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/" class="external-link">MI^2 DataLab</a> </span>
-          <span class="version version-default">1.0.0</span>
+          <span class="version version-default">1.2.0</span>
         </div>
       </div>
     </div>
@@ -43,7 +43,7 @@ validation strategy, tested model families, and so on."><meta name="robots" cont
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Tutorial.html">forester tutorial</a>
+      <a href="../articles/Knowledge_check.html">Knowledge Check</a>
     </li>
   </ul></li>
 <li>
@@ -80,16 +80,19 @@ validation strategy, tested model families, and so on.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">train</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">y</span>,</span>
-<span>  type <span class="op">=</span> <span class="st">"guess"</span>,</span>
-<span>  engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ranger"</span>, <span class="st">"xgboost"</span>, <span class="st">"decision_tree"</span>, <span class="st">"lightgbm"</span>, <span class="st">"catboost"</span><span class="op">)</span>,</span>
-<span>  loss <span class="op">=</span> <span class="st">"default"</span>,</span>
-<span>  validation <span class="op">=</span> <span class="st">"default"</span>,</span>
-<span>  tuning <span class="op">=</span> <span class="st">"default"</span>,</span>
-<span>  keep <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ranger"</span>, <span class="st">"xgboost"</span>, <span class="st">"decision_tree"</span>, <span class="st">"lightgbm"</span><span class="op">)</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  train_test_split <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span>,</span>
 <span>  bayes_iter <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  random_iter <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  advanced_preprocessing <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  random_evals <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  advanced_preprocessing <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  sort_by <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  metric_function <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  metric_function_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  metric_function_decreasing <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  best_model_number <span class="op">=</span> <span class="fl">5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -109,7 +112,7 @@ the target variable.</p></dd>
 
 
 <dt>type</dt>
-<dd><p>A character, one of `classification`/`regression`/`guess` that
+<dd><p>A character, one of `binary_clf`/`regression`/`guess` that
 sets the type of the task. If `guess` (the default option) then
 forester will figure out `type` based on the number of unique values
 in the `y` variable.</p></dd>
@@ -121,57 +124,127 @@ Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost
 All models from this vector will be trained and the best one will be returned.</p></dd>
 
 
-<dt>loss</dt>
-<dd><p>A character with the name of the loss function.
-If `default` then the default loss function for a given task will be used.</p></dd>
-
-
-<dt>validation</dt>
-<dd><p>A validation/model selection a character of
-data.frame. If `data.frame` then this data will be used for the model
-assessment and selection. If `character`, then it will be a name of
-the hyperparameter.</p></dd>
-
-
-<dt>tuning</dt>
-<dd><p>A character with the name of the tuning procedure.
-one out of `default`/`portfolio`/`bayesian`/`random search`.
-If `default` then no tuning, just default hyperparameteres are used.
-If `portfolio` then static portfolio of hyperparametes are tried.
-If `bayesian` then Bayesian optimization is performed.
-If `random search` then random search is performed.</p></dd>
-
-
-<dt>keep</dt>
-<dd><p>Shall all models be returned (`keep = FALSE`) or only the best one
-(`keep = FALSE`, default option)?</p></dd>
-
-
 <dt>verbose</dt>
 <dd><p>A logical value, if set to TRUE, provides all information about
 training process, if FALSE gives none.</p></dd>
 
 
+<dt>train_test_split</dt>
+<dd><p>A 3-value vector, describing the proportions of train,
+test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).</p></dd>
+
+
 <dt>bayes_iter</dt>
 <dd><p>An integer value describing number of optimization rounds
-used by Bayesian optimization.</p></dd>
+used by the Bayesian optimization.</p></dd>
 
 
-<dt>random_iter</dt>
-<dd><p>An integer value describing number of optimization rounds
-used by random search.</p></dd>
+<dt>random_evals</dt>
+<dd><p>An integer value describing number of trained models
+with different parameters by random search.</p></dd>
 
 
 <dt>advanced_preprocessing</dt>
 <dd><p>A logical value describing, whether the user wants to use
 advanced preprocessing methods (ex. deleting correlated values).</p></dd>
 
+
+<dt>metrics</dt>
+<dd><p>A vector of metrics names. By default param set for `auto`, most important metrics are returned.
+For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.</p></dd>
+
+
+<dt>sort_by</dt>
+<dd><p>A string with a name of metric to sort by.
+For `auto` models going to be sorted by `mse` for regression and `f1` for classification.</p></dd>
+
+
+<dt>metric_function</dt>
+<dd><p>The self-created function.
+It should look like name(predictions, observed) and return the numeric value.
+In case of using `metrics` param with a value other than `auto` or `all`, is needed to use a value `metric_function`
+in order to see given metric in report. If `sort_by` is equal to `auto` models are sorted by `metric_function`.</p></dd>
+
+
+<dt>metric_function_name</dt>
+<dd><p>The name of the column with values of `metric_function` parameter.
+By default `metric_function_name` is `metric_function`.</p></dd>
+
+
+<dt>metric_function_decreasing</dt>
+<dd><p>A logical value indicating how metric_function should be sorted. `TRUE` by default.</p></dd>
+
+
+<dt>best_model_number</dt>
+<dd><p>Number best models to be chosen as element of the return.
+All trained models will be returned as different element of the return.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
     
 
-<p>A list of all necessary objects for other functions.</p>
+<p>A list of all necessary objects for other functions. It contains:
+`type` The type of the ML task. If the user did not specify a type in the
+input parameters, the algorithm recognizes, uses and returns the same type.
+It could be 'regression' or 'classification'.
+`deleted_columns` Column names from the original data frame that have been
+removed in the data preprocessing process, e.g. due to too high correlation
+with other columns.
+`preprocessed_data` The data frame after the preprocessing process - that
+means: removing columns with one value for all rows, binarizing the target
+column, managing missing values and in advanced preprocessing: deleting
+correlated values, deleting columns that are ID-like columns and performing
+Boruta algorithm for selecting most important features.
+`bin_labels` Labels of binarized target value - 1, 2 values for binary
+classification and NULL for regression.
+`train_data` The training dataset - the part of the source dataset after
+preprocessing, balancing and splitting into the training, test and validation
+datasets.
+`test_data` The test dataset - the part of the source dataset after
+preprocessing, balancing and splitting into the training, test and
+validation datasets.
+`valid_data` The validation dataset - the part of the source dataset after
+preprocessing, balancing and splitting into the training, test and validation
+datasets.
+`predictions` Prediction list for all trained models based on the training
+dataset.
+`score_test` The list of metrics for all trained models calculated on a test
+dataset. For regression task there are: mse, r2 and mad metrics. For the
+classification task there are: f1, auc, recall, precision and accuracy.
+`score_train` The list of metrics for all trained models calculated on a train
+dataset. For regression task there are: mse, r2 and mad metrics. For the
+`score_valid` The list of metrics for all trained models calculated on a validation
+dataset. For regression task there are: mse, r2 and mad metrics. For the
+`models_list` The list of all trained models.
+`data` The original data.
+`y` The original target column name.
+`test_observed` Values of y column from the test dataset.
+`train_observed` Values of y column from the training dataset.
+`valid_observed` Values of y column from the validation dataset.
+`test_observed_labels` Values of y column from the test dataset as text labels
+(for classification task only).
+`train_observed_labels` Values of y column from the training dataset as text
+labels (for classification task only).
+`valid_observed_labels` Values of y column from the validation dataset as text
+labels (for classification task only).
+`best_models` Ranking list of top 10 trained models - with default
+parameters, with parameters optimized with the Bayesian optimization
+algorithm and with parameters optimized with the random search algorithm.
+`engine` The list of names of all types of trained models. Possible
+values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
+`predictions_all` Predictions for all trained models on a test dataset.
+`predictions_best` Predictions for models on a test dataset from best_models list.
+`predictions_all_labels` Predictions for all trained models on a test dataset
+as text labels for classification task only).
+`predictions_best_labels` Predictions for models on a test dataset from
+best_models list as labels (for classification task only).
+`predictions_train` Predictions for all trained models on a train dataset.
+`raw_train` The another form of the training dataset (useful for creating
+VS plot and predicting on training dataset for catboost and lightgbm models).
+`check_report` Data check report held as a list of strings. It is used
+by the `report()` function.
+`outliers` The vector of possible outliers detected by the `check_data()`.</p>
     </div>
 
     <div id="ref-examples">
@@ -179,7 +252,8 @@ advanced preprocessing methods (ex. deleting correlated values).</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ModelOriented/forester" class="external-link">forester</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">'lisbon'</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">train_output</span> <span class="op">&lt;-</span> <span class="fu">train</span><span class="op">(</span><span class="va">lisbon</span>, <span class="st">'Price'</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Type guessed as:  regression </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Type guessed as:  regression </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  -------------------- CHECK DATA REPORT -------------------- </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> The dataset has 246 observations and 17 columns, which names are: </span>
@@ -187,154 +261,100 @@ advanced preprocessing methods (ex. deleting correlated values).</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With the target value described by a column Price.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Static columns are: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Country; District; Municipality; </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> Static columns are: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Country; District; Municipality; </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> With dominating values: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Portugal; Lisboa; Lisboa; </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> These column pairs are duplicate:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> With dominating values: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Portugal; Lisboa; Lisboa; </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> These column pairs are duplicate:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  District - Municipality; </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No target values are missing. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> No target values are missing. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No predictor values are missing. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> No predictor values are missing. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Number of logged events: 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No issues with dimensionality. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> No issues with dimensionality. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Strongly correlated pairs of numerical values are: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> Strongly correlated, by Spearman rank, pairs of numerical values are: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bedrooms - AreaNet: 0.77;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bedrooms - AreaGross: 0.77;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bathrooms - AreaNet: 0.78;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bathrooms - AreaGross: 0.78;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AreaNet - AreaGross: 1;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Bedrooms - AreaNet: 0.77;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Bedrooms - AreaGross: 0.77;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Bathrooms - AreaNet: 0.78;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Bathrooms - AreaGross: 0.78;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  AreaNet - AreaGross: 1;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Strongly correlated pairs of categorical values are: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> PropertyType - PropertySubType: 1;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> Strongly correlated, by Crammer's V rank, pairs of categorical values are: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PropertyType - PropertySubType: 1;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> These obserwation migth be outliers due to their numerical columns values: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> These obserwation migth be outliers due to their numerical columns values: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  145 146 196 44 5 51 57 58 59 60 61 62 63 64 69 75 76 77 78 ;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Target data is not evenly distributed with quantile bins: 0.25 0.35 0.14 0.26 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> Target data is not evenly distributed with quantile bins: 0.25 0.35 0.14 0.26 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Columns names suggest that some of them are IDs, removing them can improve the model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> Columns names suggest that some of them are IDs, removing them can improve the model.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Suspicious columns are: Id .</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Columns data suggest that some of them are IDs, removing them can improve the model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> Columns data suggest that some of them are IDs, removing them can improve the model.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Suspicious columns are: Id .</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  -------------------- CHECK DATA REPORT END -------------------- </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Number of logged events: 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data preprocessed. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data splitted and balanced </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Correct formats prepared </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Models sucsesfully trained </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Predicted Successfully </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-in"><span><span class="va">train_output</span><span class="op">$</span><span class="va">ranked_list</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 engine          mse     rmse          r2       mad       mae</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        catboost_RS_7  13287089514 115269.6  0.88480199  44691.14  81219.87</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        catboost_RS_5  16322628450 127760.0  0.85848410  65281.45  91677.04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        catboost_RS_6  17316210005 131591.1  0.84986983  57494.50  95512.92</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        catboost_RS_1  17601989487 132672.5  0.84739214  73947.95  99199.62</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       catboost_RS_10  18432150588 135765.1  0.84019471  56550.68  91548.26</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6        xgboost_model  20199334629 142124.4  0.82487337  69611.20 104424.18</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        xgboost_bayes  20199334629 142124.4  0.82487337  69611.20 104424.18</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8       catboost_model  22255799235 149183.8  0.80704398  57172.77 100257.28</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9       catboost_bayes  22255799235 149183.8  0.80704398  57172.77 100257.28</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10       catboost_RS_2  22778811778 150926.5  0.80250950  77649.90 104368.69</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11         ranger_RS_4  23515770858 153348.5  0.79612013  73526.68 109138.60</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12        ranger_model  23526276072 153382.8  0.79602905  79783.93 109855.88</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13        ranger_bayes  23526276072 153382.8  0.79602905  79783.93 109855.88</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14         ranger_RS_1  24830309248 157576.4  0.78472318  81652.33 113563.22</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15         ranger_RS_9  25774245592 160543.6  0.77653933  93215.43 120099.65</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16         ranger_RS_5  26018600366 161302.8  0.77442079  91039.68 113483.59</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17       lightgbm_RS_3  26682593880 163348.1  0.76866402 104657.35 131276.74</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18         ranger_RS_2  29132575865 170682.7  0.74742287  87335.46 125369.17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19       lightgbm_RS_8  30054948172 173363.6  0.73942598 130717.74 137987.51</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20       lightgbm_RS_1  31001532149 176072.5  0.73121917 137677.28 142193.73</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21       lightgbm_RS_9  31001532149 176072.5  0.73121917 137677.28 142193.73</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22         ranger_RS_3  31931972171 178695.2  0.72315233  80259.62 129696.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23       lightgbm_RS_5  35669580105 188863.9  0.69074756 143468.69 154934.01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24       lightgbm_RS_7  35669580105 188863.9  0.69074756 143468.69 154934.01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25      lightgbm_model  38886793073 197197.3  0.66285458 151084.45 158269.20</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26      lightgbm_RS_10  38886793073 197197.3  0.66285458 151084.45 158269.20</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27      lightgbm_bayes  38886793073 197197.3  0.66285458 151084.45 158269.20</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28         ranger_RS_7  48752122419 220798.8  0.57732296 143296.59 173315.02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29         ranger_RS_8  48867653236 221060.3  0.57632131 159712.87 177752.09</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30       lightgbm_RS_4  52484461458 229094.9  0.54496387 146944.08 170433.07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31        ranger_RS_10  53555515962 231420.6  0.53567791 143437.27 174632.45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32         ranger_RS_6  55895702143 236422.7  0.51538869 176991.20 184704.21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33        xgboost_RS_4  58372530954 241604.1  0.49391478 110344.26 170303.54</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34        xgboost_RS_2  59025904869 242952.5  0.48825008 121403.32 173060.61</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35        xgboost_RS_8  59025904869 242952.5  0.48825008 121403.32 173060.61</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36       lightgbm_RS_6  60916666125 246813.0  0.47185733 155198.66 178300.46</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37        xgboost_RS_1  61969483284 248936.7  0.46272948 105078.35 167997.57</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38       catboost_RS_3  74351717001 272675.1  0.35537650 114631.39 195331.85</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39       lightgbm_RS_2  82059260120 286459.9  0.28855271 156728.04 191050.06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40 decision_tree_model  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41  decision_tree_RS_1  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42  decision_tree_RS_2  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43  decision_tree_RS_3  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44  decision_tree_RS_4  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45  decision_tree_RS_5  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46  decision_tree_RS_6  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47  decision_tree_RS_7  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48  decision_tree_RS_8  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49  decision_tree_RS_9  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50 decision_tree_RS_10  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51 decision_tree_bayes  87381240462 295603.2  0.24241156 107316.33 192250.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52        xgboost_RS_9 126704488007 355955.7 -0.09851788 217096.28 271146.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53        xgboost_RS_5 126799535593 356089.2 -0.09934194 217096.28 271380.98</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54        xgboost_RS_7 126799535593 356089.2 -0.09934194 217096.28 271380.98</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55       catboost_RS_8 154020882531 392454.9 -0.33534886 117203.10 248219.41</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56       catboost_RS_4 182438090265 427127.7 -0.58172381 139678.59 240839.03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57       catboost_RS_9 193383321428 439753.7 -0.67661809 136302.98 253004.71</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 58        xgboost_RS_6 274563883507 523988.4 -1.38044714 342247.48 427370.89</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 59        xgboost_RS_3 274677664401 524097.0 -1.38143361 344352.06 430301.77</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 60       xgboost_RS_10 274677664401 524097.0 -1.38143361 344352.06 430301.77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Data preprocessed. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Data split and balanced. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Correct formats prepared. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Models successfully trained. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Predicted successfully. </span>
+<span class="r-in"><span><span class="va">train_output</span><span class="op">$</span><span class="va">score_valid</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    no.                name        engine        tuning          mse          r2      mae</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    2       xgboost_model       xgboost         basic 143685453859  0.60640199 135871.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   46       xgboost_bayes       xgboost     bayes_opt 144796997342  0.60335713 138757.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   47 decision_tree_bayes decision_tree     bayes_opt 167134585019  0.54216771 151383.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   11         ranger_RS_7        ranger random_search 172355600654  0.52786576 146038.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   12         ranger_RS_8        ranger random_search 175206764634  0.52005556 140453.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    1        ranger_model        ranger         basic 176861131326  0.51552375 140467.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7   45        ranger_bayes        ranger     bayes_opt 177100208139  0.51486884 142764.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8   10         ranger_RS_6        ranger random_search 177696042483  0.51323667 150902.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9    8         ranger_RS_4        ranger random_search 178173236730  0.51192949 147778.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10   6         ranger_RS_2        ranger random_search 180738901681  0.50490136 143104.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11   4      lightgbm_model      lightgbm         basic 198600114778  0.45597408 163623.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12  43       lightgbm_RS_9      lightgbm random_search 198600114778  0.45597408 163623.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13  38       lightgbm_RS_4      lightgbm random_search 201251798549  0.44871032 169723.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14  39       lightgbm_RS_5      lightgbm random_search 201251798549  0.44871032 169723.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15   3 decision_tree_model decision_tree         basic 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16  25  decision_tree_RS_1 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17  26  decision_tree_RS_2 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18  27  decision_tree_RS_3 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19  28  decision_tree_RS_4 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20  29  decision_tree_RS_5 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21  30  decision_tree_RS_6 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22  31  decision_tree_RS_7 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23  32  decision_tree_RS_8 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24  33  decision_tree_RS_9 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25  34 decision_tree_RS_10 decision_tree random_search 201497538451  0.44803716 176132.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26  48      lightgbm_bayes      lightgbm     bayes_opt 201568659750  0.44784234 162111.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27  35       lightgbm_RS_1      lightgbm random_search 202121875717  0.44632691 170545.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28  14        ranger_RS_10        ranger random_search 213760186314  0.41444605 187644.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29  42       lightgbm_RS_8      lightgbm random_search 214805128850  0.41158364 163852.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30  44      lightgbm_RS_10      lightgbm random_search 214805128850  0.41158364 163852.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31  37       lightgbm_RS_3      lightgbm random_search 215251555308  0.41036074 165520.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32  41       lightgbm_RS_7      lightgbm random_search 215251555308  0.41036074 165520.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33   5         ranger_RS_1        ranger random_search 216042730457  0.40819347 190711.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34   9         ranger_RS_5        ranger random_search 221397579341  0.39352492 193152.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35   7         ranger_RS_3        ranger random_search 226399456894  0.37982326 187923.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36  40       lightgbm_RS_6      lightgbm random_search 228517310575  0.37402181 175919.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37  13         ranger_RS_9        ranger random_search 229673753119  0.37085397 195580.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38  15        xgboost_RS_1       xgboost random_search 251159464876  0.31199809 200641.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39  22        xgboost_RS_8       xgboost random_search 251159464876  0.31199809 200641.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40  16        xgboost_RS_2       xgboost random_search 251529223453  0.31098521 202108.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41  24       xgboost_RS_10       xgboost random_search 251529223453  0.31098521 202108.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42  20        xgboost_RS_6       xgboost random_search 256059009039  0.29857675 202524.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43  36       lightgbm_RS_2      lightgbm random_search 257857650556  0.29364973 211581.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44  17        xgboost_RS_3       xgboost random_search 346948222547  0.04960364 315084.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45  21        xgboost_RS_7       xgboost random_search 346948222547  0.04960364 315084.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46  19        xgboost_RS_5       xgboost random_search 349598730125  0.04234310 313834.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47  23        xgboost_RS_9       xgboost random_search 349598730125  0.04234310 313834.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48  18        xgboost_RS_4       xgboost random_search 556458657778 -0.52430895 486418.6</span>
 </code></pre></div>
     </div>
   </div>
