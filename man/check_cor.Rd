@@ -2,7 +2,7 @@
 % Please edit documentation in R/check_data.R
 \name{check_cor}
 \alias{check_cor}
-\title{Search for strongly correlated values (Spearman for numerical, Crammer V for
+\title{Search for strongly correlated values (Spearman's rank for numerical, Crammer's V for
 categorical)}
 \usage{
 check_cor(df, y, verbose = TRUE)
@@ -20,6 +20,6 @@ the process, if FALSE gives none.}
 A list with every line of the sub-report.
 }
 \description{
-Search for strongly correlated values (Spearman for numerical, Crammer V for
+Search for strongly correlated values (Spearman's rank for numerical, Crammer's V for
 categorical)
 }

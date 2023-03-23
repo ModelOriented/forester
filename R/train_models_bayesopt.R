@@ -113,7 +113,7 @@ train_models_bayesopt <- function(train_data,
         probability    <- TRUE
       }
 
-      fitness_fun <- function(num.trees, min.node.size, max.depth, sample.fraction) {
+      fitness_fun_ranger <- function(num.trees, min.node.size, max.depth, sample.fraction) {
 
         model <- ranger::ranger(
           dependent.variable.name = y,
@@ -150,18 +150,17 @@ train_models_bayesopt <- function(train_data,
                      max.depth       = c(1L, 100L),
                      sample.fraction = c(0.25, 0.75))
 
-      set.seed(123)
       bayes <- NULL
       tryCatch(
         expr = {
           if (verbose) {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_ranger,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
                                                        verbose    = 1)
           } else {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_ranger,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
@@ -211,7 +210,7 @@ train_models_bayesopt <- function(train_data,
         verbose_cat('Incorrect task type.', verbose = verbose)
       }
 
-      fitness_fun <- function(nrounds, eta, subsample, gamma, max_depth) {
+      fitness_fun_xgboost <- function(nrounds, eta, subsample, gamma, max_depth) {
         capture.output(
           model <- xgboost::xgboost(
             train_data$xgboost_data,
@@ -250,20 +249,19 @@ train_models_bayesopt <- function(train_data,
                          gamma     = c(0, 2, 10),
                          max_depth = c(1, 6, 10))
 
-      #fitness_fun(grid[1,1], grid[1,2], grid[1,3], grid[1,4], grid[1,5])
+      #fitness_fun_xgboost(grid[1,1], grid[1,2], grid[1,3], grid[1,4], grid[1,5])
 
-      set.seed(1)
       bayes <- NULL
       tryCatch(
         expr = {
           if (verbose) {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_xgboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
                                                        verbose    = 1)
           } else {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_xgboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
@@ -305,7 +303,7 @@ train_models_bayesopt <- function(train_data,
     }
     else if (engine[i] == 'decision_tree') {
       form        <- as.formula(paste0(y, ' ~.'))
-      fitness_fun <- function(minsplit, minprob, maxdepth, nresample) {
+      fitness_fun_decision_tree <- function(minsplit, minprob, maxdepth, nresample) {
 
         model    <- partykit::ctree(form, data = train_data$decision_tree_data,
                                     minsplit   = minsplit,
@@ -332,18 +330,18 @@ train_models_bayesopt <- function(train_data,
                      minprob   = c(0.01, 1),
                      maxdepth  = c(1L, 20L),
                      nresample = c(1L, 1000L))
-      set.seed(1)
+
       bayes <- NULL
       tryCatch(
         expr = {
           if (verbose) {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_decision_tree,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
                                                        verbose    = 1)
           } else {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_decision_tree,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
@@ -376,7 +374,7 @@ train_models_bayesopt <- function(train_data,
     }
     else if (engine[i] == 'lightgbm') {
 
-      fitness_fun <- function(learning_rate, num_leaves, num_iterations) {
+      fitness_fun_lightgbm <- function(learning_rate, num_leaves, num_iterations) {
 
         if (type == 'binary_clf') {
           obj    <- 'binary'
@@ -417,18 +415,17 @@ train_models_bayesopt <- function(train_data,
                      num_leaves     = c(2L, 50L),
                      num_iterations = c(1L, 100L))
 
-      set.seed(1)
       bayes <- NULL
       tryCatch(
         expr = {
           if (verbose) {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_lightgbm,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
                                                        verbose    = 1)
           } else {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_lightgbm,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
@@ -473,7 +470,7 @@ train_models_bayesopt <- function(train_data,
       }
     }
     else if (engine[i] == 'catboost') {
-      fitness_fun <- function(iterations, border_count, depth, learning_rate, min_data_in_leaf) {
+      fitness_fun_catboost <- function(iterations, border_count, depth, learning_rate, min_data_in_leaf) {
         if (type == 'binary_clf') {
           obj    <- 'Logloss'
           params <- list(loss_function = obj, logging_level = 'Silent')
@@ -522,18 +519,18 @@ train_models_bayesopt <- function(train_data,
                      depth            = c(2L, 16L),
                      learning_rate    = c(0.01, 0.9),
                      min_data_in_leaf = c(1L, 10L))
-      set.seed(1)
+
       bayes <- NULL
       tryCatch(
         expr = {
           if (verbose) {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_catboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
                                                        verbose    = 1)
           } else {
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun,
+            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_catboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,

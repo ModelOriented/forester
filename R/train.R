@@ -23,6 +23,9 @@
 #' training process, if FALSE gives none.
 #' @param train_test_split A 3-value vector, describing the proportions of train,
 #' test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).
+#' @param split_seed An integer value describing the seed for the split into
+#' train, test, and validation datasets. By default no seed is set and the split
+#' is performed randomly. Default value is NULL.
 #' @param bayes_iter An integer value describing number of optimization rounds
 #' used by the Bayesian optimization.
 #' @param random_evals An integer value describing number of trained models
@@ -104,6 +107,12 @@
 #' `check_report` Data check report held as a list of strings. It is used
 #' by the `report()` function.
 #' `outliers` The vector of possible outliers detected by the `check_data()`.
+#' `train_inds` The vector of integers describing the observation indexes from
+#' the original data frame that went to the training set.
+#' `test_inds` The vector of integers describing the observation indexes from
+#' the original data frame that went to the testing set.
+#' `valid_inds` The vector of integers describing the observation indexes from
+#' the original data frame that went to the validation set.
 #' @export
 #'
 #' @examples
@@ -117,6 +126,7 @@ train <- function(data,
                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
                   verbose = TRUE,
                   train_test_split = c(0.6, 0.2, 0.2),
+                  split_seed = NULL,
                   bayes_iter = 10,
                   random_evals = 10,
                   advanced_preprocessing = FALSE,
@@ -154,7 +164,6 @@ train <- function(data,
     verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
   }
 
-
   check_report <- check_data(data, y, verbose)
 
   preprocessed_data <- preprocessing(data, y, type, advanced = advanced_preprocessing)
@@ -164,11 +173,11 @@ train <- function(data,
                 preprocessed_data$colnames, '\n\n', verbose = verbose)
   }
 
-
   verbose_cat(crayon::green('\u2714'), 'Data preprocessed. \n', verbose = verbose)
 
   split_data <- train_test_balance(preprocessed_data$data, y, balance = TRUE,
-                                   fractions = train_test_split)
+                                   fractions = train_test_split, seed = split_seed)
+
   verbose_cat(crayon::green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
 
   train_data <- prepare_data(split_data$train, y, engine)
@@ -189,8 +198,8 @@ train <- function(data,
   preds_basic    <- predict_models_all(model_basic, test_data, y, type)
   verbose_cat(crayon::green('\u2714'), 'Predicted successfully. \n', verbose = verbose)
 
-  test_observed  <- split_data$test[[y]]
   train_observed <- split_data$train[[y]]
+  test_observed  <- split_data$test[[y]]
   valid_observed <- split_data$valid[[y]]
 
   model_random   <- random_search(train_data,
@@ -277,7 +286,6 @@ train <- function(data,
 
   best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
   predictions_best <- predict_models_all(best_models$models, test_data, y, type = type)
-
   predict_train    <- predict_models_all(models_all, raw_train, y, type = type)
   predict_test     <- predict_models_all(models_all, test_data, y, type = type)
   predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
@@ -363,7 +371,10 @@ train <- function(data,
         predictions_train       = predict_train,
         raw_train               = raw_train,
         check_report            = check_report$str,
-        outliers                = check_report$outliers
+        outliers                = check_report$outliers,
+        train_inds              = split_data$train_inds,
+        test_inds               = split_data$test_inds,
+        valid_inds              = split_data$valid_inds
       )
     )
   } else {
@@ -393,7 +404,10 @@ train <- function(data,
         predictions_train       = predict_train,
         raw_train               = raw_train,
         check_report            = check_report,
-        outliers                = check_report$outliers
+        outliers                = check_report$outliers,
+        train_inds              = split_data$train_inds,
+        test_inds               = split_data$test_inds,
+        valid_inds              = split_data$valid_inds
       )
     )
   }
