@@ -1,0 +1,17 @@
+"task_name","framework","mean_accuracy","mean_auc","mean_f1"
+"banknote-authentication","forester",1,1,1
+"banknote-authentication","h20",0.929,0.923,0.905
+"blood-transfusion-service-center","forester",1,0.77,0.752
+"blood-transfusion-service-center","h20",0.7,0.682,0.519
+"breast-w","forester",1,1,1
+"breast-w","h20",0.998,0.998,0.997
+"credit-approval","forester",1,0.999,1
+"credit-approval","h20",0.961,0.959,0.955
+"credit-g","forester",1,0.967,0.998
+"credit-g","h20",0.906,0.855,0.938
+"diabetes","forester",1,0.991,0.999
+"diabetes","h20",0.874,0.871,0.826
+"kr-vs-kp","forester",1,1,1
+"kr-vs-kp","h20",0.999,0.999,0.965
+"phoneme","forester",1,1,1
+"phoneme","h20",1,1,1

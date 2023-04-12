@@ -141,7 +141,7 @@ manage_missing <- function(df, y) {
     df <- df[, -col_to_rm]
   }
   # input missing values via mice
-  df <- mice::mice(df, seed = 123, print = FALSE)
+  df <- mice::mice(df, seed = 123, print = FALSE, remove_collinear = FALSE)
   df <- mice::complete(df)
 
   return(df)
