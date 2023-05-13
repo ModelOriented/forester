@@ -84,18 +84,11 @@ random_search <- function(train_data,
   )
 
   tree_grid <- list(
-<<<<<<< HEAD
-    minsplit  = c(1, 20, 60),
-    minprob   = c(0.01, 0.1, 1),
-    maxdepth  = c(1, 10, 20),
-    nresample = c(1, 100, 1000)
-=======
     minsplit     = c(3, 10, 20),
     minprob      = c(0.01, 0.1),
     maxsurrogate = c(0, 1, 2),
     maxdepth     = c(5, 10, Inf),
     nresample    = c(100, 9999)
->>>>>>> df19fc2ddc3d95b84727bc33b107eade9d9cfb9f
   )
 
   lightgbm_grid <- list(
@@ -204,8 +197,7 @@ random_search <- function(train_data,
         data = train_data$decision_tree_data
       ))
     }
-    names(tree_models) <-
-      paste('decision_tree_RS_', 1:max_tree_evals, sep = '')
+    names(tree_models) <- paste('decision_tree_RS_', 1:max_tree_evals, sep = '')
     search_models      <- c(search_models, tree_models)
     search_engine      <- c(search_engine, rep('decision_tree', max_tree_evals))
   }
