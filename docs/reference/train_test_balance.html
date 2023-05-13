@@ -25,7 +25,7 @@
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy" class="external-link">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/" class="external-link">MI^2 DataLab</a> </span>
-          <span class="version version-default">1.0.0</span>
+          <span class="version version-default">1.2.0</span>
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Tutorial.html">forester tutorial</a>
+      <a href="../articles/Knowledge_check.html">Knowledge Check</a>
     </li>
   </ul></li>
 <li>
@@ -71,7 +71,13 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">train_test_balance</span><span class="op">(</span><span class="va">data</span>, <span class="va">y</span>, <span class="va">type</span>, balance <span class="op">=</span> <span class="cn">TRUE</span>, fractions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">train_test_balance</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">y</span>,</span>
+<span>  balance <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  fractions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span>,</span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -85,11 +91,6 @@ matrix and so on.</p></dd>
 <dd><p>A string that indicates a target column name.</p></dd>
 
 
-<dt>type</dt>
-<dd><p>A string that determines if Machine Learning task is the
-`classification` or `regression`.</p></dd>
-
-
 <dt>balance</dt>
 <dd><p>A logical value, determines if we want to balance the dataset.</p></dd>
 
@@ -97,6 +98,11 @@ matrix and so on.</p></dd>
 <dt>fractions</dt>
 <dd><p>A vector with 3 numeric values that sum to 1 which
 determine sizes of train, test and validation datasets. DEFAULT: c(0.6, 0.2, 0.2).</p></dd>
+
+
+<dt>seed</dt>
+<dd><p>An integer random seed. It allows for comparable results. If it
+is NULL, the split is random.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -109,7 +115,7 @@ determine sizes of train, test and validation datasets. DEFAULT: c(0.6, 0.2, 0.2
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">lisbon</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">b_lisbon</span> <span class="op">&lt;-</span> <span class="fu">train_test_balance</span><span class="op">(</span><span class="va">lisbon</span>, <span class="st">'Price'</span>, balance <span class="op">=</span> <span class="cn">FALSE</span>, <span class="st">'regression'</span>,</span></span>
+<span class="r-in"><span><span class="va">b_lisbon</span> <span class="op">&lt;-</span> <span class="fu">train_test_balance</span><span class="op">(</span><span class="va">lisbon</span>, <span class="st">'Price'</span>, balance <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>                               fractions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>train <span class="op">=</span> <span class="fl">0.6</span>, valid <span class="op">=</span> <span class="fl">0.2</span>, test <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>

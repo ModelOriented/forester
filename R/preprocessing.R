@@ -3,6 +3,8 @@
 #' @param data A data source, that is one the of major R formats: data.table, data.frame,
 #' matrix, and so on.
 #' @param y A string that indicates a target column name.
+#' @param type A string that determines if Machine Learning task is the
+#' `binary_clf` or `regression`.
 #' @param advanced  A logical value describing, whether the user wants to use
 #' advanced preprocessing methods (deleting correlated values).
 #' @param verbose A logical value, if set to TRUE, provides all information about
@@ -13,8 +15,8 @@
 #'
 #' @examples
 #' data(compas)
-#' prep_data <- preprocessing(compas,'Two_yr_Recidivism')
-preprocessing <- function(data, y, advanced = FALSE, verbose = FALSE) {
+#' prep_data <- preprocessing(compas,'Two_yr_Recidivism', 'binary_clf')
+preprocessing <- function(data, y, type, advanced = FALSE, verbose = FALSE) {
   # cat(' -------------------- PREPROCESSING REPORT --------------------- \n \n')
   pre_data   <- pre_rm_static_cols(data, y)
   binary     <- binarize_target(pre_data, y)
@@ -28,6 +30,10 @@ preprocessing <- function(data, y, advanced = FALSE, verbose = FALSE) {
     pre_data <- boruta_selection(pre_data, y)
   }
   del_cols   <- save_deleted_columns(data, pre_data)
+
+  if (type == 'binary_clf') {
+    pre_data[, y] <- as.factor(pre_data[, y])
+  }
 
   # cat(' ------------------ PREPROCESSING REPORT END ------------------- \n \n')
   return(
@@ -135,7 +141,7 @@ manage_missing <- function(df, y) {
     df <- df[, -col_to_rm]
   }
   # input missing values via mice
-  df <- mice::mice(df, seed = 123, print = FALSE)
+  df <- mice::mice(df, seed = 123, print = FALSE, remove_collinear = FALSE)
   df <- mice::complete(df)
 
   return(df)

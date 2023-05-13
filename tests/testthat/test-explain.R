@@ -3,13 +3,12 @@ test_that('test-explain', {
   target = 'Species'
   type              <- guess_type(iris_bin, target)
   set.seed(123)
-  preprocessed_data <- preprocessing(iris_bin, target)
+  preprocessed_data <- preprocessing(iris_bin, target, type = type)
   preprocessed_data <- preprocessed_data$data
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
                        y = target,
-                       type = type,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
@@ -98,13 +97,12 @@ test_that('test-explain', {
   target            <- 'Two_yr_Recidivism'
   type              <- guess_type(compas, target)
   set.seed(123)
-  preprocessed_data <- preprocessing(compas, target)
+  preprocessed_data <- preprocessing(compas, target, type = type)
   preprocessed_data <- preprocessed_data$data
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
                        y = target,
-                       type = type,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
@@ -195,14 +193,13 @@ test_that('test-explain', {
   type                <- guess_type(lisbon, target)
   set.seed(123)
   suppressWarnings(
-    preprocessed_data <- preprocessing(lisbon, target)
+    preprocessed_data <- preprocessing(lisbon, target, type = type)
   )
   preprocessed_data   <- preprocessed_data$data
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
                        y = target,
-                       type = type,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
@@ -256,7 +253,7 @@ test_that('test-explain', {
   expect_true(length(explainer$catboost) == 11)
 
   expect_true(nrow(FI_ranger) == 176)
-  expect_true(nrow(FI_xgboost) == 583)
+  expect_true(nrow(FI_xgboost) == 539)
   expect_true(nrow(FI_decision_tree) == 176)
   expect_true(nrow(FI_decision_tree) == 176)
   #expect_true(nrow(FI_catboost) == 77)
@@ -330,7 +327,7 @@ test_that('test-explain', {
   #suppressWarnings(FI_catboost      <- DALEX::model_parts(exp_catboost$catboost_explainer))
 
   expect_true(length(FI_ranger$permutation) == 176)
-  expect_true(length(FI_xgboost$permutation) == 583)
+  expect_true(length(FI_xgboost$permutation) == 539)
   expect_true(length(FI_decision_tree$permutation) == 176)
   expect_true(length(FI_lightgbm$permutation) == 165)
   #expect_true(length(FI_catboost$permutation) == 176)

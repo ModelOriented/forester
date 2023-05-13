@@ -26,7 +26,7 @@ If possible it will use methods for tree-based models."><meta name="robots" cont
         <div class="info">
           <span class="partof">part of the <a href="https://github.com/ModelOriented/DrWhy" class="external-link">DrWhy.AI</a>
            developed by the <a href="https://mi2.mini.pw.edu.pl/" class="external-link">MI^2 DataLab</a> </span>
-          <span class="version version-default">1.0.0</span>
+          <span class="version version-default">1.2.0</span>
         </div>
       </div>
     </div>
@@ -41,7 +41,7 @@ If possible it will use methods for tree-based models."><meta name="robots" cont
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Tutorial.html">forester tutorial</a>
+      <a href="../articles/Knowledge_check.html">Knowledge Check</a>
     </li>
   </ul></li>
 <li>
@@ -79,8 +79,7 @@ If possible it will use methods for tree-based models.</p>
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>models</dt>
-<dd><p>A single model created with the `train()` function or a list of
-models.</p></dd>
+<dd><p>A single model or the model list created with the `train()` function.</p></dd>
 
 
 <dt>test_data</dt>
@@ -109,27 +108,9 @@ should be printed or not.</p></dd>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">lisbon</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">train_output</span>   <span class="op">&lt;-</span> <span class="fu"><a href="train.html">train</a></span><span class="op">(</span><span class="va">lisbon</span>, <span class="st">'Price'</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span>, random_iter <span class="op">=</span> <span class="fl">2</span>, bayes_iter <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Number of logged events: 4</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Number of logged events: 1</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NAs introduced by coercion</span>
-<span class="r-in"><span><span class="va">best_explainer</span> <span class="op">&lt;-</span> <span class="fu">explain</span><span class="op">(</span><span class="va">train_output</span><span class="op">$</span><span class="va">best_models</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">train_output</span><span class="op">$</span><span class="va">data</span>, <span class="va">train_output</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">train_output</span>   <span class="op">&lt;-</span> <span class="fu"><a href="train.html">train</a></span><span class="op">(</span><span class="va">lisbon</span>, <span class="st">'Price'</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span>, random_evals <span class="op">=</span> <span class="fl">2</span>, bayes_iter <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">best_explainer</span> <span class="op">&lt;-</span> <span class="fu">explain</span><span class="op">(</span><span class="va">train_output</span><span class="op">$</span><span class="va">best_models</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">train_output</span><span class="op">$</span><span class="va">valid_data</span>, <span class="va">train_output</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">best_explainers</span> <span class="op">&lt;-</span> <span class="fu">explain</span><span class="op">(</span><span class="va">train_output</span><span class="op">$</span><span class="va">best_models</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">train_output</span><span class="op">$</span><span class="va">valid_data</span>, <span class="va">train_output</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </div>

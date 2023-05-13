@@ -4,13 +4,16 @@
 \alias{preprocessing}
 \title{Conduct preprocessing processes}
 \usage{
-preprocessing(data, y, advanced = FALSE, verbose = FALSE)
+preprocessing(data, y, type, advanced = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{data}{A data source, that is one the of major R formats: data.table, data.frame,
 matrix, and so on.}
 
 \item{y}{A string that indicates a target column name.}
+
+\item{type}{A string that determines if Machine Learning task is the
+`binary_clf` or `regression`.}
 
 \item{advanced}{A logical value describing, whether the user wants to use
 advanced preprocessing methods (deleting correlated values).}
@@ -26,5 +29,5 @@ Conduct preprocessing processes
 }
 \examples{
 data(compas)
-prep_data <- preprocessing(compas,'Two_yr_Recidivism')
+prep_data <- preprocessing(compas,'Two_yr_Recidivism', 'binary_clf')
 }

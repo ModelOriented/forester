@@ -1,9 +1,9 @@
-#' Random optimalization of hiperparameters
+#' Random optimization of hyperparameters
 #'
 #' @param train_data A training data for models created by `prepare_data()` function.
 #' @param y A string that indicates a target column name.
 #' @param models A list of models trained by `train_models()` function.
-#' They will be compered with models trained with different hiperparameters.
+#' They will be compered with models trained with different hyperparameters
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.
 #' @param type A string that determines if Machine Learning task is the
@@ -18,12 +18,11 @@
 #' data(iris)
 #' iris_bin          <- iris[1:100, ]
 #' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species')
+#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
 #'   train_test_balance(preprocessed_data,
 #'                      'Species',
-#'                      type = type,
 #'                      balance = FALSE)
 #' train_data <-
 #'   prepare_data(split_data$train,
@@ -85,10 +84,18 @@ random_search <- function(train_data,
   )
 
   tree_grid <- list(
+<<<<<<< HEAD
     minsplit  = c(1, 20, 60),
     minprob   = c(0.01, 0.1, 1),
     maxdepth  = c(1, 10, 20),
     nresample = c(1, 100, 1000)
+=======
+    minsplit     = c(3, 10, 20),
+    minprob      = c(0.01, 0.1),
+    maxsurrogate = c(0, 1, 2),
+    maxdepth     = c(5, 10, Inf),
+    nresample    = c(100, 9999)
+>>>>>>> df19fc2ddc3d95b84727bc33b107eade9d9cfb9f
   )
 
   lightgbm_grid <- list(
@@ -98,10 +105,11 @@ random_search <- function(train_data,
   )
 
   catboost_grid <- list(
-    iterations    = c(20, 100, 300),
-    border_count  = c(1, 10, 100),
-    depth         = c(4, 7, 10),
-    learning_rate = c(0.05, 0.1, 0.3)
+    iterations       = c(100, 100, 1000),
+    border_count     = c(64, 256, 1024),
+    depth            = c(2, 8, 16),
+    learning_rate    = c(0.01, 0.1, 0.9),
+    min_data_in_leaf = c(1, 3, 10)
   )
 
   search_models <- list()
@@ -145,9 +153,11 @@ random_search <- function(train_data,
     } else if (type == 'binary_clf') {
       objective <- 'binary:logistic'
       if (any(train_data$ranger_data[[y]] == 2)) {
-        train_data$ranger_data[[y]] = train_data$ranger_data[[y]] - 1
+        label <- as.numeric(train_data$ranger_data[[y]]) - 1
+      } else {
+        label <- as.numeric(train_data$ranger_data[[y]])
       }
-      label     <- as.vector(train_data$ranger_data[[y]])
+      label     <- as.vector(label)
     }
     xgboost_models        <- list()
     expanded_xgboost_grid <- expand.grid(xgboost_grid)
@@ -276,5 +286,5 @@ random_search <- function(train_data,
   return(list(
       models = search_models,
       engine = search_engine
-      ))
+  ))
 }

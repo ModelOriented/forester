@@ -17,14 +17,12 @@
 #'
 #' @examples
 #' data(iris)
-#'
 #' type              <- guess_type(lisbon, 'Price')
-#' preprocessed_data <- preprocessing(lisbon, 'Price')
+#' preprocessed_data <- preprocessing(lisbon, 'Price', type)
 #' preprocessed_data <- preprocessed_data$data
 #' split_data <-
 #'   train_test_balance(preprocessed_data,
 #'                      'Price',
-#'                      type = type,
 #'                      balance = FALSE)
 #' set.seed(123)
 #' train_data <-
@@ -87,17 +85,9 @@ prepare_data <- function(data,
         data[, i] <- droplevels(data[, i])
       }
     }
-
-    #data <- droplevels(data) # We have to drop levels that were changed to other
-    # and insert all levels from the train (for OHE in the xgboost model).
-    # for (i in 1:ncol(data)) {
-    #   if ('factor' %in% class(data[, i])) {
-    #     levels(data[, i]) <- c(levels(data[, i]), levels(train[, i]))
-    #   }
-    # }
   }
 
-  # ranger data is always needed as *almost* the unprocessed one
+  # Ranger data is always needed as *almost* the unprocessed one.
   ranger_data <- data.frame(data)
   # We have to drop levels that were changed to other and insert all levels
   # from the train (for OHE in the xgboost model).

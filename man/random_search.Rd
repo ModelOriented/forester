@@ -2,7 +2,7 @@
 % Please edit documentation in R/random_search.R
 \name{random_search}
 \alias{random_search}
-\title{Random optimalization of hiperparameters}
+\title{Random optimization of hyperparameters}
 \usage{
 random_search(train_data, y, models = NULL, engine, type, max_evals = 10)
 }
@@ -12,13 +12,13 @@ random_search(train_data, y, models = NULL, engine, type, max_evals = 10)
 \item{y}{A string that indicates a target column name.}
 
 \item{models}{A list of models trained by `train_models()` function.
-They will be compered with models trained with different hiperparameters.}
+They will be compered with models trained with different hyperparameters}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
 values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`classification` or `regression` task.}
+`binary_clf` or `regression` task.}
 
 \item{max_evals}{The number of trained models for each model type in `engine`.}
 }
@@ -27,18 +27,17 @@ A list consisting of models created via random search and ranked list
 of models scores.
 }
 \description{
-Random optimalization of hiperparameters
+Random optimization of hyperparameters
 }
 \examples{
 data(iris)
 iris_bin          <- iris[1:100, ]
 type              <- guess_type(iris_bin, 'Species')
-preprocessed_data <- preprocessing(iris_bin, 'Species')
+preprocessed_data <- preprocessing(iris_bin, 'Species', type)
 preprocessed_data <- preprocessed_data$data
 split_data <-
   train_test_balance(preprocessed_data,
                      'Species',
-                     type = type,
                      balance = FALSE)
 train_data <-
   prepare_data(split_data$train,

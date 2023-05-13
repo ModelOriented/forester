@@ -5,7 +5,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       lisbon,
       y = 'Price',
-      type = 'regression',
       balance = FALSE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -21,7 +20,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       lisbon,
       y = 'Price',
-      type = 'regression',
       balance = FALSE,
       fractions = c(0.5, 0.25, 0.25)
     )
@@ -36,7 +34,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       compas,
       y = 'Two_yr_Recidivism',
-      type = 'binary_clf',
       balance = FALSE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -53,7 +50,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       compas,
       y = 'Two_yr_Recidivism',
-      type = 'regression',
       balance = FALSE,
       fractions = c(0.5, 0.25, 0.25)
     )
@@ -68,7 +64,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       lymph,
       y = 'class',
-      type = 'multi_clf',
       balance = FALSE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -85,7 +80,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       lymph,
       y = 'class',
-      type = 'multi_clf',
       balance = FALSE,
       fractions = c(0.5, 0.25, 0.25)
     )
@@ -100,7 +94,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       testing_data,
       y = 'y',
-      type = 'regression',
       balance = FALSE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -117,7 +110,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       testing_data,
       y = 'y',
-      type = 'regression',
       balance = FALSE,
       fractions = c(0.5, 0.25, 0.25)
     )
@@ -135,7 +127,6 @@ test_that('test-train_test_balance', {
       lisbon,
       y = 'Price',
       balance = TRUE,
-      type = 'regression',
       fractions = c(0.6, 0.2, 0.2)
     )
 
@@ -148,7 +139,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       lisbon,
       y = 'Price',
-      type = 'regression',
       balance = FALSE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -162,7 +152,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       compas,
       y = 'Two_yr_Recidivism',
-      type = 'binary_clf',
       balance = TRUE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -179,7 +168,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       compas,
       y = 'Two_yr_Recidivism',
-      type = 'binary_clf',
       balance = FALSE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -196,7 +184,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       lymph,
       y = 'class',
-      type = 'multi_clf',
       balance = TRUE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -221,7 +208,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       lymph,
       y = 'class',
-      type = 'multi_clf',
       balance = FALSE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -246,7 +232,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       testing_data,
       y = 'y',
-      type = 'regression',
       balance = TRUE,
       fractions = c(0.6, 0.2, 0.2)
     )
@@ -260,7 +245,6 @@ test_that('test-train_test_balance', {
     train_test_balance(
       testing_data,
       y = 'y',
-      type = 'regression',
       balance = FALSE,
       fractions = c(0.6, 0.2, 0.2)
     )

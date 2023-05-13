@@ -3,7 +3,7 @@ test_that('test-predict_new', {
   data        <- lisbon
   y           <- 'Price'
   suppressWarnings(
-    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 2)
+    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 0)
   )
 
   new_obs              <- lisbon[1, ]
@@ -12,7 +12,7 @@ test_that('test-predict_new', {
     preds <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 12)
+  expect_true(length(preds) == 8)
   expect_true(length(preds[[1]]) == 1)
 
   new_obs['Bedrooms']      <- NULL
@@ -28,14 +28,14 @@ test_that('test-predict_new', {
     preds <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 12)
+  expect_true(length(preds) == 8)
   expect_true(length(preds[[1]]) == 30)
 
   # Tests for adult dataset.
   data        <- adult[1:100, ]
   y           <- 'salary'
   suppressWarnings(
-    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 2)
+    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 0)
   )
 
   new_obs              <- adult[30, ]
@@ -45,7 +45,7 @@ test_that('test-predict_new', {
     preds <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 12)
+  expect_true(length(preds) == 8)
   expect_true(length(preds[[1]]) == 1)
 
   new_obs['education'] <- NULL
@@ -60,14 +60,14 @@ test_that('test-predict_new', {
     preds <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 12)
+  expect_true(length(preds) == 8)
   expect_true(length(preds[[1]]) == 30)
 
   # Tests for testing_data.
   data        <- testing_data[1:100, ]
   y           <- 'y'
   suppressWarnings(
-    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 2)
+    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 0)
   )
 
   new_obs        <- testing_data[1, ]
@@ -77,7 +77,7 @@ test_that('test-predict_new', {
     preds        <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 12)
+  expect_true(length(preds) == 8)
   expect_true(length(preds[[1]]) == 1)
 
   new_obs['X4']      <- NULL
@@ -91,6 +91,6 @@ test_that('test-predict_new', {
     preds            <- predict_new(train_out, new_obs, verbose = FALSE)
   )
 
-  expect_true(length(preds) == 12)
+  expect_true(length(preds) == 8)
   expect_true(length(preds[[1]]) == 30)
-  })
+})

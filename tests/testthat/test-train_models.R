@@ -2,12 +2,11 @@ test_that('test-train_models', {
   # Iris dataset for classification.
   iris_bin          <- iris[1:100, ]
   type              <- guess_type(iris_bin, 'Species')
-  preprocessed_data <- preprocessing(iris_bin, 'Species')
+  preprocessed_data <- preprocessing(iris_bin, 'Species', type = type)
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Species',
-                       type = type,
                        balance = FALSE)
   train_data <-
     prepare_data(split_data$train,
@@ -31,12 +30,11 @@ test_that('test-train_models', {
 
   # Compas dataset for classification.
   type              <- guess_type(compas, 'Two_yr_Recidivism')
-  preprocessed_data <- preprocessing(compas, 'Two_yr_Recidivism')
+  preprocessed_data <- preprocessing(compas, 'Two_yr_Recidivism', type = type)
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Two_yr_Recidivism',
-                       type = type,
                        balance = FALSE)
   suppressWarnings(
     train_data <-
@@ -63,13 +61,12 @@ test_that('test-train_models', {
   # Lisbon dataset for regression.
   type                <- guess_type(lisbon, 'Price')
   suppressWarnings(
-    preprocessed_data <- preprocessing(lisbon, 'Price')
+    preprocessed_data <- preprocessing(lisbon, 'Price', type = type)
   )
   preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'Price',
-                       type = type,
                        balance = FALSE)
   suppressWarnings(
     train_data <- prepare_data(split_data$train,
@@ -94,12 +91,11 @@ test_that('test-train_models', {
 
   # Test for regression.
   type              <- guess_type(testing_data, 'y')
-  preprocessed_data <- preprocessing(testing_data, 'y')
+  preprocessed_data <- preprocessing(testing_data, 'y', type = type)
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
                        y = 'y',
-                       type = type,
                        balance = FALSE)
   suppressWarnings(
     train_data <- prepare_data(split_data$train,

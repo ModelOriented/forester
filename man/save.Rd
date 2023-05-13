@@ -32,6 +32,6 @@ full path and name of the saved file.}
 Save elements from forester
 }
 \examples{
-train <- train(iris, 'Sepal.Width')
+train <- train(iris[1:100, ], 'Sepal.Width')
 save(train)
 }

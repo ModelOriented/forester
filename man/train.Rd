@@ -11,6 +11,7 @@ train(
   engine = c("ranger", "xgboost", "decision_tree", "lightgbm"),
   verbose = TRUE,
   train_test_split = c(0.6, 0.2, 0.2),
+  split_seed = NULL,
   bayes_iter = 10,
   random_evals = 10,
   advanced_preprocessing = FALSE,
@@ -32,7 +33,7 @@ on all columns in the `data`.}
 (2) a character name of variable in the `data` that contains
 the target variable.}
 
-\item{type}{A character, one of `classification`/`regression`/`guess` that
+\item{type}{A character, one of `binary_clf`/`regression`/`guess` that
 sets the type of the task. If `guess` (the default option) then
 forester will figure out `type` based on the number of unique values
 in the `y` variable.}
@@ -46,6 +47,10 @@ training process, if FALSE gives none.}
 
 \item{train_test_split}{A 3-value vector, describing the proportions of train,
 test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).}
+
+\item{split_seed}{An integer value describing the seed for the split into
+train, test, and validation datasets. By default no seed is set and the split
+is performed randomly. Default value is NULL.}
 
 \item{bayes_iter}{An integer value describing number of optimization rounds
 used by the Bayesian optimization.}
@@ -101,9 +106,13 @@ preprocessing, balancing and splitting into the training, test and validation
 datasets.
 `predictions` Prediction list for all trained models based on the training
 dataset.
-`ranked_list` The list of metrics for all trained models. For regression task
-there are: mse, r2 and mad metrics. For the classification task there are:
-f1, auc, recall, precision and accuracy.
+`score_test` The list of metrics for all trained models calculated on a test
+dataset. For regression task there are: mse, r2 and mad metrics. For the
+classification task there are: f1, auc, recall, precision and accuracy.
+`score_train` The list of metrics for all trained models calculated on a train
+dataset. For regression task there are: mse, r2 and mad metrics. For the
+`score_valid` The list of metrics for all trained models calculated on a validation
+dataset. For regression task there are: mse, r2 and mad metrics. For the
 `models_list` The list of all trained models.
 `data` The original data.
 `y` The original target column name.
@@ -121,15 +130,24 @@ parameters, with parameters optimized with the Bayesian optimization
 algorithm and with parameters optimized with the random search algorithm.
 `engine` The list of names of all types of trained models. Possible
 values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
-`predictions_all` Predictions for all trained models.
-`predictions_best` Predictions for models from best_models list.
-`predictions_all_labels` Predictions for all trained models as text labels
-(for classification task only).
-`predictions_best_labels` Predictions for models from best_models list as
-labels (for classification task only).
+`predictions_all` Predictions for all trained models on a test dataset.
+`predictions_best` Predictions for models on a test dataset from best_models list.
+`predictions_all_labels` Predictions for all trained models on a test dataset
+as text labels for classification task only).
+`predictions_best_labels` Predictions for models on a test dataset from
+best_models list as labels (for classification task only).
+`predictions_train` Predictions for all trained models on a train dataset.
 `raw_train` The another form of the training dataset (useful for creating
 VS plot and predicting on training dataset for catboost and lightgbm models).
+`check_report` Data check report held as a list of strings. It is used
+by the `report()` function.
 `outliers` The vector of possible outliers detected by the `check_data()`.
+`train_inds` The vector of integers describing the observation indexes from
+the original data frame that went to the training set.
+`test_inds` The vector of integers describing the observation indexes from
+the original data frame that went to the testing set.
+`valid_inds` The vector of integers describing the observation indexes from
+the original data frame that went to the validation set.
 }
 \description{
 The `train()` function is the core function of this package.
@@ -141,5 +159,5 @@ validation strategy, tested model families, and so on.
 library(forester)
 data('lisbon')
 train_output <- train(lisbon, 'Price')
-train_output$ranked_list
+train_output$score_valid
 }

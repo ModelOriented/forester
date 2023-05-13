@@ -1,12 +1,12 @@
 test_that('test-preprocessing', {
-  prep_compas    <- preprocessing(compas, 'Two_yr_Recidivism')
+  prep_compas    <- preprocessing(compas, 'Two_yr_Recidivism', type = 'binary_clf')
   suppressWarnings(
-    prep_lisbon  <- preprocessing(lisbon, 'Price')
+    prep_lisbon  <- preprocessing(lisbon, 'Price', type = 'regression')
     )
-  prep_iris      <- preprocessing(iris, 'Species')
-  prep_adult     <- preprocessing(adult[1:1000, ], 'salary')
-  prep_lymph     <- preprocessing(lymph, 'class')
-  prep_test      <- preprocessing(testing_data, 'y')
+  prep_iris      <- preprocessing(iris[1:100, ], 'Species', type = 'binary_clf')
+  prep_adult     <- preprocessing(adult[1:1000, ], 'salary', type = 'binary_clf')
+  prep_lymph     <- preprocessing(lymph, 'class', type = 'binary_clf')
+  prep_test      <- preprocessing(testing_data, 'y', type = 'regression')
 
   rm_stat_compas <- pre_rm_static_cols(compas, 'Two_yr_Recidivism')
   rm_stat_lisbon <- pre_rm_static_cols(lisbon, 'Price')

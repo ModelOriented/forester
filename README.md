@@ -25,6 +25,12 @@ The catboost model is used in the `train()` function as an additional engine.
 devtools::install_url('https://github.com/catboost/catboost/releases/download/v1.1.1/catboost-R-Darwin-1.1.1.tgz', INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-staged-install"))
 ```
 
+Alternatively one can do a longer installation, where whole repository will be downloaded.
+
+``` r
+devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')
+```
+
 ### ggradar
 
 The ggradar is required for creating radar plot visualization in the report from the `report()` function.
@@ -44,7 +50,7 @@ tinytex::install_tinytex()
 
 ## How to build tree-based models in R?
 
-![](misc/intro.png)
+![](man/figures/intro.png)
 
 ## What is the *forester*?
 
@@ -63,15 +69,18 @@ The *forester* package is **an AutoML tool in R** that wraps up all machine lear
 - **evaluating** them and providing a ranked list.
 
 
-![](misc/graph_forester.png)
+![](man/figures/graph_forester.png)
 
 ## For whom is this package created?
 
 The  forester  package is designed for beginners in data science, but also for more  experienced users. They get an easy-to-use tool that can be used to prepare high-quality baseline models for comparison with more advanced methods or a set of output parameters for more thorough optimisations.
 
-## Notes
+## Introductory blogs
 
-
+- forester: an R package for automated building of tree-based models: https://medium.com/responsibleml/forester-an-r-package-for-automated-building-of-tree-based-models-5e683c7489c
+- forester: what makes the package special?: https://medium.com/responsibleml/forester-what-makes-the-package-special-9ece9b8a64d
+- forester: predicting house prices use case: https://medium.com/responsibleml/forester-predicting-house-prices-use-case-b537253b6142
+- forester: the simplicity of AutoML: https://medium.com/responsibleml/forester-the-simplicity-of-automl-98d9272f3ea
 
 ## Authors
 

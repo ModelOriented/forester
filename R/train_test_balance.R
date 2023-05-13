@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' data(lisbon)
-#' b_lisbon <- train_test_balance(lisbon, 'Price', balance = FALSE, 'regression',
+#' b_lisbon <- train_test_balance(lisbon, 'Price', balance = FALSE,
 #'                                fractions = c(train = 0.6, valid = 0.2, test = 0.2))
 train_test_balance <-
   function(data, y, balance = TRUE, fractions = c(0.6, 0.2, 0.2), seed = NULL) {
@@ -26,13 +26,11 @@ train_test_balance <-
     }
 
     if (balance == TRUE) {
-      set.seed(3)# testing
       inds  <- splitTools::partition(target, p = c(train = fractions[1],
                                                    test  = fractions[2],
                                                    valid = fractions[3]),
                                      seed = seed)
     } else {
-      set.seed(3)
       inds  <- splitTools::partition(target, p = c(train = fractions[1],
                                                    test  = fractions[2],
                                                    valid = fractions[3]),
@@ -41,8 +39,11 @@ train_test_balance <-
     }
 
     return(list(
-      train = data[inds$train, ],
-      test  = data[inds$valid, ],
-      valid = data[inds$test, ]
+      train      = data[inds$train, ],
+      test       = data[inds$test, ],
+      valid      = data[inds$valid, ],
+      train_inds = inds$train,
+      test_inds  = inds$test,
+      valid_inds = inds$valid
     ))
   }

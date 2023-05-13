@@ -217,7 +217,7 @@ check_dim <- function(df, verbose = TRUE) {
   cols <- dim(df)[2]
 
   if (cols > 30) {
-    verbose_cat(crayon::red('\u2716'), 'Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), ' Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
     str <- capture.output(
       cat('**Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. **\n', sep = ''))
 
@@ -240,7 +240,7 @@ check_dim <- function(df, verbose = TRUE) {
 }
 
 
-#' Search for strongly correlated values (Spearman for numerical, Crammer V for
+#' Search for strongly correlated values (Spearman's rank for numerical, Crammer's V for
 #' categorical)
 #'
 #' @param df A data source, that is one of the major R formats: data.table, data.frame,
@@ -302,6 +302,7 @@ check_cor <- function(df, y, verbose = TRUE) {
       verbose_cat(crayon::green('\u2714'), 'No strongly correlated, by Spearman rank, pairs of numerical values. \n', verbose = verbose)
       str <- capture.output(cat('**No strongly correlated, by Spearman rank, pairs of numerical values. **\n\n'))
     }
+    verbose_cat('\n', verbose = verbose)
   }
 
   fct_names <- NULL
@@ -343,7 +344,6 @@ check_cor <- function(df, y, verbose = TRUE) {
         }
         if (i != j && strong_V_cor) {
           if (no_cor_fct) {
-            verbose_cat('\n', verbose = verbose)
             verbose_cat(crayon::red('\u2716'), 'Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: \n', verbose = verbose)
             str <- c(str, capture.output(cat('\n', '** Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: **\n\n')))
             no_cor_fct = FALSE
@@ -355,13 +355,13 @@ check_cor <- function(df, y, verbose = TRUE) {
       }
     }
     if (no_cor_fct) {
-      verbose_cat('\n', verbose = verbose)
       verbose_cat(crayon::green('\u2714'), 'No strongly correlated, by Crammer\'s V rank, pairs of categorical values. \n', verbose = verbose)
       str <- c(str, capture.output(
         cat('**No strongly correlated, by Crammer\'s V rank, pairs of categorical values. **\n')))
     }
+    verbose_cat('\n', verbose = verbose)
   }
-  verbose_cat('\n', verbose = verbose)
+
   str <- c(str, capture.output(cat('\n')))
 
   return(
@@ -406,7 +406,7 @@ check_outliers <- function(df, verbose = TRUE) {
     return (which(x < Tmin | x > Tmax))
   }
 
-  inter_quntile_range <- function(x) {
+  inter_quantile_range <- function(x) {
     Tmin = summary(x)[2] - (1.5 * IQR(x))
     Tmax = summary(x)[4] + (1.5 * IQR(x))
     return (which(x < Tmin | x > Tmax))
@@ -423,35 +423,41 @@ check_outliers <- function(df, verbose = TRUE) {
   data_num <- data[num_idx]
   outliers <- c()
 
-  for (i in 1:ncol(data_num)) {
-    outliers_tmp <- c()
-    outliers_tmp <- c(outliers_tmp, mean_standard_deviation(data_num[, i]))
-    outliers_tmp <- c(outliers_tmp, median_absolute_deviation(data_num[, i]))
-    outliers_tmp <- c(outliers_tmp, inter_quntile_range(data_num[, i]))
-    bool_outlier <- table(outliers_tmp)
-    outliers     <- c(outliers, names(bool_outlier[bool_outlier == 3]))
-  }
+  if (ncol(data_num) != 0) {
+    for (i in 1:ncol(data_num)) {
+      outliers_tmp <- c()
+      outliers_tmp <- c(outliers_tmp, mean_standard_deviation(data_num[, i]))
+      outliers_tmp <- c(outliers_tmp, median_absolute_deviation(data_num[, i]))
+      outliers_tmp <- c(outliers_tmp, inter_quantile_range(data_num[, i]))
+      bool_outlier <- table(outliers_tmp)
+      outliers     <- c(outliers, names(bool_outlier[bool_outlier == 3]))
+    }
 
-  outliers <- unique(outliers)
-  outliers <- sort(outliers)
+    outliers <- unique(outliers)
+    outliers <- sort(outliers)
 
-  if (length(outliers) == 0) {
-    verbose_cat(crayon::green('\u2714'), 'No outliers in the dataset. \n', verbose = verbose)
-    str <- capture.output(cat('**No outliers in the dataset. **\n'))
+    if (length(outliers) == 0) {
+      verbose_cat(crayon::green('\u2714'), 'No outliers in the dataset. \n', verbose = verbose)
+      str <- capture.output(cat('**No outliers in the dataset. **\n'))
 
-  } else if (length(outliers) < 50) {
-    verbose_cat(crayon::red('\u2716'), 'These obserwation migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
-    str <- capture.output(
-      cat('**These obserwation migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
+    } else if (length(outliers) < 50) {
+      verbose_cat(crayon::red('\u2716'), 'These observations migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
+      str <- capture.output(
+        cat('**These observations migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
+    } else {
+      verbose_cat(crayon::red('\u2716'), 'There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \n', verbose = verbose)
+      str <- capture.output(
+        cat('**There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. **\n'))
+    }
+    verbose_cat('\n', verbose = verbose)
+
+    str      <- c(str, capture.output(cat('\n')))
+    outliers <- as.numeric(outliers)
   } else {
-    verbose_cat(crayon::red('\u2716'), 'There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \n', verbose = verbose)
-    str <- capture.output(
-      cat('**There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. **\n'))
+    verbose_cat(crayon::green('\u2714'), 'No numeric data in the dataset. \n', verbose = verbose)
+    str <- capture.output(cat('**No numeric data in the dataset. **\n'))
+    verbose_cat('\n', verbose = verbose)
   }
-  verbose_cat('\n', verbose = verbose)
-
-  str      <- c(str, capture.output(cat('\n')))
-  outliers <- as.numeric(outliers)
 
   rtr <- list(
     str       = str,

@@ -23,6 +23,9 @@
 #' training process, if FALSE gives none.
 #' @param train_test_split A 3-value vector, describing the proportions of train,
 #' test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).
+#' @param split_seed An integer value describing the seed for the split into
+#' train, test, and validation datasets. By default no seed is set and the split
+#' is performed randomly. Default value is NULL.
 #' @param bayes_iter An integer value describing number of optimization rounds
 #' used by the Bayesian optimization.
 #' @param random_evals An integer value describing number of trained models
@@ -68,9 +71,13 @@
 #' datasets.
 #' `predictions` Prediction list for all trained models based on the training
 #' dataset.
-#' `ranked_list` The list of metrics for all trained models. For regression task
-#' there are: mse, r2 and mad metrics. For the classification task there are:
-#' f1, auc, recall, precision and accuracy.
+#' `score_test` The list of metrics for all trained models calculated on a test
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
+#' classification task there are: f1, auc, recall, precision and accuracy.
+#' `score_train` The list of metrics for all trained models calculated on a train
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
+#' `score_valid` The list of metrics for all trained models calculated on a validation
+#' dataset. For regression task there are: mse, r2 and mad metrics. For the
 #' `models_list` The list of all trained models.
 #' `data` The original data.
 #' `y` The original target column name.
@@ -88,28 +95,38 @@
 #' algorithm and with parameters optimized with the random search algorithm.
 #' `engine` The list of names of all types of trained models. Possible
 #' values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
-#' `predictions_all` Predictions for all trained models.
-#' `predictions_best` Predictions for models from best_models list.
-#' `predictions_all_labels` Predictions for all trained models as text labels
-#' (for classification task only).
-#' `predictions_best_labels` Predictions for models from best_models list as
-#' labels (for classification task only).
+#' `predictions_all` Predictions for all trained models on a test dataset.
+#' `predictions_best` Predictions for models on a test dataset from best_models list.
+#' `predictions_all_labels` Predictions for all trained models on a test dataset
+#' as text labels for classification task only).
+#' `predictions_best_labels` Predictions for models on a test dataset from
+#' best_models list as labels (for classification task only).
+#' `predictions_train` Predictions for all trained models on a train dataset.
 #' `raw_train` The another form of the training dataset (useful for creating
 #' VS plot and predicting on training dataset for catboost and lightgbm models).
+#' `check_report` Data check report held as a list of strings. It is used
+#' by the `report()` function.
 #' `outliers` The vector of possible outliers detected by the `check_data()`.
+#' `train_inds` The vector of integers describing the observation indexes from
+#' the original data frame that went to the training set.
+#' `test_inds` The vector of integers describing the observation indexes from
+#' the original data frame that went to the testing set.
+#' `valid_inds` The vector of integers describing the observation indexes from
+#' the original data frame that went to the validation set.
 #' @export
 #'
 #' @examples
 #' library(forester)
 #' data('lisbon')
 #' train_output <- train(lisbon, 'Price')
-#' train_output$ranked_list
+#' train_output$score_valid
 train <- function(data,
                   y,
                   type = 'auto',
                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
                   verbose = TRUE,
                   train_test_split = c(0.6, 0.2, 0.2),
+                  split_seed = NULL,
                   bayes_iter = 10,
                   random_evals = 10,
                   advanced_preprocessing = FALSE,
@@ -131,6 +148,13 @@ train <- function(data,
     return(NULL)
   })
 
+  if ('tbl' %in% class(data)) {
+    data <- as.data.frame(data)
+    verbose_cat(crayon::red('\u2716'), 'Provided dataset is a tibble and not a',
+                'data.frame or matrix. Casting the dataset to data.frame format. \n\n',
+                verbose = verbose)
+  }
+
   if (type == 'auto') {
     type <- guess_type(data, y)
     verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
@@ -140,27 +164,20 @@ train <- function(data,
     verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
   }
 
+  check_report <- check_data(data, y, verbose)
 
-  if (verbose) {
-    check_report <- check_data(data, y, verbose)
-  } else {
-    check_report          <- c()
-    check_report$str      <- NULL
-    check_report$outliers <- NULL
-  }
-
-  preprocessed_data <- preprocessing(data, y, advanced = advanced_preprocessing)
+  preprocessed_data <- preprocessing(data, y, type, advanced = advanced_preprocessing)
 
   if (advanced_preprocessing) {
     verbose_cat(crayon::red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
                 preprocessed_data$colnames, '\n\n', verbose = verbose)
   }
 
-
   verbose_cat(crayon::green('\u2714'), 'Data preprocessed. \n', verbose = verbose)
 
   split_data <- train_test_balance(preprocessed_data$data, y, balance = TRUE,
-                                   fractions = train_test_split)
+                                   fractions = train_test_split, seed = split_seed)
+
   verbose_cat(crayon::green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
 
   train_data <- prepare_data(split_data$train, y, engine)
@@ -181,8 +198,8 @@ train <- function(data,
   preds_basic    <- predict_models_all(model_basic, test_data, y, type)
   verbose_cat(crayon::green('\u2714'), 'Predicted successfully. \n', verbose = verbose)
 
-  test_observed  <- split_data$test[[y]]
   train_observed <- split_data$train[[y]]
+  test_observed  <- split_data$test[[y]]
   valid_observed <- split_data$valid[[y]]
 
   model_random   <- random_search(train_data,
@@ -191,6 +208,7 @@ train <- function(data,
                                   engine = engine,
                                   type = type,
                                   max_evals = random_evals)
+  preds_random <- NULL
   if (!is.null(model_random)) {
     preds_random <- predict_models_all(model_random$models,
                                        test_data,
@@ -229,13 +247,14 @@ train <- function(data,
                          metric_function_decreasing = metric_function_decreasing,
                          engine = engine_all,
                          tuning = tuning)
+
   predictions_all  <- predict_models_all(models_all, test_data, y, type)
   verbose_cat(crayon::green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
 
   if (type == 'binary_clf') {
-    test_observed  <- test_observed - 1 # [0, 1]
-    train_observed <- train_observed - 1
-    valid_observed <- valid_observed - 1
+    test_observed  <- as.numeric(test_observed) - 1 # [0, 1]
+    train_observed <- as.numeric(train_observed) - 1
+    valid_observed <- as.numeric(valid_observed) - 1
 
     test_observed_labels  <- test_observed
     train_observed_labels <- train_observed
@@ -267,8 +286,10 @@ train <- function(data,
 
   best_models      <- choose_best_models(models_all, engine_all, score, best_model_number)
   predictions_best <- predict_models_all(best_models$models, test_data, y, type = type)
-  predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
   predict_train    <- predict_models_all(models_all, raw_train, y, type = type)
+  predict_test     <- predict_models_all(models_all, test_data, y, type = type)
+  predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
+
 
   score_valid      <- score_models(models_all,
                                    predict_valid,
@@ -317,6 +338,7 @@ train <- function(data,
       }
     }
   }
+
   if (type == 'binary_clf') {
     return(
       list(
@@ -349,7 +371,10 @@ train <- function(data,
         predictions_train       = predict_train,
         raw_train               = raw_train,
         check_report            = check_report$str,
-        outliers                = check_report$outliers
+        outliers                = check_report$outliers,
+        train_inds              = split_data$train_inds,
+        test_inds               = split_data$test_inds,
+        valid_inds              = split_data$valid_inds
       )
     )
   } else {
@@ -379,7 +404,10 @@ train <- function(data,
         predictions_train       = predict_train,
         raw_train               = raw_train,
         check_report            = check_report,
-        outliers                = check_report$outliers
+        outliers                = check_report$outliers,
+        train_inds              = split_data$train_inds,
+        test_inds               = split_data$test_inds,
+        valid_inds              = split_data$valid_inds
       )
     )
   }

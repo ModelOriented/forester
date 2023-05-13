@@ -1,7 +1,7 @@
 Package: forester
 Type: Package
 Title: Quick and Simple Tools for Training and Testing of Tree-based Models
-Version: 1.1.4
+Version: 1.2.1
 Authors@R:
     c(person("Anna", "Kozak", role = c("aut", "cre"), email = "anna1993kozak@gmail.com"),
     person("Hubert", "Ruczyński", role = c("aut"), email = "hruczynski21@interia.pl"),

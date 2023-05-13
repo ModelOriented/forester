@@ -7,7 +7,6 @@
 train_test_balance(
   data,
   y,
-  type,
   balance = TRUE,
   fractions = c(0.6, 0.2, 0.2),
   seed = NULL
@@ -18,9 +17,6 @@ train_test_balance(
 matrix and so on.}
 
 \item{y}{A string that indicates a target column name.}
-
-\item{type}{A string that determines if Machine Learning task is the
-`classification` or `regression`.}
 
 \item{balance}{A logical value, determines if we want to balance the dataset.}
 
@@ -38,6 +34,6 @@ Balance and split the dataset
 }
 \examples{
 data(lisbon)
-b_lisbon <- train_test_balance(lisbon, 'Price', balance = FALSE, 'regression',
+b_lisbon <- train_test_balance(lisbon, 'Price', balance = FALSE,
                                fractions = c(train = 0.6, valid = 0.2, test = 0.2))
 }
