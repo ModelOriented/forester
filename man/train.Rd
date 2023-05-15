@@ -82,72 +82,96 @@ All trained models will be returned as different element of the return.}
 }
 \value{
 A list of all necessary objects for other functions. It contains:
-`type` The type of the ML task. If the user did not specify a type in the
+\itemize{
+\item \code{`data`} The original data.
+\item \code{`y`} The original target column name.
+\item \code{`type`} The type of the ML task. If the user did not specify a type in the
 input parameters, the algorithm recognizes, uses and returns the same type.
 It could be 'regression' or 'classification'.
-`deleted_columns` Column names from the original data frame that have been
+
+\item \code{`deleted_columns`} Column names from the original data frame that have been
 removed in the data preprocessing process, e.g. due to too high correlation
 with other columns.
-`preprocessed_data` The data frame after the preprocessing process - that
+\item \code{`preprocessed_data`} The data frame after the preprocessing process - that
 means: removing columns with one value for all rows, binarizing the target
 column, managing missing values and in advanced preprocessing: deleting
 correlated values, deleting columns that are ID-like columns and performing
 Boruta algorithm for selecting most important features.
-`bin_labels` Labels of binarized target value - {1, 2} values for binary
+\item \code{`bin_labels`} Labels of binarized target value - {1, 2} values for binary
 classification and NULL for regression.
-`train_data` The training dataset - the part of the source dataset after
+
+\item \code{`models_list`} The list of all trained models.
+\item \code{`check_report`} Data check report held as a list of strings. It is used
+by the `report()` function.
+\item \code{`outliers`} The vector of possible outliers detected by the `check_data()`.
+
+\item \code{`best_models_on_valid`} The object containing the best performing models
+on the valdiation dataset.
+#' \item \code{`engine`} The list of names of all types of trained models. Possible
+values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
+\item \code{`raw_train`} The another form of the training dataset (useful for creating
+VS plot and predicting on training dataset for catboost and lightgbm models).
+
+\item \code{`train_data`} The training dataset - the part of the source dataset after
 preprocessing, balancing and splitting into the training, test and validation
 datasets.
-`test_data` The test dataset - the part of the source dataset after
+\item \code{`test_data`} The test dataset - the part of the source dataset after
 preprocessing, balancing and splitting into the training, test and
 validation datasets.
-`valid_data` The validation dataset - the part of the source dataset after
+\item \code{`valid_data`} The validation dataset - the part of the source dataset after
 preprocessing, balancing and splitting into the training, test and validation
 datasets.
-`predictions` Prediction list for all trained models based on the training
-dataset.
-`score_test` The list of metrics for all trained models calculated on a test
+
+\item \code{`train_inds`} The vector of integers describing the observation indexes from
+the original data frame that went to the training set.
+\item \code{`test_inds`} The vector of integers describing the observation indexes from
+the original data frame that went to the testing set.
+\item \code{`valid_inds`} The vector of integers describing the observation indexes from
+the original data frame that went to the validation set.
+
+\item \code{`predictions_train`} Predictions for all trained models on a train dataset.
+\item \code{`predictions_test`} Predictions for all trained models on a test dataset.
+\item \code{`predictions_valid`} Predictions for all trained models on a validation dataset.
+
+\item \code{`predictions_train_labels`} Predictions for all trained models on a
+train dataset with human readable labels.
+\item \code{`predictions_test_labels`} Predictions for all trained models on a
+test dataset with human readable labels.
+\item \code{`predictions_valid_labels`} Predictions for all trained models on a
+validation dataset with human readable labels.
+
+\item \code{`predictions_best_train`} Predictions for best trained models on a train dataset.
+\item \code{`predictions_best_test`} Predictions for best trained models on a test dataset.
+\item \code{`predictions_best_valid`} Predictions for best trained models on a validation dataset.
+
+\item \code{`predictions_best_train_labels`} Predictions for best trained models on a
+train dataset with human readable labels.
+\item \code{`predictions_best_test_labels`} Predictions for best trained models on a
+test dataset with human readable labels.
+\item \code{`predictions_best_valid_labels`} Predictions for best trained models on a
+validation dataset with human readable labels.
+
+\item \code{`score_train`} The list of metrics for all trained models calculated on a train
 dataset. For regression task there are: mse, r2 and mad metrics. For the
 classification task there are: f1, auc, recall, precision and accuracy.
-`score_train` The list of metrics for all trained models calculated on a train
+\item \code{`score_test`} The list of metrics for all trained models calculated on a test
 dataset. For regression task there are: mse, r2 and mad metrics. For the
-`score_valid` The list of metrics for all trained models calculated on a validation
+classification task there are: f1, auc, recall, precision and accuracy.
+\item \code{`score_valid`} The list of metrics for all trained models calculated on a validation
 dataset. For regression task there are: mse, r2 and mad metrics. For the
-`models_list` The list of all trained models.
-`data` The original data.
-`y` The original target column name.
-`test_observed` Values of y column from the test dataset.
-`train_observed` Values of y column from the training dataset.
-`valid_observed` Values of y column from the validation dataset.
-`test_observed_labels` Values of y column from the test dataset as text labels
+classification task there are: f1, auc, recall, precision and accuracy.
+
+\item \code{`test_observed`} Values of y column from the test dataset.
+\item \code{`train_observed`} Values of y column from the training dataset.
+\item \code{`valid_observed`} Values of y column from the validation dataset.
+
+\item \code{`test_observed_labels`} Values of y column from the test dataset as text labels
 (for classification task only).
-`train_observed_labels` Values of y column from the training dataset as text
+\item \code{`train_observed_labels`} Values of y column from the training dataset as text
 labels (for classification task only).
-`valid_observed_labels` Values of y column from the validation dataset as text
+\item \code{`valid_observed_labels`} Values of y column from the validation dataset as text
 labels (for classification task only).
-`best_models` Ranking list of top 10 trained models - with default
-parameters, with parameters optimized with the Bayesian optimization
-algorithm and with parameters optimized with the random search algorithm.
-`engine` The list of names of all types of trained models. Possible
-values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
-`predictions_all` Predictions for all trained models on a test dataset.
-`predictions_best` Predictions for models on a test dataset from best_models list.
-`predictions_all_labels` Predictions for all trained models on a test dataset
-as text labels for classification task only).
-`predictions_best_labels` Predictions for models on a test dataset from
-best_models list as labels (for classification task only).
-`predictions_train` Predictions for all trained models on a train dataset.
-`raw_train` The another form of the training dataset (useful for creating
-VS plot and predicting on training dataset for catboost and lightgbm models).
-`check_report` Data check report held as a list of strings. It is used
-by the `report()` function.
-`outliers` The vector of possible outliers detected by the `check_data()`.
-`train_inds` The vector of integers describing the observation indexes from
-the original data frame that went to the training set.
-`test_inds` The vector of integers describing the observation indexes from
-the original data frame that went to the testing set.
-`valid_inds` The vector of integers describing the observation indexes from
-the original data frame that went to the validation set.
+}
 }
 \description{
 The `train()` function is the core function of this package.

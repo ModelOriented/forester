@@ -18,8 +18,10 @@
 #' @examples
 #' data(lisbon)
 #' train_output   <- train(lisbon, 'Price', verbose = FALSE, random_evals = 2, bayes_iter = 1)
-#' best_explainer <- explain(train_output$best_models[[1]][1], train_output$valid_data, train_output$y)
-#' best_explainers <- explain(train_output$best_models[[1]], train_output$valid_data, train_output$y)
+#' best_explainer <- explain(train_output$best_models_on_valid[[1]][1],
+#'                           train_output$valid_data, train_output$y)
+#' best_explainers <- explain(train_output$best_models_on_valid[[1]],
+#'                            train_output$valid_data, train_output$y)
 explain <- function(models, test_data, y, verbose = FALSE) {
   type <- guess_type(test_data$ranger_data, y)
 
