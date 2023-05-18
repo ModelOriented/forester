@@ -237,17 +237,17 @@ train_models_bayesopt <- function(train_data,
 
         return(list(Score = as.numeric(max_metric)))
       }
-      bounds <- list(nrounds   = c(1L, 10000L),
-                     eta       = c(0.01, 1),
+      bounds <- list(nrounds   = c(5L, 100L),
+                     eta       = c(0.01, 0.5),
                      subsample = c(0.7, 1),
                      gamma     = c(0, 10),
                      max_depth = c(1L, 10L))
 
-      grid <- data.frame(nrounds   = c(10000, 5000, 1000),
-                         eta       = c(0.01, 0.3, 1),
-                         subsample = c(0.7, 0.95, 1),
-                         gamma     = c(0, 2, 10),
-                         max_depth = c(1, 6, 10))
+      # grid <- data.frame(nrounds   = c(10000, 5000, 1000),
+      #                    eta       = c(0.01, 0.3, 1),
+      #                    subsample = c(0.7, 0.95, 1),
+      #                    gamma     = c(0, 2, 10),
+      #                    max_depth = c(1, 6, 10))
 
       #fitness_fun_xgboost(grid[1,1], grid[1,2], grid[1,3], grid[1,4], grid[1,5])
 
@@ -413,7 +413,7 @@ train_models_bayesopt <- function(train_data,
 
       bounds <- list(learning_rate  = c(0.01, 0.5),
                      num_leaves     = c(2L, 50L),
-                     num_iterations = c(1L, 100L))
+                     num_iterations = c(5L, 100L))
 
       bayes <- NULL
       tryCatch(
@@ -514,10 +514,10 @@ train_models_bayesopt <- function(train_data,
         return(list(Score = as.numeric(max_metric)))
       }
 
-      bounds <- list(iterations       = c(100L, 1000L),
+      bounds <- list(iterations       = c(5L, 100L),
                      border_count     = c(64L, 1024L),
                      depth            = c(2L, 16L),
-                     learning_rate    = c(0.01, 0.9),
+                     learning_rate    = c(0.01, 0.5),
                      min_data_in_leaf = c(1L, 10L))
 
       bayes <- NULL

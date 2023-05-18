@@ -520,8 +520,14 @@ check_y_balance <- function(df, y, verbose = TRUE) {
     balanced <- TRUE
     for (i in 1:4) {
       for (j in i:4) {
-        if (bins[i] / bins[j] > 1.5) {
-          balanced <- FALSE
+        if (bins[j] == 0) {
+          if (bins[i] > 0) {
+            balanced <- FALSE
+          }
+        } else {
+          if (bins[i] / bins[j] > 1.5) {
+            balanced <- FALSE
+          }
         }
       }
     }

@@ -76,8 +76,8 @@ random_search <- function(train_data,
   )
 
   xgboost_grid <- list(
-    nrounds   = c(1, 1000, 10000),
-    eta       = c(0.01, 0.1, 1),
+    nrounds   = c(5, 20, 100),
+    eta       = c(0.01, 0.1, 5),
     subsample = c(0.7, 0.9, 1),
     gamma     = c(0, 1, 10),
     max_depth = c(1, 3, 10)
@@ -94,14 +94,14 @@ random_search <- function(train_data,
   lightgbm_grid <- list(
     learning_rate  = c(0.01, 0.1, 0.5),
     num_leaves     = c(2, 25, 50),
-    num_iterations = c(1, 10, 100)
+    num_iterations = c(5, 20, 100)
   )
 
   catboost_grid <- list(
-    iterations       = c(100, 100, 1000),
+    iterations       = c(5, 20, 100),
     border_count     = c(64, 256, 1024),
     depth            = c(2, 8, 16),
-    learning_rate    = c(0.01, 0.1, 0.9),
+    learning_rate    = c(0.01, 0.1, 0.5),
     min_data_in_leaf = c(1, 3, 10)
   )
 
