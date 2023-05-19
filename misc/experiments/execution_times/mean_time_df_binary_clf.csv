@@ -1,0 +1,9 @@
+"task_name","mean_forester_time","mean_h2o_time","mean_difference","mean_relative_diff"
+"banknote-authentication",818.33,2521.33,-1703,0.28
+"blood-transfusion-service-center",155.67,555.67,-400,0.26
+"breast-w",451.33,797.33,-346,0.57
+"credit-approval",805,1513,-708,0.53
+"credit-g",2453,4234,-1781,0.58
+"diabetes",1645.67,2643.67,-998,0.62
+"kr-vs-kp",451.33,806.67,-355.33,0.57
+"phoneme",2748.33,3695.33,-947,0.67
