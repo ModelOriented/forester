@@ -1,0 +1,647 @@
+---
+title: "AutoML Framework Comparison"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this document we will compare the major AutoML workflows in R with
+the `forester` package from the user perspective, focusing mostly on the
+features provided by the package, their methodology and the convenience
+of use. The aforementioned workflows are: `H2O`, and `mlr3` with
+`mlr3automl`.
+
+# Installation and set up
+
+## forester
+
+The forester package is not yet on CRAN, but the installation of the
+core functions is really simple. However to use the package properly,
+the authors advise installation of additional packages which are not on
+CRAN (`catboost`, `ggradar`, `tinytex`). All instructions are present on
+the GitHub repository and are easy to find.
+
+```{r forester main, eval=FALSE}
+# required
+install.packages("devtools")
+devtools::install_github("ModelOriented/forester")
+
+# optional - not on CRAN
+install.packages("devtools")
+devtools::install_url('https://github.com/catboost/catboost/releases/download/v1.1.1/catboost-R-Darwin-1.1.1.tgz', INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-staged-install"))
+devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
+install.packages('tinytex')
+tinytex::install_tinytex()
+```
+
+The set up of the package after the installation is also simple and
+clean.
+
+```{r forester setup}
+library(forester)
+```
+
+## H2O
+
+The installation of `H2O` is simple if we want tot grab, a delayed CRAN
+version, and a bit harder when it comes to the most recent version. The
+CRAN installation is announced at GitHub page, whereas the alternative
+can be found on the documentation page. Moreover `H2O` always requires
+`Java` to work, so the user has to install it too.
+
+```{r H2O installation, eval=FALSE}
+# CRAN installation
+install.packages("h2o")
+
+# Alternative installation
+if ("package:h2o" %in% search()) { detach("package:h2o", unload = TRUE) }
+if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
+pkgs <- c("RCurl","jsonlite")
+for (pkg in pkgs) {
+  if (! (pkg %in% rownames(installed.packages()))) { install.packages(pkg) }
+}
+install.packages("h2o", type = "source", repos = (c("http://h2o-release.s3.amazonaws.com/h2o/latest_stable_R")))
+```
+
+To run `H2O` package we not only need to import the package, but also
+initialize an `H2O` environment. This step is not hard, however it takes
+some time and when the user wants to interrupt code execution it will
+also terminate whole environment which makes him initialized it again.
+
+```{r H2O setup}
+library(h2o)
+localH2O = h2o.init()
+```
+
+## mlr3
+
+The main problem with `mlr3` as an AutoML package is that, it is not
+initially AutoML. To call `mlr3` an AutoML we have to install another
+package called `mlr3automl`, which comes from a different developers
+than the original one. Working with `mlr3` is tiresome, because the
+framework has dozens of subpackages that add some features. Luckily the
+user doesn't have to install all of them one by one, because one can
+install just `mlr3verse`, but all subpackages have to be imported one by
+one.
+
+```{r mlr3 main, eval=FALSE}
+install.packages("devtools")
+install.packages("mlr3verse")
+devtools::install_github('https://github.com/mlr-org/mlr3extralearners')
+devtools::install_github('https://github.com/a-hanf/mlr3automl', dependencies = TRUE)
+```
+
+```{r mlr3 setup, message=FALSE}
+# required
+library(mlr3verse)
+library(mlr3automl)
+# optional
+library(mlr3viz)
+library(mlr3tuning) 
+library(mlr3learners) 
+library(mlr3pipelines)
+```
+
+# Preprocessing
+
+## forester
+
+The `forester` package preprocessing methods are integrated within the
+`train()` function and consists of multiple different functions, which
+are: `preprocessing()`, `train_test_balance()`, and `prepare_data()`.
+The first function gets rid of poor quality information like removing
+static columns, imputing missing values with MICE algorithm and
+binarizes the target for binary classification task. The method has also
+alternative mode called `advanced_preprocessing`, where we perform
+additional steps like removing correlated values, id columns and perform
+BORUTA selection of most important columns. The second one splits the
+initial data set into the train, test and validation subsets with
+proportions provided by the user. The method used for the partitioning
+ensures that the subsets will be balanced in terms of labels or
+distributions. The last function prepares the data frames to be in a
+form required by the specific models, which for example means that for
+xgboost model we have to provide one hot encoded categorical values.
+
+```{r forester preprocessing }
+data('lisbon')
+prep_data <- preprocessing(lisbon, 'Price',advanced = FALSE, verbose = TRUE)
+print(head(prep_data$data))
+
+prep_data2 <- preprocessing(lisbon, 'Price',advanced = TRUE, verbose = TRUE)
+print(head(prep_data2$data))
+
+split <- train_test_balance(prep_data$data, 'Price', balance = TRUE, 'regression',
+                            fractions = c(0.6, 0.2, 0.2))
+print(head(split$train))
+print(head(split$test))
+
+
+engine = c('ranger', 'xgboost', 'decision_tree')
+train_data <- prepare_data(split$train, 'Price', engine)
+test_data  <- prepare_data(split$test, 'Price', engine, predict = TRUE, split$train)
+
+print(head(train_data$xgboost_data))
+print(head(test_data$ranger_data))
+```
+
+## H2O
+
+The `H2O` AutoML solutions preprocessing is really poor and lack plenty
+of important features. The authors have the preprocessing in mind
+however the only options available so far are the target encoding and
+balancing the classes for train, test split. The user however has to
+split the data set on his own, before running the AutoML function.
+
+## mlr3
+
+In case of `mlr3` the preprocessing exists and the authors claim that
+their preprocessing is versatile, because they tested it on 39
+challenging data sets in the `AutoML Benchmark`. On the other hand, we
+can see that the preprocessing itself is not automated and it is the
+user who has to design whole process. The basic prepossessing method
+used in the workflow is the automatic train test split. The
+preprocessing can also be set inside of the `AutoML()` function and it
+uses Imputation, Impact Encoding and PCA.
+
+```{r mlr3 preprocessing }
+imbalanced_preproc = po("imputemean") %>>%
+  po("smote") %>>%
+  po("classweights", minor_weight = 2)
+
+automl_model = AutoML(task = tsk("pima"),
+  preprocessing = imbalanced_preproc) 
+```
+
+# AutoML
+
+## forester
+
+The `forester` AutoML pipeline is hidden inside a single `train()`
+function, which covers all of the smaller ML pipelines like data
+preprocessing model tuning, evaluation. It means that the users
+interaction and preparations before using the package are absolutely
+minimal. The authors keep their tool simple to use in order to set the
+low level of entry for using the package. The `train()` function however
+has plenty of parameters which enable the user to interact and model the
+training process.
+
+The most important and basic outcome from the train is the ranked list
+in form of the `score_test` or `score_valid`, depending won which data
+set do we want to evaluate the models. This objects lets us compare the
+models in terms of multiple metric values.
+
+The ranked lists are only a fraction of the output given by the
+function. The return objects contains all the spitted data sets, columns
+removed by the preprocessing, all predictions, models, metric values,
+used engines, data check report and much more.
+
+The engines available for both tasks are: `ranger`, `xgboost`,
+`decision tree`, `lighgbm`, and `catboost`.
+
+```{r forester AutoML}
+library(forester)
+data('lisbon')
+train_output <- train(lisbon, 'Price', verbose = TRUE, 
+                      train_test_split = c(0.6, 0.2, 0.2), bayes_iter = 10, 
+                      random_evals = 3, advanced_preprocessing = FALSE)
+train_output$score_test
+```
+
+## H2O
+
+The `H2O` AutoML is limited to 6 models with additional 2 stacked
+ensembles, which are: `DRF` (Distributed Random Forest), `XRT`
+(Extremely Randomized Trees), `GLM` (Generalized Linear Model with
+regularization), `XGBoost` (XGBoost GBM), `GBM` (H2O GBM),
+`DeepLearning` (Fully-connected multi-layer artificial neural network)
+and `Full ensemble` with `Subset ensemble`.
+
+The authors claim that the only needed arguments are `y` which stands
+for the target column name and `training_frame` which is the data set,
+however, to actually own these the user has to prepare the split and
+correct format of the data frame by himself. One of the most interesting
+options is the setting the full time of the computation, however in
+reality the training process takes much more time than the one specified
+by the `max_runtime_secs` parameter.
+
+The main function provides a load of additional functionalities such as
+setting a seed, the choice of sorting metric, ability to choose the ML
+engines or the level of verbosity.
+
+The results representation as a leaderboard is really clear, however the
+names of the models are sometimes foggy. The possibilities to get the
+best model predictions and evaluation are also pretty simple. All the
+objects returned by the `h2o.automl` function are: `leader`,
+`leaderboard`, `event_log`, and training `training_info`. However with
+the usage of additional functions the user is able to obtain: specific
+model details by its id, prediction of the model, the best model of the
+given algorithm, the parameters of the model or its metrics.
+
+It is also worth noticing, that there are no preprocessing functions
+included inside the main AutoML workflow which makes using it more
+complex. Moreover the output of the function is not entirely complete
+and the user has to find other function from the package (where there
+are lots of them, because whole H2O is huge) to get basic info.
+
+```{r H2O AutoML}
+h2o.init()
+# split from the forester
+split <- train_test_balance(lisbon, 'Price', balance = TRUE, 'regression',
+                            fractions = c(0.6, 0.2, 0.2)) 
+train_H2O <- as.h2o(split$train)
+test_H2O  <- as.h2o(split$test)
+
+y <- "Price"
+x <- setdiff(names(train_H2O), y)
+
+aml <- h2o.automl(x = x, y = y,
+                  training_frame = train_H2O,
+                  max_runtime_secs = 90,
+                  seed = 1)
+
+aml@leaderboard
+```
+
+```{r H2O AutoML - preds}
+pred <- h2o.predict(aml, test_H2O)
+print(pred)
+
+perf <- h2o.performance(aml@leader, test_H2O)
+print(perf)
+```
+
+## mlr3
+
+The `mlr3` AutoML comes from the independent developer than the original
+package and is available through `mlr3automl` package. The method is
+fully compatible with the main package, which means that it operates in
+a similar way with the usage of learners, tasks, preprocessing, and so
+on. Default available engines are: `ranger`, `xgboost`, `liblinear` for
+both binary classification and regression, and for regression only the
+`svm` and `cv_glmnet`. The user can also provide other models, but the
+authors claim that in some cases it might not work properly. Similarly
+to the `H2O` package, we can define a time spent on the learning process
+with `learner_timeout` and `runtime` parameters. The user is also able
+to provide preprocessing methods created with `mlr3`, via `preprocesing`
+parameter.
+
+One of the major inconveniences is the necessity to make predictions on
+our own, instead of getting clean results. It is also unclear how to
+compare the trained models with each other to chose the best one.
+Moreover there are no built-in method for metrics calculation. The user
+interface is absolutely unclear and inconvenient.
+
+```{r mlr3 AutoML}
+iris_task     = tsk("iris")
+iris_model    = AutoML(iris_task, preprocessing = imbalanced_preproc)
+train_indices = sample(1:iris_task$nrow, 2/3*iris_task$nrow)
+
+iris_model$train(row_ids = train_indices)
+
+predict_indices = setdiff(1:iris_task$nrow, train_indices)
+predictions     = iris_model$predict(row_ids = predict_indices)
+print(predictions)
+```
+
+# Feature selection
+
+## forester
+
+In the `forester` package the feature selection can be done in one of
+the two ways. The first one, which takes place during the advanced
+preprocessing method is running a `BORUTA` selection algorithm, whereas
+the second option is to create an explainer and calculate the Feature
+Importance plots. The second option however makes no impact during the
+training process, because it is done after the models creation. The
+given information however, could encourage the user to delete less
+important columns by himself before the second training attempt.
+
+## H2O
+
+The `H2O` doesn't support feature selection.
+
+## mlr3
+
+In the `mlr3automl` there is no option of providing any kind of feature
+selection. We can only stretch the definition that running a PCA during
+the preprocessing can be counted as a feature selection, but it is far
+from being a proper method.
+
+# Model tuning
+
+## forester
+
+In the `forester` package, the model tuning consists of 3 major
+workflows: model training with `basic parameters`, training with
+`random search` on a specified grid, and the `Bayesian Optimization`
+method. The first option is a reasonable, baseline set of parameters,
+because they are not randomly selected and the algorithms authors chose
+them, because they are generally good. The second options purpose is to
+possibly search a hyperparameter space for a more promising starting
+point. The most important tuning method is the `Bayesian Optimiztation`,
+because it runs a optimization method that searches for the local
+optimum, by exploring the surroundings of the best found point. The
+method results in the best models creation, however is also time
+consuming.
+
+## H2O
+
+The `H2O` model tuning is focused around the hyperparameter gird search
+run on all of the engines which are: `DRF` (Distributed Random Forest),
+`XRT` (Extremely Randomized Trees), `GLM` (Generalized Linear Model with
+regularization), `XGBoost` (XGBoost GBM) and `GBM` (H2O GBM). The user
+has no option to define the searching space. After training the models
+(the amount of trained models depends on the `max_models` or
+`max_runtime_secs` parameters), the algorithm creates two ensembles: the
+first one contains all the models, whereas the second one a subset of
+them, so two ensembles are added in total.
+
+## mlr3
+
+There model tuning in `mlr3automl` starts from evaluating 8 fixed
+hyperparameter configuration that proved to be good staring points and
+later it continues the training with a `mlr3hyperband` optimization
+which is a multi-fidelity approach that speeds up the random search.
+
+# Visualization
+
+## forester
+
+The visualization from the `forester` are mainly connected to the
+explainability of the models and are described in `Explanation` and
+`Report` sections of the document. The plots or of high meritocratic
+quality, and have consistent and overthought layout.
+
+## H2O
+
+The visualization from the `H2O` are mainly connected to the
+explainability of the models and are described in `Explanation` and
+`Report` sections of the document. The plots or of high meritocratic
+quality, however their visual level is pretty poor.
+
+## mlr3
+
+The visualizations for `mlr3` are provided via the `mlr3viz` package and
+the `autoplot` method. It provides an object specific plot that renders
+automatically, depending on the type of the given object. The
+visualizations are however of quiet poor quality and are really shallow.
+
+# Explanation
+
+## forester
+
+The `forester` package is the part of Model Oriented universe created by
+the MI2 Data Lab, and that's why the authors decided to use one of the
+best packages implementing XAI methods, which is `DALEX`. The `forester`
+implements an `explain()` function, which creates a `DALEX` explainer,
+which saves the users time with the most time-consuming process. The
+explainer can be later used by original functions from the XAI package,
+for example to create Feature Importance plot.
+
+```{r}
+library(DALEX)
+exp_list <- forester::explain(models = train_output$best_models[[1]],
+               test_data = train_output$test_data,
+               y = train_output$y)
+exp <- exp_list$xgboost_bayes
+p1 <- DALEX::model_parts(exp)
+plot(p1)
+```
+
+## H2O
+
+The `H2O` package implements their own explanation functions via the
+`h2o.explain()` function which can be called for a single model and for
+the whole aml object. The second case will be mentioned in the report
+section.
+
+For the single model, the user can obtain plenty of XAI plots, such as
+Residual Analysis, Variable Importance, Partial Dependence, and
+Individual Conditional Expectations. Every visualization comes with the
+contextual description of what happens on the plot.
+
+```{r}
+model <- aml@leader
+exm   <- h2o.explain(model, test_H2O)
+exm
+
+```
+
+## mlr3
+
+The `mlr3automl` package is compatible with two major XAI workflows
+which are `DALEX` and `iml` and provides tools to easily use their
+functionalities on the outcomes.
+
+```{r}
+library(DALEXtra)
+dalex_explainer = iris_model$explain(iml_package = "DALEX")
+iml_explainer = iris_model$explain(iml_package = "iml")
+
+# compute and plot feature permutation importance using DALEX
+dalex_importance = DALEX::model_parts(dalex_explainer)
+plot(dalex_importance)
+
+# partial dependency plot using iml package
+iml_pdp = iml::FeatureEffect$new(iml_explainer, feature = "Sepal.Width", method = "pdp")
+plot(iml_pdp)
+```
+
+# Report
+
+## forester
+
+The `forester` package implements two forms of the reports. The first
+and less complex one is the data check report implemented as
+`check_data()` function. This lightweight report informs the user about
+the quality of the used data set. It points out the problems with the
+data set informing about missing values, duplicated columns or highly
+correlated features.
+
+```{r}
+check_data(lisbon, 'Price')
+```
+
+The second and more complex form of the report is obtained via the
+`report()` function, which creates a report depending on the type of the
+ML task, which includes the ranked list, plots comparing the best
+models, plots describing the best model, XAI plots and the data check
+report.
+
+```{r}
+report(train_output, 'report.pdf')
+```
+
+## H2O
+
+The `H2O` package indirectly implements kind of the report which is
+obtained by the `h2o.explain()` function called on the aml object. In
+this case, the output of the function is not only XAI specific and it is
+delivered as a form of report that includes: the leaderboard, Residual
+Analysis plot, Variable Importance plot and Heatmap, Model Correlation
+Heatmap and SHAP Summary.
+
+```{r}
+# Explain an AutoML object
+exa <- h2o.explain(aml, test_H2O)
+exa
+```
+
+## mlr3
+
+The `mlr` doesn't have any form of training summarization and reporting.
+
+# Workflow comparison
+
+This section compares the amount of code needed to go through all the
+pipelines elements and use the most important features for AutoML.
+
+## forester
+
+```{r forester summary, eval=FALSE}
+# needed
+install.packages("devtools")
+devtools::install_github("ModelOriented/forester")
+# optional
+install.packages("devtools")
+devtools::install_url('https://github.com/catboost/catboost/releases/download/v1.1.1/catboost-R-Darwin-1.1.1.tgz', INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-staged-install"))
+devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
+install.packages('tinytex')
+tinytex::install_tinytex()
+# AutoML
+library(forester)
+data('lisbon')
+train_output <- train(lisbon, 'Price', verbose = TRUE, 
+                      train_test_split = c(0.6, 0.2, 0.2), bayes_iter = 10, 
+                      random_evals = 3, advanced_preprocessing = FALSE)
+train_output$score_test
+# explanation
+library(DALEX)
+exp <- forester::explain(models = train_output$best_models[[1]],
+               test_data = train_output$test_data,
+               y = train_output$y)
+exp <- exp_list$xgboost_bayes
+p1 <- DALEX::model_parts(exp)
+plot(p1)
+# reporting, visualization
+report(train_output, 'report.pdf')
+```
+
+## H2O
+
+```{r}
+install.packages("h2o")
+
+# Alternative installation (most common)
+if ("package:h2o" %in% search()) { detach("package:h2o", unload = TRUE) }
+if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
+pkgs <- c("RCurl","jsonlite")
+for (pkg in pkgs) {
+  if (! (pkg %in% rownames(installed.packages()))) { install.packages(pkg) }
+}
+install.packages("h2o", type = "source", repos = (c("http://h2o-release.s3.amazonaws.com/h2o/latest_stable_R")))
+
+# AutoML
+library(h2o)
+h2o.init()
+# split from the forester, H2O has none
+split <- train_test_balance(lisbon, 'Price', balance = TRUE, 'regression',
+                            fractions = c(0.6, 0.2, 0.2)) 
+train_H2O <- as.h2o(split$train)
+test_H2O  <- as.h2o(split$test)
+
+y <- "Price"
+x <- setdiff(names(train_H2O), y)
+
+aml <- h2o.automl(x = x, y = y,
+                  training_frame = train_H2O,
+                  max_runtime_secs = 90,
+                  seed = 1)
+
+aml@leaderboard
+
+pred <- h2o.predict(aml, test_H2O)
+print(pred)
+
+perf <- h2o.performance(aml@leader, test_H2O)
+print(perf)
+# Explain an AutoML model
+model <- aml@leader
+exm   <- h2o.explain(model, test_H2O)
+exm
+
+# Explain an AutoML object
+exa <- h2o.explain(aml, test_H2O)
+exa
+```
+
+## mlr3
+
+```{r}
+install.packages("devtools")
+install.packages("mlr3verse")
+devtools::install_github('https://github.com/mlr-org/mlr3extralearners')
+devtools::install_github('https://github.com/a-hanf/mlr3automl', dependencies = TRUE)
+# required
+library(mlr3verse)
+library(mlr3automl)
+# optional
+library(mlr3viz)
+library(mlr3tuning) 
+library(mlr3learners) 
+library(mlr3pipelines)
+
+imbalanced_preproc = po("imputemean") %>>%
+  po("smote") %>>%
+  po("classweights", minor_weight = 2)
+
+
+iris_task     = tsk("iris")
+iris_model    = AutoML(iris_task, preprocessing = imbalanced_preproc)
+train_indices = sample(1:iris_task$nrow, 2/3*iris_task$nrow)
+
+iris_model$train(row_ids = train_indices)
+
+predict_indices = setdiff(1:iris_task$nrow, train_indices)
+predictions     = iris_model$predict(row_ids = predict_indices)
+print(predictions)
+
+library(DALEXtra)
+dalex_explainer = iris_model$explain(iml_package = "DALEX")
+iml_explainer = iris_model$explain(iml_package = "iml")
+
+# compute and plot feature permutation importance using DALEX
+dalex_importance = DALEX::model_parts(dalex_explainer)
+plot(dalex_importance)
+
+# partial dependency plot using iml package
+iml_pdp = iml::FeatureEffect$new(iml_explainer, feature = "Sepal.Width", method = "pdp")
+plot(iml_pdp)
+```
+
+# Documentation
+
+## forester
+
+Package is small, and the vignettes and documentation is small, clear,
+and understandable.
+
+## H2O
+
+Package is huge, has vast, detailed documentation for the AutoML part
+and is of really high quality, but delving into more advanced features
+is hard due to the abundance of documentation pages.
+
+## mlr3
+
+The documentation is incomplete, lacks the advanced examples, fining
+what you need is hard.
