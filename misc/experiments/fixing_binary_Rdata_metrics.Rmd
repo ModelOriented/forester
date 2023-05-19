@@ -1,0 +1,38 @@
+```{r}
+forester_1_3   <- readRDS("trained_1_3_sets_3_reps_10b_10r.RData")
+forester_4_5   <- readRDS("trained_4_5_sets_3_reps_10b_10r.RData")
+forester_19    <- readRDS("trained_19_sets_3_reps_10b_10r.RData")
+forester_25_26 <- readRDS("trained_25_26_sets_3_reps_10b_10r.RData")
+```
+
+```{r}
+fix_experiment <- function(exp) {
+  for (i in 1:(length(exp) - 2)) {
+    accuracy <- exp[[i]]$auc
+    auc      <- exp[[i]]$f1
+    f1       <- exp[[i]]$accuracy
+    
+    exp[[i]]$auc   <- auc
+    exp[[i]]$f1    <- f1
+    exp[[i]]$accuracy <- accuracy
+  }
+  
+  return(exp)
+}
+
+```
+
+```{r}
+forester_1_3_new <- fix_experiment(forester_1_3)
+forester_4_5_new <- fix_experiment(forester_4_5)
+forester_19_new <- fix_experiment(forester_19)
+forester_25_26_new <- fix_experiment(forester_25_26)
+```
+
+```{r}
+saveRDS(forester_1_3_new, file = "trained_1_3_sets_3_reps_10b_10r.RData")
+saveRDS(forester_4_5_new, file = "trained_4_5_sets_3_reps_10b_10r.RData")
+saveRDS(forester_19_new, file = "trained_19_sets_3_reps_10b_10r.RData")
+saveRDS(forester_25_26_new, file = "trained_25_26_sets_3_reps_10b_10r.RData")
+```
+
