@@ -154,7 +154,7 @@ draw_radar_plot <- function(score_frame, type) {
       auc_row <- as.data.frame(t(as.numeric(unlist(score_frame['auc']))))
     }
 
-    data  <- rbind(f1_row, recall_row, precision_row, accuracy_row, auc_row)
+    data  <- rbind(accuracy_row, auc_row, f1_row, recall_row, precision_row)
     data  <- data.frame(names(score_frame[-c(1, 2, 3, 4)]), data)
     title <- 'Model comparison'
 
@@ -360,9 +360,9 @@ draw_rmse_plot <- function(train_observed, train_predictions, test_observed, tes
 #' @return A ggplot object.
 #' @export
 draw_feature_importance <- function(best_models, test_data, y) {
-  explainer <- explain(best_models[[1]], test_data, y)
+  explainer <- explain(best_models[[1]][1], test_data, y)
 
-  plt <- graphics::plot(DALEX::model_parts(explainer = explainer), max_vars = 8, show_boxplots = TRUE)
+  plt <- graphics::plot(DALEX::model_parts(explainer = explainer[[1]]), max_vars = 8, show_boxplots = TRUE)
   plt <- plt +
     ggplot2::scale_color_manual(values = forester_palette()[[3]]) +
     ggplot2::theme(plot.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 20),

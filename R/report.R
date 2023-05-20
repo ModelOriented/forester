@@ -43,22 +43,7 @@ report <-
       output_file   = output_file,
       output_dir    = output_dir,
       params        = list(
-        models           = train_output$models_list,
-        data             = train_output$data,
-        y                = train_output$y,
-        test_data        = train_output$test_data,
-        train_data       = train_output$train_data,
-        observed         = train_output$test_observed,
-        train_observed   = train_output$train_observed,
-        score            = train_output$score_test,
-        best_models      = train_output$best_models$models,
-        predictions      = train_output$predictions,
-        type             = train_output$type,
-        check_data       = train_output$check_report,
-        engine           = train_output$engine,
-        predictions_all  = train_output$predictions_all,
-        raw_train        = train_output$raw_train,
-        predictions_best = train_output$predictions_best
+        train_output = train_output
       )
     )
   }
