@@ -18,12 +18,11 @@ install.packages('tinytex')
 tinytex::install_tinytex()
 ```
 
-To install the h2o package, we recommend to see the resources from its authors under the link: http://h2o-release.s3.amazonaws.com/h2o/master/1735/docs-website/Ruser/Rinstall.html, however the basic option is to run the code below. Note that the users need the Java installed on the machine.
+To install the h2o package, we recommend to see the resources from its authors under the link: <http://h2o-release.s3.amazonaws.com/h2o/master/1735/docs-website/Ruser/Rinstall.html>, however the basic option is to run the code below. Note that the users need the Java installed on the machine.
 
 ```{r}
 install.packages("h2o")
 ```
-
 
 # Initialization
 
@@ -34,11 +33,14 @@ library(OpenML)
 library(forester)
 library(h2o)
 library(tictoc)
+library(farff)
 ```
 
-# OpenML-CC18 preparations
+# Data preparations
 
 ## Getting the datasets
+
+### Binary classification
 
 Downloading whole OpenML-CC18 benchmark and saving it in the working directory.
 
@@ -58,6 +60,45 @@ for (task.id in task.ids) {
 }
 names(CC18) <- df_names
 saveRDS(CC18, file = "CC18.RData")
+```
+
+### Regression
+
+Loading widely used datasets from OpenML.
+
+```{r}
+wind              <- readARFF('regression_datasets/wind.arff') # Not regression task
+communities_crime <- readARFF('regression_datasets/phpeZQVCe.arff') # ViolentCrimesPerPop
+bank32nh          <- readARFF('regression_datasets/phpYYZ4Qc.arff') # Target: rej
+wine_quality      <- readARFF('regression_datasets/wine_quality.arff') # Target: quality
+Mercedes_Benz     <- readARFF('regression_datasets/dataset.arff') # Target: y (2nd col)
+Mercedes_Benz_y   <- Mercedes_Benz$y
+Mercedes_Benz     <- Mercedes_Benz[, -2]
+Mercedes_Benz$y   <- Mercedes_Benz_y # the last one
+kin8nm            <- readARFF('regression_datasets/dataset_2175_kin8nm.arff') # Target: y
+pol               <- readARFF('regression_datasets/dataset_2187_pol.arff') # Target: foo (really streched)
+planes2d          <- readARFF('regression_datasets/dataset_2201_2dplanes.arff') # Target: y
+elevators         <- readARFF('regression_datasets/dataset_2202_elevators.arff') # Target: Goal
+stock             <- readARFF('regression_datasets/dataset_2209_stock.arff') # Not regression task
+
+regression_bench <- list()
+
+regression_bench[[1]]  <- as.data.frame(wind)
+regression_bench[[2]]  <- as.data.frame(communities_crime)
+regression_bench[[3]]  <- as.data.frame(bank32nh)
+regression_bench[[4]]  <- as.data.frame(wine_quality)
+regression_bench[[5]]  <- as.data.frame(Mercedes_Benz)
+regression_bench[[6]]  <- as.data.frame(kin8nm)
+regression_bench[[7]]  <- as.data.frame(pol)
+regression_bench[[8]]  <- as.data.frame(planes2d)
+regression_bench[[9]]  <- as.data.frame(elevators)
+regression_bench[[10]] <- as.data.frame(stock)
+
+names(regression_bench) <- c('wind', 'us_crime', 'bank32nh', 'wine_quality', 
+                             'Mercedes_Benz_Greener_Manufacturing', 'kin8nm', 'pol', 
+                             '2dplanes', 'elevators', 'stock')
+
+regression_bench <- regression_bench[2:9]
 ```
 
 ## Data sets exploration
@@ -131,9 +172,17 @@ summary(exploration$nrows)
 exploration[c(1, 2, 3, 4, 5, 19, 25, 26), c(2, 4, 5)]
 ```
 
+## Exploration of the regression data sets
+
+```{r}
+datasets_exploration(regression_bench)
+```
+
 # Experiments on the forester package
 
-## Experiment function
+## Binary classification
+
+### Experiment function
 
 The experiment function conducts a model training for the forester package. It trains the `ranger`, `decision_tree`, `lightgbm`, and `catboost` models for every dataset provided to the function. The training is repeated `reps` (=3) times, and we have to provide a `split_seed` vector of length `reps` which sets random seed for the splitting method inside the forester. Every training consists of 10 Bayesian Optimisation iterations and 10 random search evaluations. This function measures the times needed for the training of every model, so we can provide that for the h2o AutoML. the function returns the id's of the split, all models metrics on every subset and best models metrics on every subset.
 
@@ -226,7 +275,7 @@ forester_experiment <- function(df_set, split_seed, bayes_iter = 10, random_eval
 }
 ```
 
-## Batch training
+### Batch training
 
 As training the models on the dataset is extremely time consuming (mainly because of MICE imputation and Bayesian Optimisation), we've decided to train the forester in batches, and saving the outcomes in the working directory.
 
@@ -250,6 +299,127 @@ outcomes4 <- forester_experiment(head(binary_CC18[25:26], 3), c(123, 2137, 21), 
 saveRDS(outcomes4, file = "trained_25_26_sets_3_reps_10b_10r.RData")
 ```
 
+## Regression
+
+### Experiment function
+
+```{r}
+forester_experiment <- function(df_set, split_seed, bayes_iter = 25, random_evals = 10, advanced_preprocessing = FALSE, reps = 5, engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost")) {
+  
+  best_models_train <- data.frame()
+  best_models_test  <- data.frame()
+  best_models_valid <- data.frame()
+  
+  all_models_train  <- list()
+  all_models_test   <- list()
+  all_models_valid  <- list()
+  
+  train_test_valid  <- list()
+  
+  list_names <- c()
+  
+  list_times  <- c()
+  names_times <- c()
+  
+  tic('\n General')
+  for (i in 1:length(df_set)) {
+    tic(paste0('\n Iteration: ', i, ' Dataset: ', names(df_set)[i]))
+    #list_times  <- c(list_times, Sys.time())
+    #names_times  <- c(names_times, paste0('\n Iteration: ', i, ' Dataset: ', names(df_set)[i]))
+    for (j in 1:reps) {
+      list_times  <- c(list_times, Sys.time())
+      names_times <- c(names_times, paste0('Training: ', names(df_set)[i], ' rep ', j))
+      cat(paste0('Training: ', names(df_set)[i], ' rep ', j, '\n'))
+      output <- train(data = df_set[[i]], 
+                      y = colnames(df_set[[i]])[length(df_set[[i]])],
+                      engine = engine,
+                      verbose = FALSE,
+                      train_test_split = c(0.6, 0.2, 0.2),
+                      split_seed = split_seed[j],
+                      bayes_iter = bayes_iter,
+                      random_evals = random_evals,
+                      advanced_preprocessing = advanced_preprocessing)
+      
+      top_score_train            <- output$score_train[1, ]
+      top_score_train$task_name  <- names(df_set)[i]
+      top_score_train$rep        <- j
+      
+      top_score_test             <- output$score_test[1, ]
+      top_score_test$task_name   <- names(df_set)[i]
+      top_score_test$rep         <- j
+      
+      top_score_valid            <- output$score_valid[1, ]
+      top_score_valid$task_name  <- names(df_set)[i]
+      top_score_valid$rep        <- j
+      
+      best_models_train <- rbind(best_models_train, top_score_train)
+      best_models_test  <- rbind(best_models_test, top_score_test)
+      best_models_valid <- rbind(best_models_valid, top_score_valid)
+      
+      list_names <- c(list_names, paste0(names(df_set)[i], '-rep-', j))
+      
+      all_models_train[[(i - 1) * reps + j]]  <- data.frame(output$score_train)
+      all_models_test[[(i - 1) * reps + j]]   <- data.frame(output$score_train)
+      all_models_valid[[(i - 1) * reps + j]]  <- data.frame(output$score_test)
+      
+      train_test_valid[[(i - 1) * reps + j]]  <- list(
+        train_inds = output$train_inds,
+        test_inds  = output$test_inds,
+        valid_inds = output$valid_inds
+      )
+
+    }
+    toc()
+  }
+  list_times  <- c(list_times, Sys.time())
+  names_times <- c(names_times, paste0('The end'))
+  
+  time_df <- data.frame(name = names_times, timestamp = list_times)
+  
+  print(list_names)
+  names(all_models_train)  <- list_names
+  names(all_models_test)   <- list_names
+  names(all_models_valid)  <- list_names
+  names(train_test_valid)  <- list_names
+  toc()
+  return(list(
+    best_models_train = best_models_train,
+    best_models_test  = best_models_test,
+    best_models_valid = best_models_valid,
+    all_models_train  = all_models_train,
+    all_models_test   = all_models_test,
+    all_models_valid  = all_models_valid,
+    train_test_valid  = train_test_valid,
+    time_df           = time_df
+  ))
+}
+```
+
+### Batch training
+
+```{r cache = TRUE, warning=FALSE}
+outcomes1 <- forester_experiment(regression_bench[2:3], c(123, 2137, 21), 10, 10, reps = 3, 
+                                 engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"))
+saveRDS(outcomes1, file = "trained_reg_2_3_sets_3_reps_10b_10r.RData")
+```
+
+```{r cache = TRUE, warning=FALSE}
+outcomes2 <- forester_experiment(regression_bench[5:6], c(123, 2137, 21), 10, 10, reps = 3, 
+                                 engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"))
+saveRDS(outcomes2, file = "trained_reg_5_6_sets_3_reps_10b_10r.RData")
+```
+
+```{r cache = TRUE, warning=FALSE}
+outcomes3 <- forester_experiment(regression_bench[7:8], c(123, 2137, 21), 10, 10, reps = 3, 
+                                 engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"))
+saveRDS(outcomes3, file = "trained_reg_7_8_sets_3_reps_10b_10r.RData")
+```
+
+```{r cache = TRUE, warning=FALSE}
+outcomes3 <- forester_experiment(regression_bench[7:8], c(123, 2137, 21), 10, 10, reps = 3, 
+                                 engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"))
+saveRDS(outcomes3, file = "trained_reg_7_8_sets_3_reps_10b_10r.RData")
+```
 
 # Experiments on the H2O package
 
@@ -283,9 +453,31 @@ model_performance_f1 <- function(tp, fp, tn, fn) {
 model_performance_accuracy <- function(tp, fp, tn, fn) {
   return((tp + tn) / (tp + fp + tn + fn))
 }
+
+model_performance_mse <- function(predicted, observed) {
+  mean((predicted - observed) ^ 2, na.rm = TRUE)
+}
+
+model_performance_rmse <- function(predicted, observed) {
+  sqrt(mean((predicted - observed) ^ 2, na.rm = TRUE))
+}
+
+model_performance_r2 <- function(predicted, observed) {
+  1 - model_performance_mse(predicted, observed) / model_performance_mse(mean(observed), observed)
+}
+
+model_performance_mad <- function(predicted, observed) {
+  median(abs(predicted - observed))
+}
+
+model_performance_mae <- function(predicted, observed) {
+  mean(abs(predicted - observed))
+}
 ```
 
 ## Experiment function
+
+### Binary classification
 
 The experiments on the h2o consisted of giving them the same, unprocessed data sets as for the forester, and training the h2o 3 times with basic parameters and the runtimes equal to the ones needed by the forester. As the outcomes we obtain the metrics for the best models from the h2o package.
 
@@ -364,7 +556,83 @@ h2o_experiment <- function(out_object, runtimes, dataset, reps, limit = 99999) {
 }
 ```
 
-# Outcomes
+### Regression
+
+```{r}
+h2o_experiment_reg <- function(out_object, runtimes, dataset, reps, limit = 99999) {
+  
+  localH2O = h2o.init()
+  
+  best_models_train <- data.frame()
+  best_models_test  <- data.frame()
+  best_models_valid <- data.frame()
+  
+  list_times  <- c()
+  names_times <- c()
+  
+  for (i in 1:min(length(out_object$train_test_valid), limit)) {
+    list_times  <- c(list_times, Sys.time())
+    names_times <- c(names_times, paste0('Training ', i, ' h2o.'))
+    j     <- ceiling(i / reps)
+    split <- list(
+      train = dataset[[j]][out_object$train_test_valid[[i]]$train_inds,],
+      test  = dataset[[j]][out_object$train_test_valid[[i]]$test_inds,],
+      valid = dataset[[j]][out_object$train_test_valid[[i]]$valid_inds,]
+    )
+    
+    train_H2O <- as.h2o(split$train)
+    test_H2O  <- as.h2o(split$test)
+    valid_H2O <- as.h2o(split$valid)
+    
+    y <- colnames(dataset[[j]])[ncol(dataset[[j]])]
+    x <- setdiff(names(train_H2O), y)
+    
+    aml <- h2o.automl(x = x, 
+                      y = y,
+                      training_frame = train_H2O,
+                      max_runtime_secs = runtimes[i])
+    
+    pred_train <- h2o.predict(aml, train_H2O)
+    pred_test  <- h2o.predict(aml, test_H2O)
+    pred_valid <- h2o.predict(aml, valid_H2O)
+    
+    eval <- function(pred, obs, dataset, i) {
+      observed    <- as.numeric(as.vector(obs[, length(obs)]))
+      predictions <- as.numeric(as.vector(pred))
+      task_name   <- dataset$best_models_train$task_name[i]
+      rep         <- dataset$best_models_train$rep[i]
+      
+      rmse        <- model_performance_rmse(predictions, observed)
+      mse         <- model_performance_mse(predictions, observed)
+      r2          <- model_performance_r2(predictions, observed)
+      mae         <- model_performance_mae(predictions, observed)
+      
+      df <- data.frame(task_name = task_name, rep = rep, rmse = rmse, mse = mse, r2 = r2, mae = mae)
+      return(df)
+    }
+
+    best_models_train <- rbind(best_models_train, eval(pred_train, train_H2O, out_object, i))
+    best_models_test  <- rbind(best_models_test, eval(pred_test, test_H2O, out_object, i))
+    best_models_valid <- rbind(best_models_valid, eval(pred_valid, valid_H2O, out_object, i))
+  }
+  
+  list_times  <- c(list_times, Sys.time())
+  names_times <- c(names_times, paste0('The end'))
+  
+  time_df <- data.frame(name = names_times, timestamp = list_times)
+  
+  return(list(
+    best_models_train = best_models_train,
+    best_models_test  = best_models_test,
+    best_models_valid = best_models_valid,
+    time_df           = time_df
+  ))
+}
+```
+
+## Outcomes
+
+### Binary classification
 
 ```{r}
 out1 <- readRDS("trained_1_3_sets_3_reps_10b_10r.RData")
@@ -407,8 +675,49 @@ saveRDS(h2o_exp4, file = "h2o_25_26_sets.RData")
 h2o_exp4
 ```
 
+### Regression
 
-# Visualization 
+```{r}
+out1 <- readRDS("trained_reg_2_3_sets_3_reps_10b_10r.RData")
+out2 <- readRDS("trained_reg_5_6_sets_3_reps_10b_10r.RData")
+out3 <- readRDS("trained_reg_7_8_sets_3_reps_10b_10r.RData")
+out4 <- readRDS("trained_reg_4_sets_3_reps_10b_10r.RData")
+
+out1$best_models_valid
+out2$best_models_valid
+out3$best_models_valid
+out4$best_models_valid
+```
+
+```{r cache = TRUE, warning=FALSE}
+runtimes <- -round(out1$time_df$timestamp[1:6] - out1$time_df$timestamp[2:7])
+h2o_exp1 <- h2o_experiment(out_object = out1, runtimes = runtimes, dataset = regression_bench[2:3], reps = 3, limit = 99999)
+saveRDS(h2o_exp1, file = "h2o_reg_2_3_sets.RData")
+h2o_exp1
+```
+
+```{r cache = TRUE, warning=FALSE}
+runtimes <- -round(out2$time_df$timestamp[1:6] - out2$time_df$timestamp[2:7])
+h2o_exp2 <- h2o_experiment(out_object = out2, runtimes = runtimes, dataset = regression_bench[5:6], reps = 3, limit = 99999)
+saveRDS(h2o_exp2, file = "h2o_reg_5_6_sets.RData")
+h2o_exp2
+```
+
+```{r cache = TRUE, warning=FALSE}
+runtimes <- -round(out3$time_df$timestamp[1:6] - out3$time_df$timestamp[2:7])
+h2o_exp3 <- h2o_experiment(out_object = out3, runtimes = runtimes, dataset = regression_bench[7:8], reps = 3, limit = 99999)
+saveRDS(h2o_exp3, file = "h2o_reg_7_8_sets.RData")
+h2o_exp3
+```
+
+```{r cache = TRUE, warning=FALSE}
+runtimes <- -round(out4$time_df$timestamp[1:3] - out4$time_df$timestamp[2:4])
+h2o_exp4 <- h2o_experiment(out_object = out4, runtimes = runtimes, dataset = regression_bench[c(4)], reps = 3, limit = 99999)
+saveRDS(h2o_exp4, file = "h2o_reg_4_sets.RData")
+h2o_exp4
+```
+
+# Visualization
 
 This code section is responsible for creating the visualizations presented in the paper.
 
@@ -418,6 +727,8 @@ library(dplyr)
 library(ggbeeswarm)
 library(stringr)
 ```
+
+## Binary Classification
 
 ```{r}
 forester_1_3   <- readRDS("trained_1_3_sets_3_reps_10b_10r.RData")
@@ -485,15 +796,17 @@ df$set <- factor(df$set, levels = c("test", "valid", "train"))
 df <- mutate(df, task_name_short = str_wrap(task_name, width = 8))
 
 ggplot(data = df, aes(x = set, y = accuracy, color = framework)) + 
-  geom_beeswarm(alpha = 0.9, size = 2) + 
+  geom_beeswarm(alpha = 1, size = 2) + 
   theme_minimal() + 
   labs(title = 'Performance comparison of forester and h2o',
+       subtitle = 'for the binary classification task',
        x = 'Dataset',
        y = 'Accuracy',
        color = "Framework",
        shape = "Set") +
   scale_color_manual(values = c("#afc968", "#74533d", "#2aa8b2")) +
   theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
         axis.title.x = element_text(colour = 'black', size = 12),
         axis.title.y = element_text(colour = 'black', size = 12),
         axis.text.y = element_text(colour = "black", size = 6),
@@ -508,6 +821,89 @@ ggplot(data = df, aes(x = set, y = accuracy, color = framework)) +
 
 ```
 
+## Regression
+
+```{r}
+forester_reg_2_3 <- readRDS("trained_reg_2_3_sets_3_reps_10b_10r.RData")
+forester_reg_4   <- readRDS("trained_reg_4_sets_3_reps_10b_10r.RData")
+forester_reg_5_6 <- readRDS("trained_reg_5_6_sets_3_reps_10b_10r.RData")
+forester_reg_7_8 <- readRDS("trained_reg_7_8_sets_3_reps_10b_10r.RData")
+
+h2o_reg_2_3      <- readRDS("h2o_reg_2_3_sets.RData")
+h2o_reg_4        <- readRDS("h2o_reg_4_sets.RData")
+h2o_reg_5_6      <- readRDS("h2o_reg_5_6_sets.RData")
+h2o_reg_7_8      <- readRDS("h2o_reg_7_8_sets.RData")
+
+```
+
+```{r}
+train_forester <- rbind(forester_reg_2_3$best_models_train, forester_reg_4$best_models_train, forester_reg_5_6$best_models_train, forester_reg_7_8$best_models_train)
+train_forester <- train_forester[, c(9, 10, 5, 6, 7, 8)]
+train_forester$framework <- rep('forester', 21)
+
+train_h2o <- rbind(h2o_reg_2_3$best_models_train, h2o_reg_4$best_models_train, h2o_reg_5_6$best_models_train, h2o_reg_7_8$best_models_train)
+train_h2o$framework <- rep('h2o', 21)
+train_performance <- rbind(train_forester, train_h2o)
+train_performance$framework <- factor(train_performance$framework, levels = c("forester", "h2o"))
+train_performance
+
+test_forester <- rbind(forester_reg_2_3$best_models_test, forester_reg_4$best_models_test, forester_reg_5_6$best_models_test, forester_reg_7_8$best_models_test)
+test_forester <- test_forester[, c(9, 10, 5, 6, 7, 8)]
+test_forester$framework <- rep('forester', 21)
+
+test_h2o <- rbind(h2o_reg_2_3$best_models_test, h2o_reg_4$best_models_test, h2o_reg_5_6$best_models_test, h2o_reg_7_8$best_models_test)
+test_h2o$framework <- rep('h2o', 21)
+test_performance <- rbind(test_forester, test_h2o)
+test_performance$framework <- factor(test_performance$framework, levels = c("forester", "h2o"))
+test_performance
+
+valid_forester <- rbind(forester_reg_2_3$best_models_valid, forester_reg_4$best_models_valid, forester_reg_5_6$best_models_valid, forester_reg_7_8$best_models_valid)
+valid_forester <- valid_forester[, c(9, 10, 5, 6, 7, 8)]
+valid_forester$framework <- rep('forester', 21)
+
+valid_h2o <- rbind(h2o_reg_2_3$best_models_valid, h2o_reg_4$best_models_valid, h2o_reg_5_6$best_models_valid, h2o_reg_7_8$best_models_valid)
+valid_h2o$framework <- rep('h2o', 21)
+valid_performance <- rbind(valid_forester, valid_h2o)
+valid_performance$framework <- factor(valid_performance$framework, levels = c("forester", "h2o"))
+valid_performance
+```
+
+```{r}
+train_performance$set <- "train"
+test_performance$set <- "test"
+valid_performance$set <- "valid"
+
+df <- rbind(test_performance, train_performance, valid_performance)
+df$set <- factor(df$set, levels = c("test", "valid", "train"))
+
+
+
+df <- mutate(df, task_name_short = str_wrap(task_name, width = 8))
+
+ggplot(data = df, aes(x = set, y = rmse, color = framework)) + 
+  geom_beeswarm(alpha = 1, size = 2) + 
+  theme_minimal() + 
+  labs(title = 'Performance comparison of forester and h2o',
+       subtitle = 'for the regression task',
+       x = 'Dataset',
+       y = 'RMSE',
+       color = "Framework",
+       shape = "Set") +
+  scale_color_manual(values = c("#afc968", "#74533d", "#2aa8b2")) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 6),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  coord_flip() + 
+  facet_grid(task_name_short~., scales = 'free', space = 'free') +
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))  
+```
+
 # Raw training results
 
 This code section is responsible for generating the data sets present in the raw_training_results and the tables present in the paper's Appendix.
@@ -517,16 +913,18 @@ library(xlsx)
 library(dplyr)
 ```
 
-```{r}
-forester_1_3   <- readRDS("C:/Users/Hubert/Documents/forester/trained_1_3_sets_3_reps_10b_10r.RData")
-forester_4_5   <- readRDS("C:/Users/Hubert/Documents/forester/trained_4_5_sets_3_reps_10b_10r.RData")
-forester_19    <- readRDS("C:/Users/Hubert/Documents/forester/trained_19_sets_3_reps_10b_10r.RData")
-forester_25_26 <- readRDS("C:/Users/Hubert/Documents/forester/trained_25_26_sets_3_reps_10b_10r.RData")
+## Binary classification
 
-h2o_1_3        <- readRDS("C:/Users/Hubert/Documents/forester/h2o_1_3_sets.RData")
-h2o_4_5        <- readRDS("C:/Users/Hubert/Documents/forester/h2o_4_5_sets.RData")
-h2o_19         <- readRDS("C:/Users/Hubert/Documents/forester/h2o_19_sets.RData")
-h2o_25_26      <- readRDS("C:/Users/Hubert/Documents/forester/h2o_25_26_sets.RData")
+```{r}
+forester_1_3   <- readRDS("trained_1_3_sets_3_reps_10b_10r.RData")
+forester_4_5   <- readRDS("trained_4_5_sets_3_reps_10b_10r.RData")
+forester_19    <- readRDS("trained_19_sets_3_reps_10b_10r.RData")
+forester_25_26 <- readRDS("trained_25_26_sets_3_reps_10b_10r.RData")
+
+h2o_1_3        <- readRDS("h2o_1_3_sets.RData")
+h2o_4_5        <- readRDS("h2o_4_5_sets.RData")
+h2o_19         <- readRDS("h2o_19_sets.RData")
+h2o_25_26      <- readRDS("h2o_25_26_sets.RData")
 ```
 
 ```{r}
@@ -591,21 +989,214 @@ valid_mean     <- aggregate_df(valid)
 ```
 
 ```{r}
-write.xlsx(train_mean, "C:/Users/Hubert/Documents/forester/train_mean.xlsx", row.names = FALSE)
-write.xlsx(test_mean, "C:/Users/Hubert/Documents/forester/test_mean.xlsx", row.names = FALSE)
-write.xlsx(valid_mean, "C:/Users/Hubert/Documents/forester/valid_mean.xlsx", row.names = FALSE)
+write.xlsx(train_mean, "train_mean.xlsx", row.names = FALSE)
+write.xlsx(test_mean, "test_mean.xlsx", row.names = FALSE)
+write.xlsx(valid_mean, "valid_mean.xlsx", row.names = FALSE)
 
-write.csv(train_mean, "C:/Users/Hubert/Documents/forester/train_mean.csv", row.names = FALSE)
-write.csv(test_mean, "C:/Users/Hubert/Documents/forester/test_mean.csv", row.names = FALSE)
-write.csv(valid_mean, "C:/Users/Hubert/Documents/forester/valid_mean.csv", row.names = FALSE)
+write.csv(train_mean, "train_mean.csv", row.names = FALSE)
+write.csv(test_mean, "test_mean.csv", row.names = FALSE)
+write.csv(valid_mean, "valid_mean.csv", row.names = FALSE)
 
-write.xlsx(train, "C:/Users/Hubert/Documents/forester/train.xlsx", row.names = FALSE)
-write.xlsx(test, "C:/Users/Hubert/Documents/forester/test.xlsx", row.names = FALSE)
-write.xlsx(valid, "C:/Users/Hubert/Documents/forester/valid.xlsx", row.names = FALSE)
+write.xlsx(train, "train.xlsx", row.names = FALSE)
+write.xlsx(test, "test.xlsx", row.names = FALSE)
+write.xlsx(valid, "valid.xlsx", row.names = FALSE)
 
-write.csv(train, "C:/Users/Hubert/Documents/forester/train.csv", row.names = FALSE)
-write.csv(test, "C:/Users/Hubert/Documents/forester/test.csv", row.names = FALSE)
-write.csv(valid, "C:/Users/Hubert/Documents/forester/valid.csv", row.names = FALSE)
+write.csv(train, "train.csv", row.names = FALSE)
+write.csv(test, "test.csv", row.names = FALSE)
+write.csv(valid, "valid.csv", row.names = FALSE)
 ```
 
+## Regression
 
+```{r}
+forester_reg_2_3 <- readRDS("trained_reg_2_3_sets_3_reps_10b_10r.RData")
+forester_reg_4   <- readRDS("trained_reg_4_sets_3_reps_10b_10r.RData")
+forester_reg_5_6 <- readRDS("trained_reg_5_6_sets_3_reps_10b_10r.RData")
+forester_reg_7_8 <- readRDS("trained_reg_7_8_sets_3_reps_10b_10r.RData")
+
+h2o_reg_2_3      <- readRDS("h2o_reg_2_3_sets.RData")
+h2o_reg_4        <- readRDS("h2o_reg_4_sets.RData")
+h2o_reg_5_6      <- readRDS("h2o_reg_5_6_sets.RData")
+h2o_reg_7_8      <- readRDS("h2o_reg_7_8_sets.RData")
+```
+
+```{r}
+rename_cols <- function(df) {
+  names(df$best_models_valid) <- c('task_name', 'rep', 'rmse', 'mse', 'r2', 'mae')
+  names(df$best_models_train) <- c('task_name', 'rep', 'rmse', 'mse', 'r2', 'mae')
+  names(df$best_models_test)  <- c('task_name', 'rep', 'rmse', 'mse', 'r2', 'mae')
+  return(df)
+}
+
+unify_and_merge <- function(a, b, c, d, type, col) {
+  a  <- a[[col]]
+  b  <- b[[col]]
+  c  <- c[[col]]
+  d  <- d[[col]]
+  df <- rbind(a, b, c, d)
+  
+  if (type == 'forester') {
+    df <- df[, c(9, 10, 5, 6, 7, 8)]
+  }
+  df$framework <- rep(type, 21)
+  
+  return(df)
+}
+
+aggregate_df <- function(df) {
+  df_mean <- df %>%
+    group_by(task_name, framework) %>%
+    summarise(mean_rmse = mean(rmse), mean_mse = mean(mse), mean_r2 = mean(r2), mean_mae = mean(mae))
+  
+  df_mean               <- data.frame(df_mean)
+  df_mean$mean_rmse     <- round(df_mean$mean_rmse, 3)
+  df_mean$mean_mse      <- round(df_mean$mean_mse , 3)
+  df_mean$mean_r2       <- round(df_mean$mean_r2, 3)
+  df_mean$mean_mae      <- round(df_mean$mean_mae, 3)
+  df <- df_mean
+  
+  return(df)
+}
+```
+
+```{r}
+h2o_reg_2_3     <- rename_cols(h2o_reg_2_3)
+h2o_reg_4        <- rename_cols(h2o_reg_4)
+h2o_reg_5_6      <- rename_cols(h2o_reg_5_6)
+h2o_reg_7_8      <- rename_cols(h2o_reg_7_8)
+
+forester_train <- unify_and_merge(forester_reg_2_3, forester_reg_4, forester_reg_5_6, forester_reg_7_8, 'forester', 1)
+forester_test  <- unify_and_merge(forester_reg_2_3, forester_reg_4, forester_reg_5_6, forester_reg_7_8, 'forester', 2)
+forester_valid <- unify_and_merge(forester_reg_2_3, forester_reg_4, forester_reg_5_6, forester_reg_7_8, 'forester', 3)
+
+h2o_train      <- unify_and_merge(h2o_reg_2_3, h2o_reg_4, h2o_reg_5_6, h2o_reg_7_8, 'h2o', 1)
+h2o_test       <- unify_and_merge(h2o_reg_2_3, h2o_reg_4, h2o_reg_5_6, h2o_reg_7_8, 'h2o', 2)
+h2o_valid      <- unify_and_merge(h2o_reg_2_3, h2o_reg_4, h2o_reg_5_6, h2o_reg_7_8, 'h2o', 3)
+
+train          <- rbind(forester_train, h2o_train)
+test           <- rbind(forester_test, h2o_test)
+valid          <- rbind(forester_valid, h2o_valid)
+
+train_mean     <- aggregate_df(train)
+test_mean      <- aggregate_df(test)
+valid_mean     <- aggregate_df(valid)
+```
+
+```{r}
+write.xlsx(train_mean, "train_mean_reg.xlsx", row.names = FALSE)
+write.xlsx(test_mean, "test_mean_reg.xlsx", row.names = FALSE)
+write.xlsx(valid_mean, "valid_mean_reg.xlsx", row.names = FALSE)
+
+write.csv(train_mean, "train_mean_reg.csv", row.names = FALSE)
+write.csv(test_mean, "test_mean_reg.csv", row.names = FALSE)
+write.csv(valid_mean, "valid_mean_reg.csv", row.names = FALSE)
+
+write.xlsx(train, "train_reg.xlsx", row.names = FALSE)
+write.xlsx(test, "test_reg.xlsx", row.names = FALSE)
+write.xlsx(valid, "valid_reg.xlsx", row.names = FALSE)
+
+write.csv(train, "train_reg.csv", row.names = FALSE)
+write.csv(test, "test_reg.csv", row.names = FALSE)
+write.csv(valid, "valid_reg.csv", row.names = FALSE)
+```
+
+# Calculation time analysis
+
+During the conduction of h2o experiments, it occurred to us, that although we've set the same amount of time for every single task for the h2o as the forester had, the h2o AutoML method lasted much longer than it should. To briefly explore this issue, we've decided to analyse the times needed for every experiment for both frameworks. The results show that despite setting exactly the same time for h2o to run for every experiment, this framework calculates this time in an unknown way, as our empirical results show that the h2o runs lasted two times longer than the forester on average.
+
+## Binary classification
+
+```{r}
+forester_1_3   <- readRDS("trained_1_3_sets_3_reps_10b_10r.RData")
+forester_4_5   <- readRDS("trained_4_5_sets_3_reps_10b_10r.RData")
+forester_19    <- readRDS("trained_19_sets_3_reps_10b_10r.RData")
+forester_25_26 <- readRDS("trained_25_26_sets_3_reps_10b_10r.RData")
+
+h2o_1_3   <- readRDS("h2o_1_3_sets.RData")
+h2o_4_5   <- readRDS("h2o_4_5_sets.RData")
+h2o_19    <- readRDS("h2o_19_sets.RData")
+h2o_25_26 <- readRDS("h2o_25_26_sets.RData")
+```
+
+```{r}
+create_time_df <- function(forester, h2o) {
+  time_df <- list()
+  task_name <- c()
+  for (i in 1:(length(forester$time_df$name) -1)) {
+    task_name <- c(task_name, strsplit(forester$time_df$name[1:(nrow(forester$time_df) - 1)][i], split = ' ')[[1]][2])
+  }
+  time_df$task_name      <- task_name
+  time_df$forester_time  <- round(forester$time_df$timestamp[2:(nrow(forester$time_df))] - 
+                                  forester$time_df$timestamp[1:(nrow(forester$time_df) - 1)])
+  time_df$h2o_time       <- round(h2o$time_df$timestamp[2:(nrow(h2o$time_df))] - h2o$time_df$timestamp[1:(nrow(h2o$time_df) - 1)])
+  time_df$difference     <- time_df$forester_time - time_df$h2o_time
+  time_df$relative_diff   <- time_df$forester_time/time_df$h2o_time
+  return(data.frame(time_df))
+}
+
+aggregate_times <- function(df) {
+  df_mean <- df %>%
+    group_by(task_name) %>%
+    summarise(mean_forester_time = mean(forester_time), mean_h2o_time = mean(h2o_time), 
+              mean_difference = mean(difference), mean_relative_diff = mean(relative_diff))
+  
+  df_mean               <- data.frame(df_mean)
+  df_mean$mean_forester_time     <- round(df_mean$mean_forester_time, 2)
+  df_mean$mean_h2o_time          <- round(df_mean$mean_h2o_time , 2)
+  df_mean$mean_difference        <- round(df_mean$mean_difference, 2)
+  df_mean$mean_relative_diff     <- round(df_mean$mean_relative_diff, 2)
+  df <- df_mean
+  
+  return(df)
+}
+```
+
+```{r}
+time_df_binary_clf <- rbind(create_time_df(forester_1_3, h2o_1_3), 
+                            create_time_df(forester_4_5, h2o_4_5),
+                            create_time_df(forester_19, h2o_19),
+                            create_time_df(forester_25_26, h2o_25_26))
+
+mean_time_df_binary_clf <- aggregate_times(time_df_binary_clf)
+mean_time_df_binary_clf
+
+```
+
+```{r}
+write.xlsx(time_df_binary_clf, "time_df_binary_clf.xlsx", row.names = FALSE)
+write.csv(time_df_binary_clf, "time_df_binary_clf.csv", row.names = FALSE)
+
+write.xlsx(mean_time_df_binary_clf, "mean_time_df_binary_clf.xlsx", row.names = FALSE)
+write.csv(mean_time_df_binary_clf, "mean_time_df_binary_clf.csv", row.names = FALSE)
+```
+
+## Regression
+
+```{r}
+forester_reg_2_3 <- readRDS("trained_reg_2_3_sets_3_reps_10b_10r.RData")
+forester_reg_4   <- readRDS("trained_reg_4_sets_3_reps_10b_10r.RData")
+forester_reg_5_6 <- readRDS("trained_reg_5_6_sets_3_reps_10b_10r.RData")
+forester_reg_7_8 <- readRDS("trained_reg_7_8_sets_3_reps_10b_10r.RData")
+
+h2o_reg_2_3      <- readRDS("h2o_reg_2_3_sets.RData")
+h2o_reg_4        <- readRDS("h2o_reg_4_sets.RData")
+h2o_reg_5_6      <- readRDS("h2o_reg_5_6_sets.RData")
+h2o_reg_7_8      <- readRDS("h2o_reg_7_8_sets.RData")
+```
+
+```{r}
+time_df_regression <- rbind(create_time_df(forester_reg_2_3, h2o_reg_2_3), 
+                            create_time_df(forester_reg_4, h2o_reg_4),
+                            create_time_df(forester_reg_5_6, h2o_reg_5_6),
+                            create_time_df(forester_reg_7_8, h2o_reg_7_8))
+mean_time_df_regression <- aggregate_times(time_df_regression)
+mean_time_df_regression
+```
+
+```{r}
+write.xlsx(time_df_regression, "time_df_regression.xlsx", row.names = FALSE)
+write.csv(time_df_regression, "time_df_regression.csv", row.names = FALSE)
+
+write.xlsx(mean_time_df_regression, "mean_time_df_regression.xlsx", row.names = FALSE)
+write.csv(mean_time_df_regression, "mean_time_df_regression.csv", row.names = FALSE)
+```
