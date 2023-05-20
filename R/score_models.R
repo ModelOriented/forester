@@ -4,17 +4,23 @@
 #' @param predictions A list of predictions of every engine from the test data.
 #' @param observed A vector of true values from the test data.
 #' @param type A string, determines if the future task is `binary_clf` or `regression`.
-#' @param metrics A vector of metrics names. By default param set for `auto`, most important metrics are returned.
-#' For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.
-#' @param sort_by String with name of metric to sort by.
-#' For `auto` models going to be sorted by `mse` for regression and `f1` for classification.
+#' @param metrics A vector of metrics names. By default param set for `auto`,
+#' most important metrics are returned. For `all` all metrics are returned.
+#' For `NULL` no metrics returned but still sorted by `sort_by`. The metrics
+#' available for the binary classification are: `auc`, `f1`, `recall`, `precision`,
+#' `accuracy`, `sensitivity`, `specificity`, `balanced_accuracy`, and for the
+#' regression: `mse`, `rmse`, `r2`, `mad`, and `mae`.
+#' @param sort_by String with name of metric to sort by. For `auto` models going
+#' to be sorted by `rmse` for regression and `accuracy` for classification.
 #' @param metric_function The self-created function.
 #' It should look like name(predictions, observed) and return the numeric value.
-#' In case of using `metrics` param with value other than `auto` or `all`, is needed to use value `metric_function`
-#' in order to see given metric in report. If `sort_by` is equal to `auto` models are sorted by `metric_function`.
-#' @param metric_function_name The name of the column with values of param `metric_function`.
-#' By default `metric_function_name` is `metric_function`.
-#' @param metric_function_decreasing A logical value indicating how metric_function should be sorted. `TRUE` by default.
+#' In case of using `metrics` param with value other than `auto` or `all`,
+#' is needed to use value `metric_function` in order to see given metric in report.
+#' If `sort_by` is equal to `auto` models are sorted by `metric_function`.
+#' @param metric_function_name The name of the column with values of param
+#' `metric_function`. By default `metric_function_name` is `metric_function`.
+#' @param metric_function_decreasing A logical value indicating how metric_function
+#' should be sorted. `TRUE` by default.
 #' @param engine A vector of strings containing information of engine in `models` list.
 #' @param tuning A vector of strings containing information of tuning method in `models` list.
 #'
@@ -73,10 +79,13 @@ score_models <- function(models,
                          engine = NULL,
                          tuning = NULL) {
   metrics_reggresion <- c('mse', 'rmse', 'r2', 'mad', 'mae')
-  metrics_binary_clf <- c('auc', 'f1', 'recall', 'precision', 'accuracy')
+  metrics_binary_clf <- c('accuracy', 'auc', 'f1', 'recall', 'precision',
+                          'sensitivity', 'specificity', 'balanced_accuracy')
   metrics_decreasing <- c('mse' = FALSE, 'rmse' = FALSE, 'r2' = TRUE,
                           'mad' = FALSE, 'mae' = FALSE, 'recall' = TRUE, 'precision' = TRUE,
-                          'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE, 'metric_function' = metric_function_decreasing)
+                          'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE, 'sensitivity' = TRUE,
+                          'specificity' = TRUE, 'balanced_accuracy' = TRUE,
+                          'metric_function' = metric_function_decreasing)
 
   metrics <- c(metrics)
   colnames_basic <- c('no.', 'name')
@@ -161,7 +170,7 @@ score_models <- function(models,
                                names(models)[i],
                                engine[i],
                                tuning[i],
-                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[1]], observed)}, # czemu tu było -1?
+                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed)}, # czemu tu było -1?
                                model_performance_mse(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_rmse(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_r2(unlist(predictions[[i]], use.names = FALSE), observed),
@@ -172,14 +181,14 @@ score_models <- function(models,
   } else if (type == 'binary_clf') {
       models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_binary_clf) + nr_add_col))
       colnames(models_frame) <- c(colnames_basic, metrics_binary_clf)
-
       set.seed(1)
       observed <- as.numeric(observed)
       for (i in 1:length(models)) {
-        tp = sum((observed == 2) * (as.numeric(unlist(predictions[[i]])) >= 0.5))
-        fp = sum((observed == 1) * (as.numeric(unlist(predictions[[i]])) >= 0.5))
-        tn = sum((observed == 1) * (as.numeric(unlist(predictions[[i]])) < 0.5))
-        fn = sum((observed == 2) * (as.numeric(unlist(predictions[[i]])) < 0.5))
+        tp <- sum((observed == 2) * (as.numeric(unlist(predictions[[i]])) >= 0.5))
+        fp <- sum((observed == 1) * (as.numeric(unlist(predictions[[i]])) >= 0.5))
+        tn <- sum((observed == 1) * (as.numeric(unlist(predictions[[i]])) < 0.5))
+        fn <- sum((observed == 2) * (as.numeric(unlist(predictions[[i]])) < 0.5))
+
         models_frame[i, ] <- c(i,
                                names(models[i]),
                                engine[i],
@@ -189,7 +198,10 @@ score_models <- function(models,
                                model_performance_auc(predictions[[i]], observed - 1),
                                model_performance_f1(tp, fp, tn, fn),
                                model_performance_recall(tp, fp, tn, fn),
-                               model_performance_precision(tp, fp, tn, fn)
+                               model_performance_precision(tp, fp, tn, fn),
+                               model_performance_sensitivity(tp, fp, tn, fn),
+                               model_performance_specificity(tp, fp, tn, fn),
+                               model_performance_balanced_accuracy(tp, fp, tn, fn)
                                )
     }
   }
@@ -236,30 +248,41 @@ model_performance_mae <- function(predicted, observed) {
 
 model_performance_auc <- function(predicted, observed) {
   tpr_tmp <- tapply(observed, predicted, sum)
-  TPR <- c(0, cumsum(rev(tpr_tmp))) / sum(observed)
+  TPR     <- c(0, cumsum(rev(tpr_tmp))) / sum(observed)
   fpr_tmp <- tapply(1 - observed, predicted, sum)
-  FPR <- c(0, cumsum(rev(fpr_tmp))) / sum(1 - observed)
-
-  auc <- sum(diff(FPR) * (TPR[-1] + TPR[-length(TPR)]) / 2)
-  auc
+  FPR     <- c(0, cumsum(rev(fpr_tmp))) / sum(1 - observed)
+  auc     <- sum(diff(FPR) * (TPR[-1] + TPR[-length(TPR)]) / 2)
+  return(auc)
 }
 
 model_performance_recall <- function(tp, fp, tn, fn) {
-  tp / (tp + fn)
+  return(tp / (tp + fn))
 }
 
 model_performance_precision <- function(tp, fp, tn, fn) {
-  tp / (tp + fp)
+  return(tp / (tp + fp))
 }
 
 model_performance_f1 <- function(tp, fp, tn, fn) {
-  recall = tp / (tp + fn)
-  precision = tp / (tp + fp)
-  2 * (precision * recall) / (precision + recall)
+  recall    <- tp / (tp + fn)
+  precision <- tp / (tp + fp)
+  return(2 * (precision * recall) / (precision + recall))
 }
 
 model_performance_accuracy <- function(tp, fp, tn, fn) {
-  (tp + tn) / (tp + fp + tn + fn)
+  return((tp + tn) / (tp + fp + tn + fn))
+}
+
+model_performance_sensitivity <- function(tp, fp, tn, fn) {
+  return((tp) / (tp + fn))
+}
+
+model_performance_specificity <- function(tp, fp, tn, fn) {
+  return((tn) / (fp + tn))
+}
+
+model_performance_balanced_accuracy <- function(tp, fp, tn, fn) {
+  (model_performance_sensitivity(tp, fp, tn, fn) + model_performance_specificity(tp, fp, tn, fn)) / 2
 }
 
 model_performance_macro_f1 <- function(predicted, observed) {

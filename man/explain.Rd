@@ -29,6 +29,8 @@ If possible it will use methods for tree-based models.
 \examples{
 data(lisbon)
 train_output   <- train(lisbon, 'Price', verbose = FALSE, random_evals = 2, bayes_iter = 1)
-best_explainer <- explain(train_output$best_models[[1]][1], train_output$valid_data, train_output$y)
-best_explainers <- explain(train_output$best_models[[1]], train_output$valid_data, train_output$y)
+best_explainer <- explain(train_output$best_models_on_valid[[1]][1],
+                          train_output$valid_data, train_output$y)
+best_explainers <- explain(train_output$best_models_on_valid[[1]],
+                           train_output$valid_data, train_output$y)
 }

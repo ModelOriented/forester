@@ -69,16 +69,18 @@ random_search <- function(train_data,
   }
 
   ranger_grid <- list(
-    num.trees     = list(50, 100, 200),
-    mtry          = list(NULL),
-    min.node.size = list(NULL, 2, 5),
-    max.depth     = list(NULL, 2, 5)
+    num.trees       = c(5, 100, 1000),
+    min.node.size   = c(1, 4, 10),
+    max.depth       = c(1, 10, 100),
+    sample.fraction = c(0.25, 0.5, 0.75)
   )
 
   xgboost_grid <- list(
-    booster   = list('gbtree', 'dart'),
-    eta       = list(0.1, 0.3, 0.5),
-    max_depth = list(2, 6, 20)
+    nrounds   = c(5, 20, 100),
+    eta       = c(0.01, 0.1, 5),
+    subsample = c(0.7, 0.9, 1),
+    gamma     = c(0, 1, 10),
+    max_depth = c(1, 3, 10)
   )
 
   tree_grid <- list(
@@ -90,16 +92,16 @@ random_search <- function(train_data,
   )
 
   lightgbm_grid <- list(
-    learning_rate  = c(0.05, 0.1, 0.2),
-    num_leaves     = c(7, 15, 31),
-    num_iterations = c(20, 100, 300)
+    learning_rate  = c(0.01, 0.1, 0.5),
+    num_leaves     = c(2, 25, 50),
+    num_iterations = c(5, 20, 100)
   )
 
   catboost_grid <- list(
-    iterations       = c(100, 100, 1000),
+    iterations       = c(5, 20, 100),
     border_count     = c(64, 256, 1024),
     depth            = c(2, 8, 16),
-    learning_rate    = c(0.01, 0.1, 0.9),
+    learning_rate    = c(0.01, 0.1, 0.5),
     min_data_in_leaf = c(1, 3, 10)
   )
 
@@ -125,7 +127,7 @@ random_search <- function(train_data,
             data = train_data$ranger_data,
             dependent.variable.name = y,
             num.trees = unlist(sample_ranger_grid[i, 'num.trees']),
-            mtry = unlist(sample_ranger_grid[i, 'try']),
+            sample.fraction = unlist(sample_ranger_grid[i, 'sample.fraction']),
             min.node.size = unlist(sample_ranger_grid[i, 'min.node.size']),
             max.depth = unlist(sample_ranger_grid[i, 'max.depth']),
             classification = classification,
@@ -162,9 +164,10 @@ random_search <- function(train_data,
             data = train_data$xgboost_data,
             label = label,
             objective = objective,
-            nrounds = 2,
             verbose = 0,
-            booster = unlist(sample_xgboost_grid[i, 'booster']),
+            nrounds = unlist(sample_xgboost_grid[i, 'nrounds']),
+            subsample = unlist(sample_xgboost_grid[i, 'subsample']),
+            gamma = unlist(sample_xgboost_grid[i, 'gamma']),
             eta = unlist(sample_xgboost_grid[i, 'eta']),
             max_depth = unlist(sample_xgboost_grid[i, 'max_depth'])
           )
@@ -186,7 +189,6 @@ random_search <- function(train_data,
         partykit::ctree_control(
           minsplit = unlist(sample_tree_grid[i, 'minsplit']),
           minprob = unlist(sample_tree_grid[i, 'minprob']),
-          maxsurrogate = unlist(sample_tree_grid[i, 'maxsurrogate']),
           maxdepth = unlist(sample_tree_grid[i, 'maxdepth']),
           nresample = unlist(sample_tree_grid[i, 'nresample'])
         )
@@ -195,8 +197,7 @@ random_search <- function(train_data,
         data = train_data$decision_tree_data
       ))
     }
-    names(tree_models) <-
-      paste('decision_tree_RS_', 1:max_tree_evals, sep = '')
+    names(tree_models) <- paste('decision_tree_RS_', 1:max_tree_evals, sep = '')
     search_models      <- c(search_models, tree_models)
     search_engine      <- c(search_engine, rep('decision_tree', max_tree_evals))
   }
@@ -236,8 +237,7 @@ random_search <- function(train_data,
         )
 
     }
-    names(lightgbm_models) <-
-      paste('lightgbm_RS_', 1:max_lightgbm_evals, sep = '')
+    names(lightgbm_models) <- paste('lightgbm_RS_', 1:max_lightgbm_evals, sep = '')
     search_models          <- c(search_models, lightgbm_models)
     search_engine          <- c(search_engine, rep('lightgbm', max_lightgbm_evals))
   }

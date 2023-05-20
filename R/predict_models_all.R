@@ -98,6 +98,7 @@ predict_models_all <- function(models, data, y, type) {
         )
       }
     }
+    names(predictions) <- names(models)
     return(predictions)
 
   } else if (type == 'binary_clf') {
@@ -129,6 +130,7 @@ predict_models_all <- function(models, data, y, type) {
         )
       }
     }
+    names(predictions) <- names(models)
     return(predictions)
   }
 }

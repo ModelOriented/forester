@@ -147,8 +147,9 @@ test_that('regresion scoring compas', {
                 sort_by = 'wrong')
   )
 
-  expect_true(all(dim(score_all) == c(5, 9)))
-  expect_true(all(colnames(score_all) == c('no.', 'name', 'engine', 'tuning', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
+  expect_true(all(dim(score_all) == c(5, 12)))
+  expect_true(all(colnames(score_all) == c('no.', 'name', 'engine', 'tuning', 'accuracy', 'auc', 'f1', 'recall', 'precision',
+                                           'sensitivity', 'specificity', 'balanced_accuracy')))
   expect_true(all(score_all$accuracy == score_all$accuracy[order(score_all$accuracy, decreasing = TRUE)]))
 
   expect_true(all(dim(score_auto) == c(5, 7)))
@@ -211,8 +212,9 @@ test_that('regresion scoring compas', {
                                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                                tuning = rep('test', 5))
 
-  expect_true(all(dim(score_good) == c(5, 10)))
-  expect_true(all(colnames(score_good) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
+  expect_true(all(dim(score_good) == c(5, 13)))
+  expect_true(all(colnames(score_good) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'accuracy', 'auc', 'f1', 'recall', 'precision',
+                                            'sensitivity', 'specificity', 'balanced_accuracy')))
   expect_true((all(is.numeric(score_good$metric_function))))
   expect_true(all(score_good$metric_function == score_good$metric_function[order(score_good$metric_function, decreasing = TRUE)]))
 
@@ -220,8 +222,9 @@ test_that('regresion scoring compas', {
   expect_true(all(colnames(score_warinig) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'accuracy', 'auc', 'f1')))
   expect_true((all(is.na(score_warinig$metric_function))))
 
-  expect_true(all(dim(score_error) == c(5, 10)))
-  expect_true(all(colnames(score_error) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'auc', 'f1', 'recall', 'precision', 'accuracy')))
+  expect_true(all(dim(score_error) == c(5, 13)))
+  expect_true(all(colnames(score_error) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'accuracy', 'auc', 'f1', 'recall', 'precision',
+                                             'sensitivity', 'specificity', 'balanced_accuracy')))
   expect_true((all(is.na(score_error$metric_function))))
 
   expect_true(all(dim(score_name) == c(5, 6)))
