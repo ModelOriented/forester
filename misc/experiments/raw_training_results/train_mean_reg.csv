@@ -1,0 +1,15 @@
+"task_name","framework","mean_rmse","mean_mse","mean_r2","mean_mae"
+"2dplanes","forester",0.697,0.5,0.974,0.423
+"2dplanes","h2o",0.984,0.969,0.95,0.785
+"bank32nh","forester",0.001,0,1,0.001
+"bank32nh","h2o",0.054,0.003,0.806,0.037
+"elevators","forester",0.001,0,0.978,0.001
+"elevators","h2o",0.002,0,0.942,0.001
+"kin8nm","forester",0.012,0,0.997,0.009
+"kin8nm","h2o",0.066,0.004,0.937,0.051
+"Mercedes_Benz_Greener_Manufacturing","forester",2.456,6.13,0.963,0.775
+"Mercedes_Benz_Greener_Manufacturing","h2o",7.806,61.115,0.625,4.935
+"pol","forester",1.139,1.483,0.999,0.699
+"pol","h2o",1.803,3.251,0.998,0.829
+"wine_quality","forester",0.071,0.005,0.993,0.031
+"wine_quality","h2o",0.161,0.027,0.965,0.124

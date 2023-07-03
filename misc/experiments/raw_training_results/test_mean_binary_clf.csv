@@ -1,0 +1,17 @@
+task_name;framework;mean_accuracy;mean_auc;mean_f1
+banknote-authentication;forester;0,995;0,995;1
+banknote-authentication;h2o;0,933;0,927;0,915
+blood-transfusion-service-center;forester;0,796;0,772;0,976
+blood-transfusion-service-center;h2o;0,713;0,707;0,54
+breast-w;forester;0,976;0,984;0,986
+breast-w;h2o;0,971;0,97;0,959
+credit-approval;forester;0,885;0,931;0,942
+credit-approval;h2o;0,882;0,882;0,87
+credit-g;forester;0,733;0,79;0,865
+credit-g;h2o;0,743;0,64;0,829
+diabetes;forester;0,768;0,823;0,799
+diabetes;h2o;0,753;0,727;0,643
+kr-vs-kp;forester;0,994;0,999;0,991
+kr-vs-kp;h2o;0,991;0,991;0,991
+phoneme;forester;0,909;0,96;0,867
+phoneme;h2o;0,904;0,895;0,842
