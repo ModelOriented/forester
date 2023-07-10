@@ -9,7 +9,7 @@ test_that('test-train_test_balance', {
       fractions = c(0.6, 0.2, 0.2)
     )
 
-  expect_true(length(b_lisbon) == 3)
+  expect_true(length(b_lisbon) == 6)
   expect_true(nrow(b_lisbon$train) == 146)
   expect_true(nrow(b_lisbon$test) == 50)
   expect_true(nrow(b_lisbon$valid) == 50)
@@ -38,7 +38,7 @@ test_that('test-train_test_balance', {
       fractions = c(0.6, 0.2, 0.2)
     )
 
-  expect_true(length(b_compas) == 3)
+  expect_true(length(b_compas) == 6)
   expect_true(nrow(b_compas$train) == 3702)
   expect_true(nrow(b_compas$test) == 1235)
   expect_true(nrow(b_compas$valid) == 1235)
@@ -68,7 +68,7 @@ test_that('test-train_test_balance', {
       fractions = c(0.6, 0.2, 0.2)
     )
 
-  expect_true(length(b_lymph) == 3)
+  expect_true(length(b_lymph) == 6)
   expect_true(nrow(b_lymph$train) == 88)
   expect_true(nrow(b_lymph$test) == 30)
   expect_true(nrow(b_lymph$valid) == 30)
@@ -98,7 +98,7 @@ test_that('test-train_test_balance', {
       fractions = c(0.6, 0.2, 0.2)
     )
 
-  expect_true(length(b_test) == 3)
+  expect_true(length(b_test) == 6)
   expect_true(nrow(b_test$train) == 600)
   expect_true(nrow(b_test$test) == 200)
   expect_true(nrow(b_test$valid) == 200)
@@ -131,8 +131,8 @@ test_that('test-train_test_balance', {
     )
 
   expect_true(round(mean(b_lisbon$train$Price), 1) == 551418.9)
-  expect_true(round(mean(b_lisbon$test$Price), 1)  == 567551)
-  expect_true(round(mean(b_lisbon$valid$Price), 1) == 537076.5)
+  expect_true(round(mean(b_lisbon$valid$Price), 1)  == 567551)
+  expect_true(round(mean(b_lisbon$test$Price), 1) == 537076.5)
 
   set.seed(123)
   b_lisbon <-
@@ -144,8 +144,8 @@ test_that('test-train_test_balance', {
     )
 
   expect_true(round(mean(b_lisbon$train$Price), 1) == 607065.6)
-  expect_true(round(mean(b_lisbon$test$Price), 1)  == 455758)
-  expect_true(round(mean(b_lisbon$valid$Price), 1) == 485771.6)
+  expect_true(round(mean(b_lisbon$valid$Price), 1)  == 455758)
+  expect_true(round(mean(b_lisbon$test$Price), 1) == 485771.6)
 
   set.seed(123)
   b_compas <-
@@ -158,9 +158,9 @@ test_that('test-train_test_balance', {
   expect_true(sum(as.integer(b_compas$train$Two_yr_Recidivism == 1)) == 1685)
   expect_true(sum(as.integer(b_compas$train$Two_yr_Recidivism == 0))  == 2018)
   expect_true(sum(as.integer(b_compas$test$Two_yr_Recidivism == 1)) == 562)
-  expect_true(sum(as.integer(b_compas$test$Two_yr_Recidivism == 0)) == 672)
+  expect_true(sum(as.integer(b_compas$test$Two_yr_Recidivism == 0)) == 673)
   expect_true(sum(as.integer(b_compas$valid$Two_yr_Recidivism == 1)) == 562)
-  expect_true(sum(as.integer(b_compas$valid$Two_yr_Recidivism == 0)) == 673)
+  expect_true(sum(as.integer(b_compas$valid$Two_yr_Recidivism == 0)) == 672)
 
 
   set.seed(123)
@@ -174,10 +174,10 @@ test_that('test-train_test_balance', {
 
   expect_true(sum(as.integer(b_compas$train$Two_yr_Recidivism == 1)) == 1650)
   expect_true(sum(as.integer(b_compas$train$Two_yr_Recidivism == 0))  == 2052)
-  expect_true(sum(as.integer(b_compas$test$Two_yr_Recidivism == 1)) == 596)
-  expect_true(sum(as.integer(b_compas$test$Two_yr_Recidivism == 0)) == 639)
-  expect_true(sum(as.integer(b_compas$valid$Two_yr_Recidivism == 1)) == 563)
-  expect_true(sum(as.integer(b_compas$valid$Two_yr_Recidivism == 0)) == 672)
+  expect_true(sum(as.integer(b_compas$test$Two_yr_Recidivism == 1)) == 563)
+  expect_true(sum(as.integer(b_compas$test$Two_yr_Recidivism == 0)) == 672)
+  expect_true(sum(as.integer(b_compas$valid$Two_yr_Recidivism == 1)) == 596)
+  expect_true(sum(as.integer(b_compas$valid$Two_yr_Recidivism == 0)) == 639)
 
   set.seed(123)
   b_lymph <-
@@ -194,12 +194,12 @@ test_that('test-train_test_balance', {
 
   expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 1)) == 1)
   expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 2)) == 17)
-  expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 3)) == 13)
+  expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 3)) == 12)
   expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 4)) == 1)
 
   expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 1)) == 1)
   expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 2)) == 17)
-  expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 3)) == 12)
+  expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 3)) == 13)
   expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 4)) == 1)
 
 
@@ -218,13 +218,13 @@ test_that('test-train_test_balance', {
   expect_true(sum(as.integer(as.integer(b_lymph$train$class) == 4)) == 0)
 
   expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 1)) == 0)
-  expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 2)) == 19)
-  expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 3)) == 9)
+  expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 2)) == 16)
+  expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 3)) == 12)
   expect_true(sum(as.integer(as.integer(b_lymph$test$class) == 4)) == 2)
 
   expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 1)) == 0)
-  expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 2)) == 16)
-  expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 3)) == 12)
+  expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 2)) == 19)
+  expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 3)) == 9)
   expect_true(sum(as.integer(as.integer(b_lymph$valid$class) == 4)) == 2)
 
   set.seed(123)
@@ -250,6 +250,6 @@ test_that('test-train_test_balance', {
     )
 
   expect_true(round(mean(b_test$train$y), 1) == 14.6)
-  expect_true(round(mean(b_test$test$y), 1)  == 14.5)
-  expect_true(round(mean(b_test$valid$y), 1) == 14.1)
+  expect_true(round(mean(b_test$test$y), 1)  == 14.1)
+  expect_true(round(mean(b_test$valid$y), 1) == 14.5)
 })

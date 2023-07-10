@@ -38,7 +38,8 @@ Imports:
     pROC,
     stats,
     tibble,
-    crayon
+    crayon,
+    VIM
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
@@ -50,7 +51,11 @@ Suggests:
     DALEX,
     ggradar,
     tinytex,
-    knitr
+    knitr,
+    sivs,
+    parallel,
+    rmcfs,
+    varrank
 Config/testthat/edition: 3
 VignetteBuilder:
     knitr

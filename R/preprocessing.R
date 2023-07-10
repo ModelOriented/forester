@@ -12,12 +12,7 @@
 #'
 #' @return A preprocessed dataset.
 #' @export
-#'
-#' @examples
-#' data(compas)
-#' prep_data <- preprocessing(compas,'Two_yr_Recidivism', 'binary_clf')
 preprocessing <- function(data, y, type, advanced = FALSE, verbose = FALSE) {
-  # cat(' -------------------- PREPROCESSING REPORT --------------------- \n \n')
   pre_data   <- pre_rm_static_cols(data, y)
   binary     <- binarize_target(pre_data, y)
   pre_data   <- binary$bin_data
@@ -35,7 +30,6 @@ preprocessing <- function(data, y, type, advanced = FALSE, verbose = FALSE) {
     pre_data[, y] <- as.factor(pre_data[, y])
   }
 
-  # cat(' ------------------ PREPROCESSING REPORT END ------------------- \n \n')
   return(
     list(
       data       = pre_data,
@@ -44,7 +38,6 @@ preprocessing <- function(data, y, type, advanced = FALSE, verbose = FALSE) {
     )
   )
 }
-
 
 #' Remove columns with one value for all rows
 #'
@@ -73,7 +66,6 @@ pre_rm_static_cols <- function(data, y) {
   }
   return(data)
 }
-
 
 #' Binarize the target column
 #'
@@ -318,7 +310,6 @@ delete_id_columns <- function(data) {
 
   return(data)
 }
-
 
 #' Perform Boruta algorithm for selecting most important features
 #'

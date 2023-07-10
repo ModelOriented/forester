@@ -59,7 +59,7 @@ prepare_data <- function(data,
       if ('factor' %in% class(data[, i]) && names(data[i]) != y) {
         levels(data[, i]) <- c(levels(data[, i]), 'other')
         data[1, i] <- 'other'
-        data[, i] <- droplevels(data[, i])
+        data[, i]  <- droplevels(data[, i])
       }
     }
 
@@ -70,7 +70,7 @@ prepare_data <- function(data,
       if ('factor' %in% class(train[, i]) && names(train[i]) != y) {
         levels(train[, i]) <- c(levels(train[, i]), 'other')
         train[1, i] <- 'other'
-        train[, i] <- droplevels(train[, i])
+        train[, i]  <- droplevels(train[, i])
       }
     }
     # Then we change all factors unseen in the train to category other.

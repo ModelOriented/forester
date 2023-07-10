@@ -27,7 +27,3 @@ A preprocessed dataset.
 \description{
 Conduct preprocessing processes
 }
-\examples{
-data(compas)
-prep_data <- preprocessing(compas,'Two_yr_Recidivism', 'binary_clf')
-}

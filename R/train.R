@@ -188,6 +188,12 @@ train <- function(data,
     verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
   }
 
+  # Move target to be the last feature, for easier integrity.
+  #X       <- data[names(data) != y]
+  #Y       <- data[y]
+  #data    <- X
+  #data[y] <- Y
+
   check_report <- check_data(data, y, verbose)
 
   preprocessed_data <- preprocessing(data, y, type, advanced = advanced_preprocessing)

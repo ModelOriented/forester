@@ -103,7 +103,8 @@ predict_models_all <- function(models, data, y, type) {
 
   } else if (type == 'binary_clf') {
     for (i in 1:length(models)) {
-      if (engine[i] == 'ranger') { # There was issue of 1 column entry from the prediction made beforehand in train pipeline.
+      # There was issue of 1 column entry from the prediction made beforehand in train pipeline.
+      if (engine[i] == 'ranger') {
         preds <- ranger::predictions(predict(models[[i]], data$ranger_data))
         if (is.null(ncol(preds))) {
           predictions[i] <- list(preds - 1)

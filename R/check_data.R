@@ -566,7 +566,7 @@ check_y_balance <- function(df, y, verbose = TRUE) {
 #' @export
 detect_id_columns <- function(data, verbose = TRUE) {
   names     <- colnames(data)
-  id_names  <- c('id', 'no', 'nr', 'number', 'idx', 'identification')
+  id_names  <- c('id', 'nr', 'number', 'idx', 'identification', 'index')
   sus_names <- c()
   sus_data  <- c()
   for (i in 1:ncol(data)) {

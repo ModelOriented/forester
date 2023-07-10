@@ -55,7 +55,7 @@ train_models <- function(data, y, engine, type) {
     } else if (engine[i] == 'xgboost') {
       if (type == 'binary_clf') {
         if (any(data$ranger_data[[y]] == 2)) {
-          data$ranger_data[[y]] = as.numeric(data$ranger_data[[y]]) - 1
+          data$ranger_data[[y]] <- as.numeric(data$ranger_data[[y]]) - 1
         }
       xgboost_model <-
         xgboost::xgboost(data$xgboost_data,
@@ -73,20 +73,20 @@ train_models <- function(data, y, engine, type) {
       }
 
     } else if (engine[i] == 'decision_tree') {
-      form = as.formula(paste0(y, ' ~.'))
+      form                <- as.formula(paste0(y, ' ~.'))
       decision_tree_model <- partykit::ctree(form, data = data$decision_tree_data)
 
     } else if (engine[i] == 'lightgbm') {
       # For each objective type, we need another set of params
       # setting up the parameters.
       if (type == 'binary_clf') {
-        obj = 'binary'
+        obj    <- 'binary'
         params <- list(objective = obj)
       } else if (type == 'multi_clf') {
-        obj = 'multiclass'
+        obj    <- 'multiclass'
         params <- list(objective = obj)
       } else if (type == 'regression') {
-        obj = 'regression'
+        obj    <- 'regression'
         params <- list(objective = obj)
       }
 
@@ -96,13 +96,13 @@ train_models <- function(data, y, engine, type) {
 
     } else if (engine[i] == 'catboost') {
       if (type == 'binary_clf') {
-        obj = 'Logloss'
+        obj    <- 'Logloss'
         params <- list(loss_function = obj, logging_level = 'Silent')
       } else if (type == 'multi_clf') {
-        obj = 'MultiClass'
+        obj    <- 'MultiClass'
         params <- list(loss_function = obj, logging_level = 'Silent')
       } else if (type == 'regression') {
-        obj = 'MAE'
+        obj    <- 'MAE'
         params <- list(loss_function = obj, logging_level = 'Silent')
       }
       capture.output(catboost_model <- catboost::catboost.train(data$catboost_data, params = params))
