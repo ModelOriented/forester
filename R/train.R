@@ -30,8 +30,6 @@
 #' used by the Bayesian optimization.
 #' @param random_evals An integer value describing number of trained models
 #' with different parameters by random search.
-#' @param advanced_preprocessing A logical value describing, whether the user wants to use
-#' advanced preprocessing methods (ex. deleting correlated values).
 #' @param metrics A vector of metrics names. By default param set for `auto`, most important metrics are returned.
 #' For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.
 #' @param sort_by A string with a name of metric to sort by.
@@ -42,9 +40,14 @@
 #' in order to see given metric in report. If `sort_by` is equal to `auto` models are sorted by `metric_function`.
 #' @param metric_function_name The name of the column with values of `metric_function` parameter.
 #' By default `metric_function_name` is `metric_function`.
-#' @param metric_function_decreasing A logical value indicating how metric_function should be sorted. `TRUE` by default.
+#' @param metric_function_decreasing A logical value indicating how metric_function
+#' should be sorted. `TRUE` by default.
 #' @param best_model_number Number best models to be chosen as element of the return.
 #' All trained models will be returned as different element of the return.
+#' @param custom_preprocessing An object returned by the `custom_preprocessing()`
+#' function. By default it is set to NULL, which indicates that basic preprocessing
+#' inside the train will be executed. This process however only makes the necessary actions
+#' for the `train()` to work properly.
 #'
 #' @return A list of all necessary objects for other functions. It contains:
 #' \itemize{
@@ -64,14 +67,15 @@
 #' Boruta algorithm for selecting most important features.
 #' \item \code{`bin_labels`} Labels of binarized target value - {1, 2} values for binary
 #' classification and NULL for regression.
-#'
+#' \item \code{`deleted_rows`} The indexes of rows deleted during the preprocessing,
+#' if none were removed the value is NULL.
 #' \item \code{`models_list`} The list of all trained models.
 #' \item \code{`check_report`} Data check report held as a list of strings. It is used
 #' by the `report()` function.
 #' \item \code{`outliers`} The vector of possible outliers detected by the `check_data()`.
 #'
 #' \item \code{`best_models_on_valid`} The object containing the best performing models
-#' on the valdiation dataset.
+#' on the validation dataset.
 #' #' \item \code{`engine`} The list of names of all types of trained models. Possible
 #' values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
 #' \item \code{`raw_train`} The another form of the training dataset (useful for creating
@@ -140,10 +144,12 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(forester)
 #' data('lisbon')
 #' train_output <- train(lisbon, 'Price')
 #' train_output$score_valid
+#' }
 train <- function(data,
                   y,
                   type = 'auto',
@@ -153,13 +159,13 @@ train <- function(data,
                   split_seed = NULL,
                   bayes_iter = 10,
                   random_evals = 10,
-                  advanced_preprocessing = FALSE,
                   metrics = 'auto',
                   sort_by = 'auto',
                   metric_function = NULL,
                   metric_function_name = NULL,
                   metric_function_decreasing = TRUE,
-                  best_model_number = 5) {
+                  best_model_number = 5,
+                  custom_preprocessing = NULL) {
   tryCatch({
     if ('catboost' %in% engine) {
       find.package('catboost')
@@ -188,22 +194,18 @@ train <- function(data,
     verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
   }
 
-  # Move target to be the last feature, for easier integrity.
-  #X       <- data[names(data) != y]
-  #Y       <- data[y]
-  #data    <- X
-  #data[y] <- Y
 
-  check_report <- check_data(data, y, verbose)
 
-  preprocessed_data <- preprocessing(data, y, type, advanced = advanced_preprocessing)
-
-  if (advanced_preprocessing) {
-    verbose_cat(crayon::red('\u2716'), 'Columns deleted during the advanced preprocessing: \n',
-                preprocessed_data$colnames, '\n\n', verbose = verbose)
+  if (is.null(custom_preprocessing)) {
+    check_report              <- check_data(data, y, verbose)
+    preprocessed_data         <- preprocessing(data, y, type)
+    preprocessed_data$rm_rows <- NULL
+    verbose_cat(crayon::green('\u2714'), 'Data preprocessed with basic preprocessing. \n', verbose = verbose)
+  } else {
+    check_report      <- check_data(custom_preprocessing$data, y, verbose)
+    preprocessed_data <- custom_preprocessing
+    verbose_cat(crayon::green('\u2714'), 'Imported preprocessed data from custom_preprocessing(). \n', verbose = verbose)
   }
-
-  verbose_cat(crayon::green('\u2714'), 'Data preprocessed. \n', verbose = verbose)
 
   # Data splitting and recording observed variables in each dataset.
   split_data <- train_test_balance(preprocessed_data$data, y, balance = TRUE,
@@ -396,7 +398,6 @@ train <- function(data,
         }
       }
     }
-
     # For the best models predictions.
     for (j in 1:length(predictions_best_train)){
       for (i in 1:length(predictions_best_train[[j]])) {
@@ -432,9 +433,10 @@ train <- function(data,
         y                       = y,
         type                    = type,
 
-        deleted_columns         = preprocessed_data$colnames,
+        deleted_columns         = preprocessed_data$rm_colnames,
         preprocessed_data       = preprocessed_data$data,
         bin_labels              = preprocessed_data$bin_labels,
+        deleted_rows            = preprocessed_data$rm_rows,
 
         models_list             = models_all,
         check_report            = check_report$str,
@@ -485,9 +487,10 @@ train <- function(data,
     return(
       list(
         type                    = type,
-        deleted_columns         = preprocessed_data$colnames,
+        deleted_columns         = preprocessed_data$rm_colnames,
         preprocessed_data       = preprocessed_data$data,
         bin_labels              = preprocessed_data$bin_labels,
+        deleted_rows            = preprocessed_data$rm_rows,
 
         models_list             = models_all,
         data                    = data,

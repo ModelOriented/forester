@@ -5,25 +5,29 @@
 #' @param y A string that indicates a target column name.
 #' @param type A string that determines if Machine Learning task is the
 #' `binary_clf` or `regression`.
-#' @param advanced  A logical value describing, whether the user wants to use
-#' advanced preprocessing methods (deleting correlated values).
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
-#' @return A preprocessed dataset.
+#' @return A list containing three objects:
+#' \itemize{
+#' \item \code{`data`} A preprocessed dataset,
+#' \item \code{`rm_colnames`} The names of removed columns,
+#' \item \code{`bin_labels`} The text labels before target binarization.
+#' }
 #' @export
-preprocessing <- function(data, y, type, advanced = FALSE, verbose = FALSE) {
+preprocessing <- function(data, y, type, verbose = FALSE) {
   pre_data   <- pre_rm_static_cols(data, y)
   binary     <- binarize_target(pre_data, y)
   pre_data   <- binary$bin_data
   bin_labels <- binary$labels
   pre_data   <- manage_missing(pre_data, y)
-  if (advanced) {
-    del_cor  <- delete_correlated_values(pre_data, y, verbose = verbose)
-    pre_data <- del_cor$data
-    pre_data <- delete_id_columns(pre_data)
-    pre_data <- boruta_selection(pre_data, y)
-  }
+  # Legacy version of advanced preprocessing
+  # if (advanced) {
+  #   del_cor  <- delete_correlated_values(pre_data, y, verbose = verbose)
+  #   pre_data <- del_cor$data
+  #   pre_data <- delete_id_columns(pre_data)
+  #   pre_data <- boruta_selection(pre_data, y)
+  # }
   del_cols   <- save_deleted_columns(data, pre_data)
 
   if (type == 'binary_clf') {
@@ -32,9 +36,9 @@ preprocessing <- function(data, y, type, advanced = FALSE, verbose = FALSE) {
 
   return(
     list(
-      data       = pre_data,
-      colnames   = del_cols,
-      bin_labels = bin_labels
+      data        = pre_data,
+      rm_colnames = del_cols,
+      bin_labels  = bin_labels
     )
   )
 }
@@ -80,7 +84,6 @@ pre_rm_static_cols <- function(data, y) {
 #' binarize_target(iris[1:100, ], 'Species')
 binarize_target <- function(data, y) {
   if (guess_type(data, y) == 'binary_clf') {
-    #cat('Binarizing the target column. \n \n')
     bin_data      <- data
     data[[y]]     <- as.factor(data[[y]])
     bin_data[[y]] <- as.integer(data[[y]])
@@ -97,7 +100,6 @@ binarize_target <- function(data, y) {
   } else {
     bin_data <- data
     labels   <- NULL
-    #cat('No need for target binarization. \n \n')
   }
 
   return(

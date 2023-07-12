@@ -1,12 +1,12 @@
 #' Helper function for the custom preprocessing removing columns and rows.
 #'
-# This function includes 6 modules for the removal of unwanted features / observations.
-# We can remove duplicate columns, the ID-like columns, static columns
-# (with specified staticity threshold), sparse columns (with specified sparsity threshold),
-# and highly correlated ones (with specified high correlation threshold).
-# Additionally we can remove the observations that are too sparse (sparsity threshold),
-# and have missing target value. One can turn on and off each module by setting
-# proper `active_modules` logical values.
+#' This function includes 6 modules for the removal of unwanted features / observations.
+#' We can remove duplicate columns, the ID-like columns, static columns
+#' (with specified staticity threshold), sparse columns (with specified sparsity threshold),
+#' and highly correlated ones (with specified high correlation threshold).
+#' Additionally we can remove the observations that are too sparse (sparsity threshold),
+#' and have missing target value. One can turn on and off each module by setting
+#' proper `active_modules` logical values.
 #'
 #' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix, and so on.

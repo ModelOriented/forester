@@ -15,12 +15,12 @@ test_that('test-train', {
   metric_fun <- function(predictions, observed) {
     return (predictions - observed) / length(predictions)
   }
-  suppressWarnings(output_iris    <- train(df_iris, y_iris, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_lisbon  <- train(df_lisbon, y_lisbon, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_compas  <- train(df_compas, y_compas, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_adult   <- train(df_adult, y_adult, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_test    <- train(df_test, y_test, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE))
-  suppressWarnings(output_metrics <- train(df_iris, y_iris, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1, advanced_preprocessing = FALSE,
+  suppressWarnings(output_iris    <- train(df_iris, y_iris, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1))
+  suppressWarnings(output_lisbon  <- train(df_lisbon, y_lisbon, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1))
+  suppressWarnings(output_compas  <- train(df_compas, y_compas, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1))
+  suppressWarnings(output_adult   <- train(df_adult, y_adult, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1))
+  suppressWarnings(output_test    <- train(df_test, y_test, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1))
+  suppressWarnings(output_metrics <- train(df_iris, y_iris, engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 2, bayes_iter = 1,
                                           metrics = 'all', metric_function = metric_fun, metric_function_name = 'custom', metric_function_decreasing = FALSE))
   bin <- 'binary_clf'
   reg <- 'regression'

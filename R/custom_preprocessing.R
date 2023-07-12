@@ -1,6 +1,12 @@
 #' Tailored custom preprocessing function which removes unnecessary data,
 #' imputes the missing fields and selects most important features.
 #'
+#' The custom preprocessing function can be used as a more advanced option for
+#' the preprocessing step. It should be executed before the usage of `train()`,
+#' and its results have to be provided to the input of this function as a separate
+#' parameter. The outcomes from the `custom_preprocessing()` are not obligatory for
+#' `train()` to work, but are highly recommended.
+#'
 #' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix and so on.
 #' @param y A string that indicates a target column name.
@@ -22,16 +28,16 @@
 #' threshold of dominating values for column If feature has more dominating
 #' values it is going to be removed. By default set to 1, which indicates that
 #' all values are equal.
-#' \item \code{`sparse_columns_threshold`}A numeric value from [0,1] range, which indicates the maximum
+#' \item \code{`sparse_columns_threshold`} A numeric value from [0,1] range, which indicates the maximum
 #' threshold of missing values for columns If column has more missing fields
 #' it is going to be removed. By default set to 0.7.
-#' \item \code{`sparse_rows_threshold`}A numeric value from [0,1] range, which indicates the maximum
+#' \item \code{`sparse_rows_threshold`} A numeric value from [0,1] range, which indicates the maximum
 #' threshold of missing values for observation. If observation has more missing fields
 #' it is going to be removed. By default set to 0.7.
-#' \code{`na_indicators`}A list containing the values that will be treated as NA
+#' \code{`na_indicators`} A list containing the values that will be treated as NA
 #' indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 #' as these are already checked in other criterion.
-#' \item \code{`high_correlation_threshold`}A numeric value from [0,1] range, which indicates when we consider
+#' \item \code{`high_correlation_threshold`} A numeric value from [0,1] range, which indicates when we consider
 #' the correlation to be high. If feature surpasses this threshold it is going to
 #' be removed. By default set to 0.7.
 #' }
@@ -39,32 +45,31 @@
 #' of missing data. It needs to be provided as presented in an example with exactly
 #' the same column names. The parameters are described below:
 #' \itemize{
-#' \item \code{`imputation_method`}A string value indication the imputation method. The
+#' \item \code{`imputation_method`} A string value indication the imputation method. The
 #' imputation method must be one of 'median-other', 'median-frequency', 'knn', or 'mice'.
-#' \item \code{`k`}An integer describing the number of nearest neighbours to use. By default
+#' \item \code{`k`} An integer describing the number of nearest neighbours to use. By default
 #' set to 10. The parameter applicable only if selection `imputation_method` is 'knn'.
-#' \item \code{`m`}An integer describing the number of multiple imputations to use.
-#' By default set to 5. The parameter applicable only if selection
-#' `imputation_method` is 'mice'.
+#' \item \code{`m`} An integer describing the number of multiple imputations to use.
+#' By default set to 5. The parameter applicable only if selection `imputation_method` is 'mice'.
 #' }
 #' @param feature_selection_parameters A list containing the parameters used in the feature
 #' selection process. It needs to be provided as presented in an example with exactly
 #' the same column names. The parameters are described below:
-#' #' \itemize{
-#' \item \code{`feature_selection_method`}A string value indication the feature selection method.
+#' \itemize{
+#' \item \code{`feature_selection_method`} A string value indication the feature selection method.
 #' The imputation method must be one of 'VI', 'MCFS', 'MI', 'BORUTA', or 'none' if we don't
 #' want it.
-#' \item \code{`max_features`}A positive integer value describing the desired number of
-#' selected features. Initial value set as 'default' which is 10 for `VI` and `MI`, and
-#' NULL (number of relevant features chosen by the method) for `MCFS`.
-#' Only `MCFS` can use the NULL value. `BORUTA` doesn't use this parameter.
-#' \item \code{`nperm`}An integer describing the number of permutations performed, relevant
+#' \item \code{`max_features`} A positive integer value describing the desired number of
+#' selected features. Initial value set as 'default' which is min(10, ncol(data) - 1)
+#' for `VI` and `MI`, and NULL (number of relevant features chosen by the method)
+#' for `MCFS`. Only `MCFS` can use the NULL value. `BORUTA` doesn't use this parameter.
+#' \item \code{`nperm`} An integer describing the number of permutations performed, relevant
 #' for the `VI` method. By default set to 1.
-#' \item \code{`cutoffPermutations`}An non-negative integer value that determines the number of permutation
+#' \item \code{`cutoffPermutations`} An non-negative integer value that determines the number of permutation
 #' runs. It needs at least 20 permutations for a statistically significant result.
 #' Minimum value of this parameter is 3, however if it is 0 then permutations
 #' method is turned off. Relevant for the `MCFS` method.
-#' \item \code{`threadsNumber`}A positive integer value describing the number of threads to use
+#' \item \code{`threadsNumber`} A positive integer value describing the number of threads to use
 #' in computation. More threads needs more CPU cores as well as memory usage is
 #' a bit higher. It is recommended to set this value equal to or less than CPU
 #' available cores. By default set to NULL, which will use maximal number of cores
@@ -73,12 +78,19 @@
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' preprocessing process, if FALSE gives none.
 #'
-#' @return
+#' @return A list containing four objects:
+#' \itemize{
+#' \item \code{`data`} A dataset after the preprocessing,
+#' \item \code{`rm_colnames`} The names of removed columns,
+#' \item \code{`rm_rows`} The indexes of removed observations,
+#' \item \code{`bin_labels`} The text labels before target binarization,
+#' \item \code{`custom_params`} The list of all parameters specified for this function.
+#' }
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' custom_preprocessing(data = lisbon,
+#' k <- custom_preprocessing(data = lisbon,
 #'                      y = 'Price,
 #'                      na_indicators = c(''),
 #'                      removal_parameters = list(
@@ -104,6 +116,9 @@
 #'                        threadsNumber = NULL
 #'                      ),
 #'                      verbose = FALSE)
+#'
+#' # If you want to obtain the same results quickly, just use the code below:
+#' do.call(custom_preprocessing, k$custom_params)
 #' }
 
 
@@ -130,9 +145,21 @@ custom_preprocessing <- function(data,
                                    max_features = 'default',
                                    nperm = 1,
                                    cutoffPermutations = 20,
-                                   threadsNumber = NULL,
+                                   threadsNumber = NULL
                                  ),
                                  verbose = FALSE) {
+  if ('tbl' %in% class(data)) {
+    data <- as.data.frame(data)
+    verbose_cat(crayon::red('\u2716'), 'Provided dataset is a tibble and not a',
+                'data.frame or matrix. Casting the dataset to data.frame format. \n\n',
+                verbose = verbose)
+  }
+
+  if (!y %in% colnames(data)) {
+    verbose_cat(crayon::red('\u2716'), 'Provided target column name for y parameter', y,
+                'is not present in the datataset. \n\n', verbose = verbose)
+  }
+  org_data <- data
   cols     <- colnames(data)
   removal  <- preprocessing_removal(data,
                                     y,
@@ -181,10 +208,19 @@ custom_preprocessing <- function(data,
 
   return(
     list(
-      data       = data,
-      colnames   = colnames,
-      rows       = removal$rm_row,
-      bin_labels = bin_labels
+      data          = data,
+      rm_colnames   = colnames,
+      rm_rows       = removal$rm_row,
+      bin_labels    = bin_labels,
+      custom_params = list(
+        data                         = org_data,
+        y                            = y,
+        na_indicators                = na_indicators,
+        removal_parameters           = removal_parameters,
+        imputation_parameters        = imputation_parameters,
+        feature_selection_parameters = feature_selection_parameters,
+        verbose                      = verbose
+      )
     )
   )
 }

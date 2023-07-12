@@ -13,8 +13,16 @@
 		    -   `MCFS` - The Monte Carlo Feature Selection,
 		    -   `MI` - The Varrank method based on mutual information scores,
 		    -   `BORUTA` - The BORUTA algorithm - short time.
--   Removed the example from the `preprocessing()` function.
 -	  Added tests for the `custom_preprocessing()`, `preprocessing_removal()`, `preprocessing_imputation()`, and `preprocessing_feature_selection()` functions.
+-   In the `train()` function:
+    -   Removed `advanced_preprocessing` parameter, as `custom_preprocessing()` is more advanced version of it,
+    -   Added `custom_preprocessing` parameter, which takes the output of a `custom_preprocessing()` function,
+    -   Added `deleted_rows` value to the output,
+    -   Changed output parameter from `columns` to `deleted_columns`.
+-   In the `preprocessing()` function:
+    -   Removed `advanced` parameter, as `custom_preprocessing()` is more advanced version of it, 
+    -   Changed output parameter from `columns` to `rm_columns`.
+    -   Removed the example from this function.
 
 # forester 1.2.1
 -   In the `train()` function:
