@@ -14,13 +14,13 @@ train(
   split_seed = NULL,
   bayes_iter = 10,
   random_evals = 10,
-  advanced_preprocessing = FALSE,
   metrics = "auto",
   sort_by = "auto",
   metric_function = NULL,
   metric_function_name = NULL,
   metric_function_decreasing = TRUE,
-  best_model_number = 5
+  best_model_number = 5,
+  custom_preprocessing = NULL
 )
 }
 \arguments{
@@ -58,9 +58,6 @@ used by the Bayesian optimization.}
 \item{random_evals}{An integer value describing number of trained models
 with different parameters by random search.}
 
-\item{advanced_preprocessing}{A logical value describing, whether the user wants to use
-advanced preprocessing methods (ex. deleting correlated values).}
-
 \item{metrics}{A vector of metrics names. By default param set for `auto`, most important metrics are returned.
 For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.}
 
@@ -75,10 +72,16 @@ in order to see given metric in report. If `sort_by` is equal to `auto` models a
 \item{metric_function_name}{The name of the column with values of `metric_function` parameter.
 By default `metric_function_name` is `metric_function`.}
 
-\item{metric_function_decreasing}{A logical value indicating how metric_function should be sorted. `TRUE` by default.}
+\item{metric_function_decreasing}{A logical value indicating how metric_function
+should be sorted. `TRUE` by default.}
 
 \item{best_model_number}{Number best models to be chosen as element of the return.
 All trained models will be returned as different element of the return.}
+
+\item{custom_preprocessing}{An object returned by the `custom_preprocessing()`
+function. By default it is set to NULL, which indicates that basic preprocessing
+inside the train will be executed. This process however only makes the necessary actions
+for the `train()` to work properly.}
 }
 \value{
 A list of all necessary objects for other functions. It contains:
@@ -99,14 +102,15 @@ correlated values, deleting columns that are ID-like columns and performing
 Boruta algorithm for selecting most important features.
 \item \code{`bin_labels`} Labels of binarized target value - {1, 2} values for binary
 classification and NULL for regression.
-
+\item \code{`deleted_rows`} The indexes of rows deleted during the preprocessing,
+if none were removed the value is NULL.
 \item \code{`models_list`} The list of all trained models.
 \item \code{`check_report`} Data check report held as a list of strings. It is used
 by the `report()` function.
 \item \code{`outliers`} The vector of possible outliers detected by the `check_data()`.
 
 \item \code{`best_models_on_valid`} The object containing the best performing models
-on the valdiation dataset.
+on the validation dataset.
 #' \item \code{`engine`} The list of names of all types of trained models. Possible
 values: 'ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'.
 \item \code{`raw_train`} The another form of the training dataset (useful for creating
@@ -180,8 +184,10 @@ Setting and changing other arguments will affect model
 validation strategy, tested model families, and so on.
 }
 \examples{
+\dontrun{
 library(forester)
 data('lisbon')
 train_output <- train(lisbon, 'Price')
 train_output$score_valid
+}
 }

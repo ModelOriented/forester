@@ -91,7 +91,7 @@
 #' @examples
 #' \dontrun{
 #' k <- custom_preprocessing(data = lisbon,
-#'                      y = 'Price,
+#'                      y = 'Price',
 #'                      na_indicators = c(''),
 #'                      removal_parameters = list(
 #'                        active_modules = c(duplicate_cols = TRUE, id_like_cols = TRUE,
@@ -119,6 +119,7 @@
 #'
 #' # If you want to obtain the same results quickly, just use the code below:
 #' do.call(custom_preprocessing, k$custom_params)
+#'
 #' }
 
 

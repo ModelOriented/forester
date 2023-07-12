@@ -24,9 +24,9 @@ matrix and so on.}
 The imputation method must be one of 'VI', 'MCFS', 'MI', or 'BORUTA'.}
 
 \item{max_features}{A positive integer value describing the desired number of
-selected features. Initial value set as 'default' which is 10 for `VI` and `MI`, and
-NULL (number of relevant features chosen by the method) for `MCFS`.
-Only `MCFS` can use the NULL value. `BORUTA` doesn't use this parameter.}
+selected features. Initial value set as 'default' which is min(10, ncol(data) - 1)
+for `VI` and `MI`, and NULL (number of relevant features chosen by the method)
+for `MCFS`. Only `MCFS` can use the NULL value. `BORUTA` doesn't use this parameter.}
 
 \item{nperm}{An integer describing the number of permutations performed, relevant
 for the `VI` method. By default set to 1.}

@@ -24,10 +24,10 @@ as these are already checked in other criterion.}
 imputation method must be one of 'median-other', 'median-frequency', 'knn', or 'mice'.}
 
 \item{k}{An integer describing the number of nearest neighbours to use. By default
-set to 10. The parameter applicable only if selection `imputation_method` is 'knn'.}
+set to 10. The parameter applicable only if selected `imputation_method` is 'knn'.}
 
 \item{m}{An integer describing the number of multiple imputations to use.
-By default set to 5. The parameter applicable only if selection
+By default set to 5. The parameter applicable only if selected
 `imputation_method` is 'mice'.}
 }
 \value{

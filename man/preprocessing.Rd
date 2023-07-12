@@ -4,7 +4,7 @@
 \alias{preprocessing}
 \title{Conduct preprocessing processes}
 \usage{
-preprocessing(data, y, type, advanced = FALSE, verbose = FALSE)
+preprocessing(data, y, type, verbose = FALSE)
 }
 \arguments{
 \item{data}{A data source, that is one the of major R formats: data.table, data.frame,
@@ -15,14 +15,16 @@ matrix, and so on.}
 \item{type}{A string that determines if Machine Learning task is the
 `binary_clf` or `regression`.}
 
-\item{advanced}{A logical value describing, whether the user wants to use
-advanced preprocessing methods (deleting correlated values).}
-
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}
 }
 \value{
-A preprocessed dataset.
+A list containing three objects:
+\itemize{
+\item \code{`data`} A preprocessed dataset,
+\item \code{`rm_colnames`} The names of removed columns,
+\item \code{`bin_labels`} The text labels before target binarization.
+}
 }
 \description{
 Conduct preprocessing processes
