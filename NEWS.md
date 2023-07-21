@@ -1,6 +1,8 @@
 # forester 1.3.0
 -   In the DESCRIPTION: Added in Imports the VIM package, and in the Suggests sivs, parallel, rmcfs, and varrank packages.
-- 	In `check_data()` function: removed 'no', and added 'index' to id_names used for id-like columns detection.
+- 	In `check_data()` function: 
+    -   removed 'no', and added 'index' to id_names used for id-like columns detection,
+    -	  Fixed minor printing and code formatting issues.
 -	  Added a `custom_preprocessing()` function, which is more advanced and customizable approach for the preprocessing pipeline. It executes other new functions implementing three major pillars of preprocessing. The functions are `preprocessing_removal()`, `preprocessing_imputation()`, `preprocessing_feature_selection()`:
 	  -   `preprocessing_removal()` - This function includes 6 modules for the removal of unwanted features / observations. We can remove duplicate columns, the ID-like columns, static columns (with specified staticity threshold), sparse columns (with specified sparsity threshold), and highly correlated ones (with specified high correlation threshold). Additionally we can remove the observations that are too sparse (sparsity threshold), and have missing target value. One can turn on and off each module by setting proper logical values.
 	  -   `preprocessing_imputation()` Imputes missing values according to one of four prepared methods:
@@ -23,6 +25,12 @@
     -   Removed `advanced` parameter, as `custom_preprocessing()` is more advanced version of it, 
     -   Changed output parameter from `columns` to `rm_columns`.
     -   Removed the example from this function.
+-	  In the `save()` function:
+	  -	  Renamed to `save_forest()`,
+	  -	  Merged parameters `name` and `path` into `file` as it is standard approach
+	  -	  Added an example of loading saved data to documentation.
+-	  Removed plenty of examples from functions that are not meant for the user.
+-	  Fixed plenty of formatting issues in various functions.
 
 # forester 1.2.1
 -   In the `train()` function:
