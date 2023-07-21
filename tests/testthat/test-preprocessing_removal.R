@@ -50,16 +50,16 @@ test_that('test-preprocessing_removal', {
       k <- sum(to_rm_col <= to_rm_cor[i])
       to_rm_cor[i] <- to_rm_cor[i] + k
     }
-    expect_equal(c(8, 7, 4), to_rm_cor)
+    expect_equal(to_rm_cor, c(7, 8, 3))
   }
 
   to_rm_col <- c(to_rm_col, to_rm_cor)
   to_rm_col <- unique(to_rm_col)
 
-  expect_equal(c(14, 1, 12, 13, 8, 7, 4), to_rm_col)
+  expect_equal(c(13, 1, 12, 14, 7, 8, 3), to_rm_col)
 
   data <- preprocessing_removal(lisbon, 'Price')
-  expect_equal(c(14, 1, 12, 13, 8, 7, 4), data$rm_col)
+  expect_equal(c(13, 1, 12, 14, 7, 8, 3), data$rm_col)
   expect_equal(NULL, data$rm_row)
 
   data <- preprocessing_removal(compas, 'Two_yr_Recidivism')

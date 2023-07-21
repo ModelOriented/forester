@@ -4,7 +4,7 @@
 \alias{select_mi_varrank}
 \title{Feature selection performed by varrank package}
 \usage{
-select_mi_varrank(data, y, max_features = 10)
+select_mi_varrank(data, y, max_features = 10, method = "estevez")
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -14,6 +14,11 @@ matrix and so on.}
 
 \item{max_features}{A positive integer value describing the desired number of
 selected features. By default set to 10.}
+
+\item{method}{A string that indicates which algorithm will be used. Available
+options are the default 'estevez' which works well for smaller datasets, but can
+raise errors for bigger ones, and simpler 'peng'. More details present in the
+documentation of ?varrank method.}
 }
 \value{
 A list containing two objects:

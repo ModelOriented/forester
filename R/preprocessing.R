@@ -62,11 +62,9 @@ pre_rm_static_cols <- function(data, y) {
     }
   }
   if (!is.null(del)) {
-    #cat('Removed static columns: ', paste0(colnames(data[del]), sep='; '), '.', '\n \n', sep = '')
     data <- data[, -del]
   } else {
     data <- data
-    #cat('No static columns were removed. \n \n')
   }
   return(data)
 }
@@ -96,12 +94,10 @@ binarize_target <- function(data, y) {
         labels[2] <- as.character(data[[y]][i])
       }
     }
-
   } else {
     bin_data <- data
     labels   <- NULL
   }
-
   return(
     list(
       bin_data = bin_data,
@@ -120,13 +116,12 @@ binarize_target <- function(data, y) {
 #' @return A dataframe with removed and imputed missing values.
 #' @export
 manage_missing <- function(df, y) {
-  # remove mostly missing columns
+  # Remove mostly missing columns.
   col_to_rm <- c()
   for (i in 1:ncol(df)) {
     if (length(df[, i][df[, i] == '']) >= length(df[, i]) / 2) {
       col_to_rm <- c(col_to_rm, i)
     }
-
     if (is.numeric(df[, i]) == FALSE) {
       df[, i] <- as.factor(df[, i])
     }
@@ -134,10 +129,9 @@ manage_missing <- function(df, y) {
   if (length(col_to_rm) > 0) {
     df <- df[, -col_to_rm]
   }
-  # input missing values via mice
+  # Input missing values via mice algorithm.
   df <- mice::mice(df, seed = 123, print = FALSE, remove_collinear = FALSE)
   df <- mice::complete(df)
-
   return(df)
 }
 
@@ -161,10 +155,8 @@ save_deleted_columns <- function(df, pre_df) {
       deleted_columns <- c(deleted_columns, names_df[i])
     }
   }
-
   return(deleted_columns)
 }
-
 
 #' Delete correlated values
 #'
@@ -184,13 +176,13 @@ save_deleted_columns <- function(df, pre_df) {
 #' names of removed columns.
 #' @export
 delete_correlated_values <- function(data, y, verbose = TRUE) {
-  # Create dataframe with correlation info
+  # Create dataframe with correlation info.
   cor                  <- check_cor(data, y, verbose = verbose)
   columns              <- c('col1', 'col2', 'cor')
   correlated           <- data.frame(matrix(nrow = 0, ncol = length(columns)))
   colnames(correlated) <- columns
+  k                    <- 0
 
-  k = 0
   if (!is.null(cor$cor_num)) {
     for (i in 1:ncol(cor$cor_num)) {
       for (j in i:ncol(cor$cor_num)) {
@@ -213,44 +205,46 @@ delete_correlated_values <- function(data, y, verbose = TRUE) {
   }
 
   # Count number of occurrences for every correlated column (also order by
-  # correlation value)
+  # correlation value).
   correlated <- data.table::setorder(correlated, -cor)
   if (nrow(correlated) > 0) {
-    col_names  <- c()
+    col_names   <- c()
     occurrences <- c()
     for (i in 1:nrow(correlated)) {
       if (!(correlated[i, 1] %in% col_names)) {
-        col_names  <- c(col_names, correlated[i, 1])
+        col_names   <- c(col_names, correlated[i, 1])
         occurrences <- c(occurrences, 1)
       } else {
         for (j in 1:length(col_names)) {
           if (correlated[i, 1] == col_names[j]) {
-            occurrences[j] = occurrences[j] + 1
+            occurrences[j] <- occurrences[j] + 1
           }
         }
       }
 
       if (!(correlated[i, 2] %in% col_names)) {
-        col_names  <- c(col_names, correlated[i, 2])
+        col_names   <- c(col_names, correlated[i, 2])
         occurrences <- c(occurrences, 1)
       } else {
         for (j in 1:length(col_names)) {
           if (correlated[i, 2] == col_names[j]) {
-            occurrences[j] = occurrences[j] + 1
+            occurrences[j] <- occurrences[j] + 1
           }
         }
       }
     }
-    # Remove columns iteratively from the most frequently occurring ones
+    # Remove columns iteratively from the most frequently occurring ones.
     corrr    <- correlated
     cols_occ <- data.frame(col_names, occurrences)
     cols_occ <- data.table::setorder(cols_occ, -occurrences)
     deleted  <- c()
-    k = 0
+    k        <- 0
+
     while (nrow(corrr) > 0) {
-      k = k + 1
-      del <- cols_occ[k, 1]
+      k          <- k + 1
+      del        <- cols_occ[k, 1]
       col_to_del <- c()
+
       for (i in 1:nrow(corrr)) {
         if (corrr[i, 1] == del && !is.null(corrr[i, 2])) {
           col_to_del <- c(col_to_del, i)
@@ -298,7 +292,6 @@ delete_id_columns <- function(data) {
     if (tolower(names[i]) %in% id_names) {
       sus <- c(sus, i)
     }
-
     if (all.equal(data[, i], as.integer(data[, i])) == TRUE &&
         length(unique(data[, i])) == nrow(data)) {
       sus <- c(sus, i)
@@ -309,7 +302,6 @@ delete_id_columns <- function(data) {
   if (length(sus) > 0) {
     data <- data[, -sus]
   }
-
   return(data)
 }
 

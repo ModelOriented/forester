@@ -11,8 +11,8 @@ preprocessing_removal(
     sparse_cols = TRUE, corrupt_rows = TRUE, correlated_cols = TRUE),
   id_names = c("id", "nr", "number", "idx", "identification", "index"),
   static_threshold = 0.99,
-  sparse_columns_threshold = 0.7,
-  sparse_rows_threshold = 0.7,
+  sparse_columns_threshold = 0.3,
+  sparse_rows_threshold = 0.3,
   na_indicators = c(""),
   high_correlation_threshold = 0.7
 )
@@ -39,11 +39,11 @@ all values are equal.}
 
 \item{sparse_columns_threshold}{A numeric value from [0,1] range, which indicates the maximum
 threshold of missing values for columns If column has more missing fields
-it is going to be removed. By default set to 0.7.}
+it is going to be removed. By default set to 0.3.}
 
 \item{sparse_rows_threshold}{A numeric value from [0,1] range, which indicates the maximum
 threshold of missing values for observation. If observation has more missing fields
-it is going to be removed. By default set to 0.7.}
+it is going to be removed. By default set to 0.3.}
 
 \item{na_indicators}{A list containing the values that will be treated as NA
 indicators. By default the list is c(''). WARNING Do not include NA or NaN,

@@ -13,51 +13,6 @@
 #' @return A list consisting of models created via random search and ranked list
 #' of models scores.
 #' @export
-#'
-#' @examples
-#' data(iris)
-#' iris_bin          <- iris[1:100, ]
-#' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-#' preprocessed_data <- preprocessed_data$data
-#' split_data <-
-#'   train_test_balance(preprocessed_data,
-#'                      'Species',
-#'                      balance = FALSE)
-#' train_data <-
-#'   prepare_data(split_data$train,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-#' test_data <-
-#'   prepare_data(split_data$test,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                predict = TRUE,
-#'                train = split_data$train)
-#'
-#'
-#' model <-
-#'   train_models(train_data,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                type = type)
-#'
-#' predictions <-
-#'   predict_models(model,
-#'                  test_data,
-#'                  'Species',
-#'                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                  type = type)
-#'
-#' score <- score_models(model, predictions, test_data$ranger_data$Species, type)
-#'
-#' random_best <- random_search(train_data,
-#'                              test_data,
-#'                              y = 'Species',
-#'                              engine = c('ranger', 'xgboost', 'decision_tree',
-#'                              'lightgbm', 'catboost'),
-#'                              type = type,
-#'                              max_evals = 4)
 random_search <- function(train_data,
                           y,
                           models = NULL,
@@ -107,6 +62,7 @@ random_search <- function(train_data,
 
   search_models <- list()
   search_engine <- c()
+
   if ('ranger' %in% engine) {
     if (type == 'regression') {
       classification <- NULL
@@ -124,14 +80,14 @@ random_search <- function(train_data,
       ranger_models[i] <-
         list(
           ranger::ranger(
-            data = train_data$ranger_data,
+            data            = train_data$ranger_data,
             dependent.variable.name = y,
-            num.trees = unlist(sample_ranger_grid[i, 'num.trees']),
+            num.trees       = unlist(sample_ranger_grid[i, 'num.trees']),
             sample.fraction = unlist(sample_ranger_grid[i, 'sample.fraction']),
-            min.node.size = unlist(sample_ranger_grid[i, 'min.node.size']),
-            max.depth = unlist(sample_ranger_grid[i, 'max.depth']),
-            classification = classification,
-            probability = probability
+            min.node.size   = unlist(sample_ranger_grid[i, 'min.node.size']),
+            max.depth       = unlist(sample_ranger_grid[i, 'max.depth']),
+            classification  = classification,
+            probability     = probability
           )
         )
     }
@@ -150,7 +106,7 @@ random_search <- function(train_data,
       } else {
         label <- as.numeric(train_data$ranger_data[[y]])
       }
-      label     <- as.vector(label)
+      label <- as.vector(label)
     }
     xgboost_models        <- list()
     expanded_xgboost_grid <- expand.grid(xgboost_grid)
@@ -161,14 +117,14 @@ random_search <- function(train_data,
       xgboost_models[i] <-
         list(
           xgboost::xgboost(
-            data = train_data$xgboost_data,
-            label = label,
+            data      = train_data$xgboost_data,
+            label     = label,
             objective = objective,
-            verbose = 0,
-            nrounds = unlist(sample_xgboost_grid[i, 'nrounds']),
+            verbose   = 0,
+            nrounds   = unlist(sample_xgboost_grid[i, 'nrounds']),
             subsample = unlist(sample_xgboost_grid[i, 'subsample']),
-            gamma = unlist(sample_xgboost_grid[i, 'gamma']),
-            eta = unlist(sample_xgboost_grid[i, 'eta']),
+            gamma     = unlist(sample_xgboost_grid[i, 'gamma']),
+            eta       = unlist(sample_xgboost_grid[i, 'eta']),
             max_depth = unlist(sample_xgboost_grid[i, 'max_depth'])
           )
         )
@@ -182,19 +138,19 @@ random_search <- function(train_data,
     expanded_tree_grid <- expand.grid(tree_grid)
     max_tree_evals     <- min(max_evals, dim(expanded_tree_grid)[1])
     sample_tree_grid   <- expanded_tree_grid[sample(1:dim(expanded_tree_grid)[1], max_tree_evals), ]
+    form               <- as.formula(paste0(y, ' ~.'))
 
-    form = as.formula(paste0(y, ' ~.'))
     for (i in 1:max_tree_evals) {
       tree_contr <-
         partykit::ctree_control(
-          minsplit = unlist(sample_tree_grid[i, 'minsplit']),
-          minprob = unlist(sample_tree_grid[i, 'minprob']),
-          maxdepth = unlist(sample_tree_grid[i, 'maxdepth']),
+          minsplit  = unlist(sample_tree_grid[i, 'minsplit']),
+          minprob   = unlist(sample_tree_grid[i, 'minprob']),
+          maxdepth  = unlist(sample_tree_grid[i, 'maxdepth']),
           nresample = unlist(sample_tree_grid[i, 'nresample'])
         )
       tree_models[i] <- list(partykit::ctree(
         formula = form,
-        data = train_data$decision_tree_data
+        data    = train_data$decision_tree_data
       ))
     }
     names(tree_models) <- paste('decision_tree_RS_', 1:max_tree_evals, sep = '')
@@ -230,8 +186,8 @@ random_search <- function(train_data,
       lightgbm_models[i] <-
         list(
           lightgbm::lgb.train(
-            params = parameters,
-            data = train_data$lightgbm_data,
+            params  = parameters,
+            data    = train_data$lightgbm_data,
             verbose = -1
           )
         )
@@ -248,13 +204,13 @@ random_search <- function(train_data,
     sample_catboost_grid   <- expanded_catboost_grid[sample(1:dim(expanded_catboost_grid)[1], max_catboost_evals), ]
 
     if (type == 'binary_clf') {
-      obj = 'Logloss'
+      obj    <- 'Logloss'
       params <- list(loss_function = obj, logging_level = 'Silent')
     } else if (type == 'multi_clf') {
-      obj = 'MultiClass'
+      obj    <- 'MultiClass'
       params <- list(loss_function = obj, logging_level = 'Silent')
     } else if (type == 'regression') {
-      obj = 'MAE'
+      obj    <- 'MAE'
       params <- list(loss_function = obj, logging_level = 'Silent')
     }
 

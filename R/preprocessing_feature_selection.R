@@ -28,6 +28,10 @@
 #' a bit higher. It is recommended to set this value equal to or less than CPU
 #' available cores. By default set to NULL, which will use maximal number of cores
 #' minus 1. Relevant for the `MCFS` method.
+#' @param method A string that indicates which algorithm will be used for MI method. Available
+#' options are the default 'estevez' which works well for smaller datasets, but can
+#' raise errors for bigger ones, and simpler 'peng'. More details present in the
+#' documentation of ?varrank method.
 #'
 #' @return A list containing two objects:
 #' \itemize{
@@ -41,7 +45,8 @@ preprocessing_feature_selection <- function(data,
                                             max_features = 'default',
                                             nperm = 1,
                                             cutoffPermutations = 20,
-                                            threadsNumber = NULL) {
+                                            threadsNumber = NULL,
+                                            method = 'estevez') {
 
   if (!feature_selection_method %in% c('VI', 'MCFS', 'MI', 'BORUTA')) {
     verbose_cat(crayon::red('\u2716'), 'Preprocessing feature selection: The feature selection method must be one of VI, MCFS, MI, or BORUTA.', '\n', verbose = TRUE)
@@ -62,7 +67,7 @@ preprocessing_feature_selection <- function(data,
     if (max_features == 'default') {
       max_features <- min(10, ncol(data) - 1)
     }
-    fs_data <- select_mi_varrank(data, y, max_features = max_features)
+    fs_data <- select_mi_varrank(data, y, max_features = max_features, method = method)
   } else if (feature_selection_method == 'BORUTA') {
     if (max_features == 'default') {
       max_features <- NULL
@@ -184,26 +189,39 @@ select_mcfs <- function(data, y, cutoffPermutations = 20, threadsNumber = NULL, 
       stop('MCFS feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).')
     }
   }
-
-  form <- as.formula(paste0(y, ' ~.'))
-  # We cannot suppress prints as they come from Java back-end.
-  mcfs <- rmcfs::mcfs(form, data, threadsNumber = threadsNumber, cutoffPermutations = cutoffPermutations)
-  # We select those features seen as important for MCFS algorithm.
-  if (!is.null(max_features)) {
-    max_fs <- min(mcfs$cutoff_value, max_features)
+  if (ncol(data) - 1 < 10) {
+    verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of features is equal to', ncol(data) - 1, 'which is too few for the MCFS algorithm to work properly. Skipping this step.\n', verbose = TRUE)
+    to_rm <- NULL
   } else {
-    max_fs <- mcfs$cutoff_value
+    to_rm <- NULL
+    form <- as.formula(paste0(y, ' ~.'))
+    # We cannot suppress prints as they come from Java back-end.
+    tryCatch({
+      mcfs <- rmcfs::mcfs(form, data, threadsNumber = threadsNumber, cutoffPermutations = cutoffPermutations)
+      # We select those features seen as important for MCFS algorithm.
+      if (!is.null(max_features)) {
+        max_fs <- min(mcfs$cutoff_value, max_features)
+      } else {
+        max_fs <- mcfs$cutoff_value
+      }
+      features           <- 1:ncol(data)
+      selected_fs        <- names(data) %in% mcfs$RI[1:max_fs, 2]
+      y_idx              <- which(names(data) == y)
+      selected_fs[y_idx] <- TRUE
+      selected_idx       <- features[selected_fs]
+      data               <- data[, selected_fs]
+      # Save features removed by FS algorithm.
+      to_rm <- NULL
+      to_rm <- abs(as.numeric(selected_fs) - 1)
+      to_rm <- features[as.logical(to_rm)]
+    },
+    error = function(cond) {
+      verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Java error occured in rmcfs package.',
+                  'Please, consider using other FS method for this task. Provided outcomes does not contain ',
+                  'any form of Feature Selection, but other components were executed regularly. \n', verbose = TRUE)
+      to_rm <- NULL
+    })
   }
-  features           <- 1:ncol(data)
-  selected_fs        <- names(data) %in% mcfs$RI[1:max_fs, 2]
-  y_idx              <- which(names(data) == y)
-  selected_fs[y_idx] <- TRUE
-  selected_idx       <- features[selected_fs]
-  data               <- data[, selected_fs]
-  # Save features removed by FS algorithm.
-  to_rm <- abs(as.numeric(selected_fs) - 1)
-  to_rm <- features[as.logical(to_rm)]
-
   return(list(
     data = data,
     idx  = to_rm
@@ -220,6 +238,10 @@ select_mcfs <- function(data, y, cutoffPermutations = 20, threadsNumber = NULL, 
 #' @param y A string that indicates a target column name.
 #' @param max_features A positive integer value describing the desired number of
 #' selected features. By default set to 10.
+#' @param method A string that indicates which algorithm will be used. Available
+#' options are the default 'estevez' which works well for smaller datasets, but can
+#' raise errors for bigger ones, and simpler 'peng'. More details present in the
+#' documentation of ?varrank method.
 #'
 #' @return A list containing two objects:
 #' \itemize{
@@ -227,17 +249,28 @@ select_mcfs <- function(data, y, cutoffPermutations = 20, threadsNumber = NULL, 
 #' \item \code{`idx`} The indexes of removed columns.
 #' }
 #' @export
-select_mi_varrank <- function(data, y, max_features = 10) {
+select_mi_varrank <- function(data, y, max_features = 10, method = 'estevez') {
   if (max_features < 1 || max_features >= ncol(data) || as.integer(max_features) != max_features) {
     verbose_cat(crayon::red('\u2716'), 'MI varrank feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).', '\n', verbose = TRUE)
     stop('MI varrank feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).')
   }
-  varrank <- varrank::varrank(data, y, method = 'estevez', algorithm = 'forward', scheme = 'mid',
-                              n.var = max_features, discretization.method = 'cencov')
+  # We perform our own data discretization as the one used in varrank is corrupted in some cases.
+  y_idx     <- which(names(data) == y)
+  disc_data <- data
+  for (i in 1:ncol(disc_data)) {
+    if (length(unique(disc_data[, i])) == 1) {
+      disc_data[, i] <- as.character(disc_data[, i])
+    } else if (is.numeric(disc_data[, i]) && names(disc_data)[i] != y) {
+      disc_data[, i] <- arules::discretize(disc_data[, i], method = 'frequency', breaks = 10)
+    }
+  }
+  disc_data
+  varrank   <- varrank::varrank(disc_data, y, method = method, algorithm = 'forward', scheme = 'mid',
+                                n.var = max_features, discretization.method = 'cencov', verbose = FALSE)
   # We select those features seen as important for varrank algorithm.
   features           <- 1:ncol(data)
   selected_fs        <- names(data) %in% varrank$ordered.var
-  y_idx              <- which(names(data) == y)
+
   selected_fs[y_idx] <- TRUE
   selected_idx       <- features[selected_fs]
   data               <- data[, selected_fs]

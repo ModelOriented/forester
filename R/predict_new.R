@@ -31,29 +31,19 @@ predict_new <- function(train_out, data, verbose = TRUE) {
   model      <- train_out$models_list
   type       <- train_out$type
 
-  # preprocessing simulation
+  # Preprocessing simulation.
   data <- data[, !(names(data) %in% del_cols)]
-  # labelling
   if (type == 'binary_clf') {
     levels(data[[y]]) <- c(1, 2)
   }
-
   if (nrow(data) > 29) {
     tryCatch(
-      data <- manage_missing(data, y),
+      data  <- manage_missing(data, y),
       error = function(e)
-        verbose_cat(
-          'Too few observations to perform imputation. MICE algorithm requires
-          at least 30 observations. \n',
-          verbose = verbose
-        )
+        verbose_cat('Too few observations to perform imputation. MICE algorithm requires at least 30 observations. \n', verbose = verbose)
     )
   } else if (nrow(data) > 0) {
-    verbose_cat(
-      'No imputation performed due to only one observation. If any values are
-      missing, user has to handle them by himself. \n',
-      verbose = verbose
-    )
+    verbose_cat('No imputation performed due to only one observation. If any values are missing, user has to handle them by himself. \n', verbose = verbose)
   }
   data         <- prepare_data(data, y, engine, TRUE, train_data)
   preds        <- predict_models_all(model, data, y, type)

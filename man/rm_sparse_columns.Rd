@@ -4,7 +4,7 @@
 \alias{rm_sparse_columns}
 \title{Remove columns with too much empty values}
 \usage{
-rm_sparse_columns(data, y, threshold = 0.7, na_indicators = c(""))
+rm_sparse_columns(data, y, threshold = 0.3, na_indicators = c(""))
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -14,7 +14,7 @@ matrix, and so on.}
 
 \item{threshold}{A numeric value from [0,1] range, which indicates the maximum
 threshold of missing values for columns If column has more missing fields
-it is going to be removed. By default set to 0.7.}
+it is going to be removed. By default set to 0.3.}
 
 \item{na_indicators}{A list containing the values that will be treated as NA
 indicators. By default the list is c(''). WARNING Do not include NA or NaN,

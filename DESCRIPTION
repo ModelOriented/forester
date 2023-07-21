@@ -39,7 +39,8 @@ Imports:
     stats,
     tibble,
     crayon,
-    VIM
+    VIM,
+    arules
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3

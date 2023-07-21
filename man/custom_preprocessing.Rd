@@ -12,11 +12,12 @@ custom_preprocessing(
   removal_parameters = list(active_modules = c(duplicate_cols = TRUE, id_like_cols =
     TRUE, static_cols = TRUE, sparse_cols = TRUE, corrupt_rows = TRUE, correlated_cols =
     TRUE), id_names = c("id", "nr", "number", "idx", "identification", "index"),
-    static_threshold = 0.99, sparse_columns_threshold = 0.7, sparse_rows_threshold = 0.7,
+    static_threshold = 0.99, sparse_columns_threshold = 0.3, sparse_rows_threshold = 0.3,
     high_correlation_threshold = 0.7),
   imputation_parameters = list(imputation_method = "median-other", k = 10, m = 5),
   feature_selection_parameters = list(feature_selection_method = "VI", max_features =
-    "default", nperm = 1, cutoffPermutations = 20, threadsNumber = NULL),
+    "default", nperm = 1, cutoffPermutations = 20, threadsNumber = NULL, method =
+    "estevez"),
   verbose = FALSE
 )
 }
@@ -47,10 +48,10 @@ values it is going to be removed. By default set to 1, which indicates that
 all values are equal.
 \item \code{`sparse_columns_threshold`} A numeric value from [0,1] range, which indicates the maximum
 threshold of missing values for columns If column has more missing fields
-it is going to be removed. By default set to 0.7.
+it is going to be removed. By default set to 0.3.
 \item \code{`sparse_rows_threshold`} A numeric value from [0,1] range, which indicates the maximum
 threshold of missing values for observation. If observation has more missing fields
-it is going to be removed. By default set to 0.7.
+it is going to be removed. By default set to 0.3.
 \code{`na_indicators`} A list containing the values that will be treated as NA
 indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 as these are already checked in other criterion.
@@ -93,6 +94,10 @@ in computation. More threads needs more CPU cores as well as memory usage is
 a bit higher. It is recommended to set this value equal to or less than CPU
 available cores. By default set to NULL, which will use maximal number of cores
 minus 1. Relevant for the `MCFS` method.
+\item \code{`method`} A string that indicates which algorithm will be used for MI method. Available
+options are the default 'estevez' which works well for smaller datasets, but can
+raise errors for bigger ones, and simpler 'peng'. More details present in the
+documentation of ?varrank method.
 }}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
@@ -121,13 +126,13 @@ k <- custom_preprocessing(data = lisbon,
                      y = 'Price',
                      na_indicators = c(''),
                      removal_parameters = list(
-                       active_modules = c(duplicate_cols = TRUE, id_like_cols = TRUE,
-                                          static_cols = TRUE, sparse_cols = TRUE,
-                                          corrupt_rows = TRUE, correlated_cols = TRUE),
+                       active_modules = c(duplicate_cols = TRUE, id_like_cols    = TRUE,
+                                          static_cols    = TRUE, sparse_cols     = TRUE,
+                                          corrupt_rows   = TRUE, correlated_cols = TRUE),
                        id_names = c('id', 'nr', 'number', 'idx', 'identification', 'index'),
-                       static_threshold = 0.99,
-                       sparse_columns_threshold = 0.7,
-                       sparse_rows_threshold = 0.7,
+                       static_threshold           = 0.99,
+                       sparse_columns_threshold   = 0.3,
+                       sparse_rows_threshold      = 0.3,
                        high_correlation_threshold = 0.7
                      ),
                      imputation_parameters = list(
@@ -140,7 +145,8 @@ k <- custom_preprocessing(data = lisbon,
                        max_features = 'default',
                        nperm = 1,
                        cutoffPermutations = 20,
-                       threadsNumber = NULL
+                       threadsNumber = NULL,
+                       method = 'estevez'
                      ),
                      verbose = FALSE)
 

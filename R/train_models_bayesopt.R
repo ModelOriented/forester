@@ -20,62 +20,6 @@
 #' @return Trained models with optimized parameters. If `retun_params` is `TRUE`, then
 #' returns also training parameters in the one list with models.
 #' @export
-#'
-#' @examples
-#' # Binary classification
-#' data(iris)
-#' iris_bin          <- iris[1:100, ]
-#' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-#' preprocessed_data <- preprocessed_data$data
-#' split_data <-
-#'   train_test_balance(preprocessed_data, 'Species', balance = FALSE)
-#' train_data <-
-#'   prepare_data(split_data$train,
-#'                'Species',
-#'                c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-#' test_data <-
-#'   prepare_data(split_data$test,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                predict = TRUE,
-#'                train = split_data$train)
-#'
-#' models <- train_models_bayesopt(train_data,
-#'                                'Species',
-#'                                test_data,
-#'                                engine = c('ranger', 'xgboost', 'decision_tree',
-#'                                'lightgbm', 'catboost'),
-#'                                type = type,
-#'                                iters.n = 1,)
-#'
-#' # Regression
-#' type              <- guess_type(lisbon, 'Price')
-#' preprocessed_data <- preprocessing(lisbon, 'Price', type)
-#' preprocessed_data <- preprocessed_data$data
-#' split_data2 <-
-#'   train_test_balance(preprocessed_data,
-#'                      y = 'Price',
-#'                      balance = FALSE)
-#' train_data2 <- prepare_data(split_data2$train,
-#'                      y = 'Price',
-#'                      engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
-#' )
-#' test_data2 <-
-#'   prepare_data(split_data2$test,
-#'                'Price',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                predict = TRUE,
-#'                train = split_data2$train)
-#'
-#'
-#' models2 <-
-#'    train_models_bayesopt(train_data2,
-#'                         'Price',
-#'                          test_data2,
-#'                          engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                          type = type,
-#'                          iters.n = 1)
 train_models_bayesopt <- function(train_data,
                                   y,
                                   test_data,
@@ -243,14 +187,6 @@ train_models_bayesopt <- function(train_data,
                      gamma     = c(0, 10),
                      max_depth = c(1L, 10L))
 
-      # grid <- data.frame(nrounds   = c(10000, 5000, 1000),
-      #                    eta       = c(0.01, 0.3, 1),
-      #                    subsample = c(0.7, 0.95, 1),
-      #                    gamma     = c(0, 2, 10),
-      #                    max_depth = c(1, 6, 10))
-
-      #fitness_fun_xgboost(grid[1,1], grid[1,2], grid[1,3], grid[1,4], grid[1,5])
-
       bayes <- NULL
       tryCatch(
         expr = {
@@ -304,14 +240,12 @@ train_models_bayesopt <- function(train_data,
     else if (engine[i] == 'decision_tree') {
       form        <- as.formula(paste0(y, ' ~.'))
       fitness_fun_decision_tree <- function(minsplit, minprob, maxdepth, nresample) {
-
         model    <- partykit::ctree(form, data = train_data$decision_tree_data,
                                     minsplit   = minsplit,
                                     minprob    = minprob,
                                     maxdepth   = maxdepth,
                                     nresample  = nresample
         )
-
         preds      <- predict(model, test_data$decision_tree_data)
         observed   <- test_data$ranger_data[, y]
         max_metric <- NULL
@@ -322,7 +256,6 @@ train_models_bayesopt <- function(train_data,
         } else {
           max_metric <- -model_performance_rmse(preds, observed) # rmse
         }
-
         return(list(Score = as.numeric(max_metric)))
       }
 
@@ -404,9 +337,9 @@ train_models_bayesopt <- function(train_data,
         if (type == 'binary_clf') {
           y_levels   <- levels(factor(train_data$ranger_data[, y]))
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
-          max_metric <- mean(preds == observed) # accuracy
+          max_metric <- mean(preds == observed) # Accuracy.
         } else {
-          max_metric <- -model_performance_rmse(preds, observed) # rmse
+          max_metric <- -model_performance_rmse(preds, observed) # RMSE.
         }
         return(list(Score = as.numeric(max_metric)))
       }
@@ -438,13 +371,13 @@ train_models_bayesopt <- function(train_data,
       )
 
       if (type == 'binary_clf') {
-        obj = 'binary'
+        obj    <- 'binary'
         params <- list(objective = obj)
       } else if (type == 'multi_clf') {
-        obj = 'multiclass'
+        obj    <- 'multiclass'
         params <- list(objective = obj)
       } else if (type == 'regression') {
-        obj = 'regression'
+        obj    <- 'regression'
         params <- list(objective = obj)
       }
       if (is.null(bayes)) {
@@ -543,13 +476,13 @@ train_models_bayesopt <- function(train_data,
       )
 
       if (type == 'binary_clf') {
-        obj = 'Logloss'
+        obj    <- 'Logloss'
         params <- list(loss_function = obj, logging_level = 'Silent')
       } else if (type == 'multi_clf') {
-        obj = 'MultiClass'
+        obj    <- 'MultiClass'
         params <- list(loss_function = obj, logging_level = 'Silent')
       } else if (type == 'regression') {
-        obj = 'MAE'
+        obj    <- 'MAE'
         params <- list(loss_function = obj, logging_level = 'Silent')
       }
 
@@ -597,7 +530,6 @@ train_models_bayesopt <- function(train_data,
     if (!is.null(to_rm)) {
       return_list <- return_list[-to_rm]
     }
-
     return(return_list)
   }
   else {
@@ -619,7 +551,6 @@ train_models_bayesopt <- function(train_data,
     if (!is.null(to_rm)) {
       return_list <- return_list[-to_rm]
     }
-
     return(return_list)
   }
 }

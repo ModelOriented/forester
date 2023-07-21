@@ -88,63 +88,69 @@ impute_basic <- function(data, na_indicators = c(''), categorical_imputation = '
   num_data <- data[num_idx]
   fct_data <- data[fct_idx]
   # Median imputation for numeric features.
-  for (i in 1:ncol(num_data)) {
-    column <- num_data[, i]
-    # Change all values considered as missing values to NA.
-    for (j in 1:length(column)) {
-      if (is.na(column[j]) || column[j] %in% na_indicators || is.null(column[j])) {
-        column[j] <- NA
-      }
-    }
-    med <- median(column, na.rm = TRUE)
-    for (j in 1:length(column)) {
-      if (is.na(column[j]) || column[j] %in% na_indicators || is.null(column[j])) {
-        column[j] <- med
-      }
-    }
-    num_data[, i] <- column
-  }
-  # Other imputation for categorical features.
-  for (i in 1:ncol(fct_data)) {
-    column <- fct_data[, i]
-    if (categorical_imputation == 'other') {
-      # Change all values considered as missing values to 'other'.
-      for (j in 1:length(column)) {
-        if (is.na(column[j]) || column[j] %in% na_indicators || is.null(column[j])) {
-          # Add the factor 'other' if it is not already present.
-          if ('other' %in% levels(column)) {
-            column[j] <- 'other'
-          } else {
-            levels(column) <- c(levels(column), 'other')
-            column[j] <- 'other'
-          }
-        }
-      }
-    } else if (categorical_imputation == 'frequency') {
+  if (ncol(num_data) >= 1) {
+    for (i in 1:ncol(num_data)) {
+      column <- num_data[, i]
       # Change all values considered as missing values to NA.
       for (j in 1:length(column)) {
         if (is.na(column[j]) || column[j] %in% na_indicators || is.null(column[j])) {
           column[j] <- NA
         }
       }
-      most_frequent <- names(sort(table(column), decreasing = TRUE))[[1]]
+      med <- median(column, na.rm = TRUE)
       for (j in 1:length(column)) {
         if (is.na(column[j]) || column[j] %in% na_indicators || is.null(column[j])) {
-          column[j] <- most_frequent
+          column[j] <- med
         }
       }
+      num_data[, i] <- column
     }
-
-    fct_data[, i] <- column
-  }
-  idx <- c(num_idx, fct_idx)
-  for (i in 1:length(num_idx)) {
-    data[, num_idx[i]] <- num_data[, i]
-  }
-  for (i in 1:length(fct_idx)) {
-    data[, fct_idx[i]] <- fct_data[, i]
   }
 
+  # Other imputation for categorical features.
+  if (ncol(fct_data) >= 1) {
+    for (i in 1:ncol(fct_data)) {
+      column <- fct_data[, i]
+      if (categorical_imputation == 'other') {
+        # Change all values considered as missing values to 'other'.
+        for (j in 1:length(column)) {
+          if (is.na(column[j]) || column[j] %in% na_indicators || is.null(column[j])) {
+            # Add the factor 'other' if it is not already present.
+            if ('other' %in% levels(column)) {
+              column[j] <- 'other'
+            } else {
+              levels(column) <- c(levels(column), 'other')
+              column[j] <- 'other'
+            }
+          }
+        }
+      } else if (categorical_imputation == 'frequency') {
+        # Change all values considered as missing values to NA.
+        for (j in 1:length(column)) {
+          if (is.na(column[j]) || column[j] %in% na_indicators || is.null(column[j])) {
+            column[j] <- NA
+          }
+        }
+        most_frequent <- names(sort(table(column), decreasing = TRUE))[[1]]
+        for (j in 1:length(column)) {
+          if (is.na(column[j]) || column[j] %in% na_indicators || is.null(column[j])) {
+            column[j] <- most_frequent
+          }
+        }
+      }
+      fct_data[, i] <- column
+    }
+  }
+  if (length(num_idx) >= 1) {
+    for (i in 1:length(num_idx)) {
+      data[, num_idx[i]] <- num_data[, i]
+    }
+  }
+  if (length(fct_idx) >= 1) {
+    for (i in 1:length(fct_idx)) {
+      data[, fct_idx[i]] <- fct_data[, i]
+    }
+  }
   return(data)
 }
 
@@ -176,7 +182,7 @@ impute_knn <- function(data, na_indicators = c(''), k = 10) {
       }
     }
   }
-  data <- VIM::kNN(data, k = k, imp_var = FALSE)
+  suppressWarnings(data <- VIM::kNN(data, k = k, imp_var = FALSE))
   return(data)
 }
 
@@ -208,7 +214,6 @@ impute_mice <- function(data, na_indicators = c(''), m = 5) {
       }
     }
   }
-
   # Setting non-numeric values as factor, otherwise MICE doesn't work properly.
   for (i in 1:ncol(data)) {
     if (!is.numeric(data[, i])) {
@@ -217,6 +222,5 @@ impute_mice <- function(data, na_indicators = c(''), m = 5) {
   }
   data <- mice::mice(data, m = m, seed = 123, print = FALSE, remove_collinear = FALSE)
   data <- mice::complete(data)
-
   return(data)
 }

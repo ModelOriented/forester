@@ -14,28 +14,6 @@
 #'
 #' @return A dataset in format proper for the selected engines.
 #' @export
-#'
-#' @examples
-#' data(iris)
-#' type              <- guess_type(lisbon, 'Price')
-#' preprocessed_data <- preprocessing(lisbon, 'Price', type)
-#' preprocessed_data <- preprocessed_data$data
-#' split_data <-
-#'   train_test_balance(preprocessed_data,
-#'                      'Price',
-#'                      balance = FALSE)
-#' set.seed(123)
-#' train_data <-
-#'   prepare_data(split_data$train,
-#'                'Price',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-#' set.seed(123)
-#' test_data <-
-#'   prepare_data(split_data$test,
-#'                'Price',
-#'                engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
-#'                predict = TRUE,
-#'                train = split_data$train)
 prepare_data <- function(data,
                          y,
                          engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
@@ -58,8 +36,8 @@ prepare_data <- function(data,
     for (i in 1:ncol(data)) {
       if ('factor' %in% class(data[, i]) && names(data[i]) != y) {
         levels(data[, i]) <- c(levels(data[, i]), 'other')
-        data[1, i] <- 'other'
-        data[, i]  <- droplevels(data[, i])
+        data[1, i]        <- 'other'
+        data[, i]         <- droplevels(data[, i])
       }
     }
 
@@ -69,8 +47,8 @@ prepare_data <- function(data,
     for (i in 1:ncol(train)) {
       if ('factor' %in% class(train[, i]) && names(train[i]) != y) {
         levels(train[, i]) <- c(levels(train[, i]), 'other')
-        train[1, i] <- 'other'
-        train[, i]  <- droplevels(train[, i])
+        train[1, i]        <- 'other'
+        train[, i]         <- droplevels(train[, i])
       }
     }
     # Then we change all factors unseen in the train to category other.
@@ -157,11 +135,10 @@ prepare_data <- function(data,
         label <- as.matrix(y_true)
       }
 
-      X <- data[, -which(names(data) == y)]
+      X   <- data[, -which(names(data) == y)]
       dat <- as.matrix(X)
 
-      lightgbm_data <- lightgbm::lgb.Dataset(data = dat,
-                                             label = label)
+      lightgbm_data <- lightgbm::lgb.Dataset(data = dat, label = label)
       # -1, because lgb enumarates classees from 0.
     } else {
       # The lgbm model can't predict on lgb.Dataset.

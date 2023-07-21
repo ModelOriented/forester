@@ -11,7 +11,8 @@ preprocessing_feature_selection(
   max_features = "default",
   nperm = 1,
   cutoffPermutations = 20,
-  threadsNumber = NULL
+  threadsNumber = NULL,
+  method = "estevez"
 )
 }
 \arguments{
@@ -41,6 +42,11 @@ in computation. More threads needs more CPU cores as well as memory usage is
 a bit higher. It is recommended to set this value equal to or less than CPU
 available cores. By default set to NULL, which will use maximal number of cores
 minus 1. Relevant for the `MCFS` method.}
+
+\item{method}{A string that indicates which algorithm will be used for MI method. Available
+options are the default 'estevez' which works well for smaller datasets, but can
+raise errors for bigger ones, and simpler 'peng'. More details present in the
+documentation of ?varrank method.}
 }
 \value{
 A list containing two objects:

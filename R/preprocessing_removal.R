@@ -24,10 +24,10 @@
 #' all values are equal.
 #' @param sparse_columns_threshold A numeric value from [0,1] range, which indicates the maximum
 #' threshold of missing values for columns If column has more missing fields
-#' it is going to be removed. By default set to 0.7.
+#' it is going to be removed. By default set to 0.3.
 #' @param sparse_rows_threshold A numeric value from [0,1] range, which indicates the maximum
 #' threshold of missing values for observation. If observation has more missing fields
-#' it is going to be removed. By default set to 0.7.
+#' it is going to be removed. By default set to 0.3.
 #' @param na_indicators A list containing the values that will be treated as NA
 #' indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 #' as these are already checked in other criterion.
@@ -44,23 +44,23 @@
 #' @export
 preprocessing_removal <- function(data,
                                   y,
-                                  active_modules = c(duplicate_cols = TRUE, id_like_cols = TRUE,
-                                                     static_cols = TRUE, sparse_cols = TRUE,
-                                                     corrupt_rows = TRUE, correlated_cols = TRUE),
+                                  active_modules = c(duplicate_cols = TRUE, id_like_cols    = TRUE,
+                                                     static_cols    = TRUE, sparse_cols     = TRUE,
+                                                     corrupt_rows   = TRUE, correlated_cols = TRUE),
                                   id_names = c('id', 'nr', 'number', 'idx', 'identification', 'index'),
-                                  static_threshold = 0.99,
-                                  sparse_columns_threshold = 0.7,
-                                  sparse_rows_threshold = 0.7,
-                                  na_indicators = c(''),
+                                  static_threshold           = 0.99,
+                                  sparse_columns_threshold   = 0.3,
+                                  sparse_rows_threshold      = 0.3,
+                                  na_indicators              = c(''),
                                   high_correlation_threshold = 0.7) {
 
   if (!is.logical(active_modules) || !is.vector(active_modules) || length(active_modules) != 6) {
     verbose_cat(crayon::red('\u2716'), 'Preprocessing removal: The active_modules parameter is not a logical vector of length equal to 6.', '\n', verbose = TRUE)
     stop('Preprocessing removal: The active_modules parameter is not a logical vector of length equal to 6.')
   }
-
   to_rm_col <- c()
   to_rm_row <- c()
+  to_rm_cor <- c()
 
   if (active_modules[[1]]) {
     to_rm_col <- rm_duplicate_columns(data, y)[[2]]
@@ -139,7 +139,7 @@ preprocessing_removal <- function(data,
 #' @param y A string that indicates a target column name.
 #' @param threshold A numeric value from [0,1] range, which indicates the maximum
 #' threshold of missing values for observation. If observation has more missing fields
-#' it is going to be removed. By default set to 0.7.
+#' it is going to be removed. By default set to 0.3.
 #' @param na_indicators A list containing the values that will be treated as NA
 #' indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 #' as these are already checked in other criterion.
@@ -150,7 +150,7 @@ preprocessing_removal <- function(data,
 #' \item \code{`idx`} The indexes of removed observations.
 #' }
 #' @export
-rm_corrupted_observations <- function(data, y, threshold = 0.7, na_indicators = c('')) {
+rm_corrupted_observations <- function(data, y, threshold = 0.3, na_indicators = c('')) {
   if (!threshold >= 0 && !threshold <= 1) {
     verbose_cat(crayon::red('\u2716'), 'Removal of corrupted observations: The value of threshold is not in [0,1] range.', '\n', verbose = TRUE)
     stop('Removal of corrupted observations: The value of threshold is not in [0,1] range.')
@@ -162,6 +162,7 @@ rm_corrupted_observations <- function(data, y, threshold = 0.7, na_indicators = 
   to_rm <- c()
   X     <- data[names(data) != y]
   Y     <- as.vector(unlist(data[y]))
+
   for (i in 1:nrow(data)) {
     nas <- sum(as.integer(is.na(X[i,]))) / (ncol(X))
     k   <- 0
@@ -176,7 +177,7 @@ rm_corrupted_observations <- function(data, y, threshold = 0.7, na_indicators = 
     if (is.na(Y[i]) || is.null(Y[i]) || Y[i] %in% na_indicators) {
       to_rm <- c(to_rm, i)
     # If observation doesn't have too much missing values.
-    } else if (nas >= 1 - threshold) {
+    } else if (nas > threshold) {
       to_rm <- c(to_rm, i)
     }
   }
@@ -210,8 +211,8 @@ rm_corrupted_observations <- function(data, y, threshold = 0.7, na_indicators = 
 rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx',
                                                   'identification', 'index')) {
   if (!is.vector(id_names)) {
-    verbose_cat(crayon::red('\u2716'), 'Removal of ID-like columns: Provided id_names is not a vector', '\n', verbose = TRUE)
-    stop('Removal of ID-like columns: Provided id_names is not a vector')
+    verbose_cat(crayon::red('\u2716'), 'Removal of ID-like columns: Provided id_names is not a vector.', '\n', verbose = TRUE)
+    stop('Removal of ID-like columns: Provided id_names is not a vector.')
   }
   names     <- colnames(data)
   to_rm     <- c()
@@ -242,7 +243,7 @@ rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx',
 #' @param y A string that indicates a target column name.
 #' @param threshold A numeric value from [0,1] range, which indicates the maximum
 #' threshold of missing values for columns If column has more missing fields
-#' it is going to be removed. By default set to 0.7.
+#' it is going to be removed. By default set to 0.3.
 #' @param na_indicators A list containing the values that will be treated as NA
 #' indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 #' as these are already checked in other criterion.
@@ -253,7 +254,7 @@ rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx',
 #' \item \code{`idx`} The indexes of removed columns.
 #' }
 #' @export
-rm_sparse_columns <- function(data, y, threshold = 0.7, na_indicators = c('')) {
+rm_sparse_columns <- function(data, y, threshold = 0.3, na_indicators = c('')) {
   if (!threshold >= 0 && !threshold <= 1) {
     verbose_cat(crayon::red('\u2716'), 'Removal of sparse columns: The value of threshold is not in [0,1] range.', '\n', verbose = TRUE)
     stop('Removal of sparse columns: The value of threshold is not in [0,1] range.')
@@ -275,13 +276,13 @@ rm_sparse_columns <- function(data, y, threshold = 0.7, na_indicators = c('')) {
       }
     }
     nas <- nas + k
-    if (nas >= 1 - threshold) {
+    if (nas >= threshold) {
       to_rm <- c(to_rm, i)
     }
   }
   if (!is.null(to_rm)) {
     to_rm <- ifelse (to_rm >= y_idx, to_rm + 1, to_rm)
-    data <- data[-to_rm, ]
+    data  <- data[-to_rm, ]
   }
   return(list(
     data = data,
@@ -304,27 +305,30 @@ rm_sparse_columns <- function(data, y, threshold = 0.7, na_indicators = c('')) {
 #' @export
 rm_duplicate_columns <- function(data, y) {
   X          <- data[names(data) != y]
-  X_2        <- X
   y_idx      <- which(names(data) == y)
   to_rm      <- c()
   duplicates <- TRUE
+  mat        <- find_duplicate_columns(X)
   while(duplicates) {
-    mat <- find_duplicate_columns(X_2)
     if (sum(mat) == 0) {
       duplicates <- FALSE
     } else {
-      add   <- sum(to_rm <= which.max(colSums(mat)))
-      to_rm <- c(to_rm, which.max(colSums(mat)) + add)
-      X_2   <- X[, -to_rm]
+      # add   <- sum(to_rm <= which.max(colSums(mat)))
+      # to_rm <- c(to_rm, which.max(colSums(mat)) + add)
+      # X_2   <- X[, -to_rm]
+
+      to_zero <- which.max(colSums(mat))
+      to_rm   <- c(to_rm, to_zero)
+      mat[, to_zero] <- rep(0, ncol(mat))
+      mat[to_zero, ] <- rep(0, nrow(mat))
     }
   }
   if (!is.null(to_rm)) {
     # If the index of our target is lower-equal than the value of index we have to
     # increase the index by one.
     ifelse (to_rm >= y_idx, to_rm + 1, to_rm)
-    data <- data[-to_rm, ]
+    data <- data[, -to_rm]
   }
-
   return(list(
     data = data,
     idx  = to_rm
@@ -344,7 +348,7 @@ rm_duplicate_columns <- function(data, y) {
 find_duplicate_columns <- function(data) {
   duplicate_mt <- matrix(0, ncol(data), ncol(data))
   for (i in 1:ncol(data)) {
-    for (j in i:ncol(data)) {
+    for (j in 1:ncol(data)) {
       if (i != j && identical(data[, i], data[, j])) {
         duplicate_mt[i, j] <- 1
       }
@@ -400,10 +404,11 @@ rm_correlated_columns <- function(data, y, threshold = 0.7) {
     strong_Spearman_mat <- matrix(0, length(num_idx), length(num_idx))
     to_rm               <- c()
     strong_Spearman_cor <- TRUE
-    # A copy needed for removal of features.
+    # A copy needed for removal of features. We include both columns and rows
+    # as it helps with detection of variables with most correlations.
     for (i in 1:ncol(cor_num)) {
-      for (j in i:ncol(cor_num)) {
-        if (i != j && cor_num[i, j] >= threshold) {
+      for (j in 1:ncol(cor_num)) {
+        if (i != j && abs(cor_num[i, j]) > threshold) {
           strong_Spearman_mat[i, j] <- 1
         }
       }
@@ -413,9 +418,14 @@ rm_correlated_columns <- function(data, y, threshold = 0.7) {
       if (sum(strong_Spearman_cp) == 0) {
         strong_Spearman_cor <- FALSE
       } else {
-        add                <- sum(to_rm <= which.max(colSums(strong_Spearman_cp)))
-        to_rm              <- c(to_rm, which.max(colSums(strong_Spearman_cp)) + add)
-        strong_Spearman_cp <- strong_Spearman_mat[, -to_rm]
+        # add                <- sum(to_rm <= which.max(colSums(strong_Spearman_cp)))
+        # to_rm              <- c(to_rm, which.max(colSums(strong_Spearman_cp)) + add)
+        # # Remove both rows and the column
+        # strong_Spearman_cp <- strong_Spearman_mat[-to_rm, -to_rm]
+        to_zero <- which.max(colSums(strong_Spearman_cp))
+        to_rm   <- c(to_rm, to_zero)
+        strong_Spearman_cp[, to_zero] <- rep(0, ncol(strong_Spearman_cp))
+        strong_Spearman_cp[to_zero, ] <- rep(0, nrow(strong_Spearman_cp))
       }
     }
     to_rm_numeric <- num_idx[to_rm]
@@ -432,7 +442,6 @@ rm_correlated_columns <- function(data, y, threshold = 0.7) {
     # Calcualte CrammerV correlation
     for (i in 1:length(fct_idx)) {
       for (j in 1:length(fct_idx)) {
-
         a = as.numeric(length(unique(fct_tbl[, i])))
         b = as.numeric(length(unique(fct_tbl[, j])))
         # With 2^31 we have to big vector that can't be allocated (over 7.4 Gb).
@@ -440,18 +449,19 @@ rm_correlated_columns <- function(data, y, threshold = 0.7) {
           cor_fct[i, j] <- round(rcompanion::cramerV(fct_tbl[, i], fct_tbl[, j]), 2)
         } else {
           cor_fct[i, j] <- NA
+          verbose_cat(crayon::red('\u2716'), 'Cannot calculate Crammer V rank for features', colnames(cor_fct)[i],
+                      'and', colnames(cor_fct)[j], 'due to too many unique values. \n', verbose = TRUE)
         }
-
       }
     }
     strong_CrammerV_mat <- matrix(0, length(fct_idx), length(fct_idx))
     to_rm               <- c()
     strong_CrammerV_cor <- TRUE
-    # A copy needed for removal of features.
-
+    # A copy needed for removal of features. We include both columns and rows
+    # as it helps with detection of variables with most correlations.
     for (i in 1:ncol(cor_fct)) {
-      for (j in i:ncol(cor_fct)) {
-        if (i != j && cor_fct[i, j] >= threshold) {
+      for (j in 1:ncol(cor_fct)) {
+        if (i != j && abs(cor_fct[i, j]) > threshold) {
           strong_CrammerV_mat[i, j] <- 1
         }
       }
@@ -462,9 +472,14 @@ rm_correlated_columns <- function(data, y, threshold = 0.7) {
       if (sum(strong_CrammerV_cp) == 0) {
         strong_CrammerV_cor <- FALSE
       } else {
-        add                 <- sum(to_rm <= which.max(colSums(strong_CrammerV_cp)))
-        to_rm               <- c(to_rm, which.max(colSums(strong_CrammerV_cp)) + add)
-        strong_CrammerV_cp  <- strong_CrammerV_mat[, -to_rm]
+        # add                 <- sum(to_rm <= which.max(colSums(strong_CrammerV_cp)))
+        # to_rm               <- c(to_rm, which.max(colSums(strong_CrammerV_cp)) + add)
+        # # Remove both rows and the column
+        # strong_CrammerV_cp  <- strong_CrammerV_mat[-to_rm, -to_rm]
+        to_zero <- which.max(colSums(strong_CrammerV_cp))
+        to_rm   <- c(to_rm, to_zero)
+        strong_CrammerV_cp[, to_zero] <- rep(0, ncol(strong_CrammerV_cp))
+        strong_CrammerV_cp[to_zero, ] <- rep(0, nrow(strong_CrammerV_cp))
       }
     }
     to_rm_categorical <- fct_idx[to_rm]
@@ -520,7 +535,7 @@ rm_static_cols <- function(data, y, threshold = 1) {
   }
   to_rm <- c()
   for (i in 1:ncol(data)) {
-    if (sort(table(data[[i]]), decreasing = TRUE)[[1]] / nrow(data) >= threshold) {
+    if (sort(table(data[[i]]), decreasing = TRUE)[[1]] / nrow(data) > threshold) {
       to_rm <- c(to_rm, i)
     }
   }

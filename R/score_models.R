@@ -27,45 +27,6 @@
 #' @return A data.frame with 'no.' - number of model from models,
 #' 'engine' - name of the model from models, other metrics columns.
 #' @export
-#'
-#' @examples
-#' iris_bin          <- iris[1:100, ]
-#' iris_bin$Species  <- factor(iris_bin$Species)
-#' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-#' preprocessed_data <- preprocessed_data$data
-#' split_data <-
-#'   train_test_balance(preprocessed_data,
-#'                      'Species',
-#'                      balance = FALSE)
-#' train_data <-
-#'   prepare_data(split_data$train,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-#' test_data <-
-#'   prepare_data(split_data$test,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                predict = TRUE,
-#'                train = split_data$train)
-#' suppressWarnings(
-#'   model <-
-#'     train_models(train_data,
-#'                  'Species',
-#'                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                  type = type)
-#' )
-#' predictions <-
-#'   predict_models(model,
-#'                  test_data,
-#'                  'Species',
-#'                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                  type = type)
-#' score <-
-#'   score_models(model,
-#'                predictions,
-#'                observed = split_data$test$Species,
-#'                type = type)
 #' @importFrom stats weighted.mean
 score_models <- function(models,
                          predictions,
@@ -87,15 +48,15 @@ score_models <- function(models,
                           'specificity' = TRUE, 'balanced_accuracy' = TRUE,
                           'metric_function' = metric_function_decreasing)
 
-  metrics <- c(metrics)
+  metrics        <- c(metrics)
   colnames_basic <- c('no.', 'name')
-  nr_add_col <- 2
+  nr_add_col     <- 2
   if (!is.null(engine)) {
-    nr_add_col <- nr_add_col + 1
+    nr_add_col     <- nr_add_col + 1
     colnames_basic <- c(colnames_basic, 'engine')
   }
   if (!is.null(tuning)) {
-    nr_add_col <- nr_add_col + 1
+    nr_add_col     <- nr_add_col + 1
     colnames_basic <- c(colnames_basic, 'tuning')
   }
 
@@ -153,8 +114,8 @@ score_models <- function(models,
     }
     if (!(sort_by %in% metrics_binary_clf)) {
       if (sort_by != 'auto') {
-        warning(paste('sort_by need to by one of binary classification metrics. Default metric applied : accuracy.
-                      You can choose one of the them: auto, metric_function (in case of usage custom function) ',
+        warning(paste('sort_by need to by one of binary classification metrics. Default metric applied : accuracy.',
+                      'You can choose one of the them: auto, metric_function (in case of usage custom function) ',
                       paste(metrics_binary_clf, collapse = ', ')))
       }
         sort_by <- 'accuracy'
@@ -212,9 +173,7 @@ score_models <- function(models,
   if (!is.null(metric_function)) {
     colnames(models_frame)[colnames(models_frame) == 'metric_function'] <- metric_function_name
   }
-
   rownames(models_frame) <- NULL
-
   return(models_frame)
 }
 
@@ -227,23 +186,23 @@ metric_function_null <- function(metric_function, predicted, observed) {
 
 # Functions below are taken from the DALEX package.
 model_performance_mse <- function(predicted, observed) {
-  mean((predicted - observed) ^ 2, na.rm = TRUE)
+  return(mean((predicted - observed) ^ 2, na.rm = TRUE))
 }
 
 model_performance_rmse <- function(predicted, observed) {
-  sqrt(mean((predicted - observed) ^ 2, na.rm = TRUE))
+  return(sqrt(mean((predicted - observed) ^ 2, na.rm = TRUE)))
 }
 
 model_performance_r2 <- function(predicted, observed) {
-  1 - model_performance_mse(predicted, observed) / model_performance_mse(mean(observed), observed)
+  return(1 - model_performance_mse(predicted, observed) / model_performance_mse(mean(observed), observed))
 }
 
 model_performance_mad <- function(predicted, observed) {
-  median(abs(predicted - observed))
+  return(median(abs(predicted - observed)))
 }
 
 model_performance_mae <- function(predicted, observed) {
-  mean(abs(predicted - observed))
+  return(mean(abs(predicted - observed)))
 }
 
 model_performance_auc <- function(predicted, observed) {
@@ -282,7 +241,7 @@ model_performance_specificity <- function(tp, fp, tn, fn) {
 }
 
 model_performance_balanced_accuracy <- function(tp, fp, tn, fn) {
-  (model_performance_sensitivity(tp, fp, tn, fn) + model_performance_specificity(tp, fp, tn, fn)) / 2
+  return((model_performance_sensitivity(tp, fp, tn, fn) + model_performance_specificity(tp, fp, tn, fn)) / 2)
 }
 
 model_performance_macro_f1 <- function(predicted, observed) {
@@ -291,26 +250,26 @@ model_performance_macro_f1 <- function(predicted, observed) {
   f1_scores            <- sapply(confusion_matrixes, function(x) {
     model_performance_f1(x$tp, x$fp, x$tn, x$fn)
   })
-  mean(f1_scores)
+  return(mean(f1_scores))
 }
 
 model_performance_micro_f1 <- function(predicted, observed) {
   # For case where each point can be assigned only to one class micro_f1 equals acc.
-  model_performance_accuracy_multi(predicted, observed)
+  return(model_performance_accuracy_multi(predicted, observed))
 }
 
 model_performance_weighted_macro_f1 <- function(predicted, observed) {
   predicted_vectorized <- turn_probs_into_vector(predicted)
-  confusion_matrixes <- calculate_confusion_matrixes(predicted_vectorized, observed)
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted_vectorized, observed)
   f1_scores <- sapply(confusion_matrixes, function(x) {
     model_performance_f1(x$tp, x$fp, x$tn, x$fn)
   })
-  weighted.mean(f1_scores, prop.table(table(observed))[names(confusion_matrixes)])
+  return(weighted.mean(f1_scores, prop.table(table(observed))[names(confusion_matrixes)]))
 }
 
 model_performance_accuracy_multi <- function(predicted, observed) {
   predicted_vectorized <- turn_probs_into_vector(predicted)
-  mean(predicted_vectorized == observed)
+  return(mean(predicted_vectorized == observed))
 }
 
 model_performance_weighted_macro_auc <- function(predicted, observed) {
@@ -318,7 +277,7 @@ model_performance_weighted_macro_auc <- function(predicted, observed) {
   auc_scores <- sapply(unique(observed), function(x) {
     model_performance_auc(predicted[,x], as.numeric(observed == x))
   })
-  weighted.mean(auc_scores, prop.table(table(observed))[unique(observed)])
+  return(weighted.mean(auc_scores, prop.table(table(observed))[unique(observed)]))
 }
 
 turn_probs_into_vector <- function(observed) {

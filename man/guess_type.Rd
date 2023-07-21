@@ -26,7 +26,3 @@ A string describing the type of ml task: `binary_clf`, `multi_clf` or
 For now, supported types are binary classification and regression.
 Multilabel classification is planned to be added later on.
 }
-\examples{
-data(compas)
-guess_type(compas,'Two_yr_Recidivism')
-}
