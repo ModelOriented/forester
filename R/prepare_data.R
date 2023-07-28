@@ -16,9 +16,9 @@
 #' @export
 prepare_data <- function(data,
                          y,
-                         engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                         engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                          predict = FALSE,
-                         train = NULL) {
+                         train   = NULL) {
   ranger_data        <- NULL
   xgboost_data       <- NULL
   decision_tree_data <- NULL
@@ -70,14 +70,14 @@ prepare_data <- function(data,
   # We have to drop levels that were changed to other and insert all levels
   # from the train (for OHE in the xgboost model).
   if ('xgboost' %in% engine) {
-    # The xgboost model works on numerical data only, so we have to perform OHE
+    # The xgboost model works on numerical data only, so we have to perform OHE.
     for (i in 1:ncol(data)) {
       if ('factor' %in% class(data[, i])) {
         levels(data[, i]) <- c(levels(data[, i]), levels(train[, i]))
       }
     }
 
-    ohe_feats = c()
+    ohe_feats     <-  c()
     xgboost_data  <- data
     for (i in 1:ncol(data)) {
       if ('factor' %in% class(data[, i])) {
@@ -97,7 +97,7 @@ prepare_data <- function(data,
       }
     }
 
-    label = xgboost_data[, y]
+    label          <- xgboost_data[, y]
     xgboost_table  <- data.table::as.data.table(data[, -which(names(xgboost_data) == y)])
     xgboost_data   <- mltools::one_hot(xgboost_table)
     xgboost_data   <- apply(xgboost_data, 2, as.numeric)
@@ -116,7 +116,15 @@ prepare_data <- function(data,
     decision_tree_data <- data
     for (i in 1:ncol(decision_tree_data)) {
       if (is.character(decision_tree_data[, i])) {
-        decision_tree_data[, i] <- factor(decision_tree_data[, i])
+        # If we get more than 31 levels per column, the decision tree cannot be
+        # build, thus we encode it numerically in this case.
+        if (length(levels(factor(decision_tree_data[, i]))) >= 30) {
+          decision_tree_data[, i] <- as.integer(factor(decision_tree_data[, i]))
+        } else {
+          decision_tree_data[, i] <- factor(decision_tree_data[, i])
+        }
+      } else if (is.factor(decision_tree_data[, i]) && length(levels(factor(decision_tree_data[, i]))) >= 30) {
+        decision_tree_data[, i] <- as.integer(factor(decision_tree_data[, i]))
       }
     }
     if (guess_type(data, y) == 'binary_clf') {

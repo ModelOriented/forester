@@ -237,10 +237,11 @@ train <- function(data,
 
   model_random   <- random_search(train_data,
                                   test_data,
-                                  y = y,
-                                  engine = engine,
-                                  type = type,
-                                  max_evals = random_evals)
+                                  y         = y,
+                                  engine    = engine,
+                                  type      = type,
+                                  max_evals = random_evals,
+                                  verbose   = verbose)
 
   verbose_cat(crayon::green('\u2714'), 'Models optimized with random search successfully trained. \n', verbose = verbose)
 

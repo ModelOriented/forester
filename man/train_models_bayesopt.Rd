@@ -30,13 +30,13 @@ values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.}
 
 \item{iters.n}{The number of iterations of BayesOpt function.}
 
-\item{return_params}{If TRUE, returns optimized model params.}
+\item{return_params}{A logical value, if set to TRUE, returns optimized model parameters.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}
 }
 \value{
-Trained models with optimized parameters. If `retun_params` is `TRUE`, then
+Trained models with optimized parameters. If `return_params` is `TRUE`, then
 returns also training parameters in the one list with models.
 }
 \description{

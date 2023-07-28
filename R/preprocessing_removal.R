@@ -95,9 +95,9 @@ preprocessing_removal <- function(data,
   }
   # We have to impute the missing data in order to calculate the correlations.
   # The imputation with median-other is the least invasive for distributions.
-  imputed_data <- preprocessing_imputation(data, na_indicators = c(''),
-                                           imputation_method = 'median-other')
   if (active_modules[[6]]) {
+    imputed_data <- preprocessing_imputation(data, na_indicators = c(''),
+                                             imputation_method = 'median-other')
     to_rm_col <- unique(to_rm_col)
     to_rm_cor <- rm_correlated_columns(imputed_data, y, threshold = high_correlation_threshold)[[2]]
     if (!is.null(to_rm_cor)) {

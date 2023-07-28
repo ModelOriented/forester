@@ -29,6 +29,8 @@
 	  -	  Renamed to `save_forest()`,
 	  -	  Merged parameters `name` and `path` into `file` as it is standard approach
 	  -	  Added an example of loading saved data to documentation.
+-   In the `prepare_data()` function added encoding for the `ctree` model so it can use columns with more than 30 levels.
+-   In the `random_search()` function added parameter `verbose`. When set to TRUE the function provides information about the training. 
 -	  Removed plenty of examples from functions that are not meant for the user.
 -	  Fixed plenty of formatting issues in various functions.
 

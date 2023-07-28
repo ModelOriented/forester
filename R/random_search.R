@@ -3,22 +3,25 @@
 #' @param train_data A training data for models created by `prepare_data()` function.
 #' @param y A string that indicates a target column name.
 #' @param models A list of models trained by `train_models()` function.
-#' They will be compered with models trained with different hyperparameters
+#' They will be compered with models trained with different hyperparameters.
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.
 #' @param type A string that determines if Machine Learning task is the
 #' `binary_clf` or `regression` task.
 #' @param max_evals The number of trained models for each model type in `engine`.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none. Set to FALSE by default.
 #'
 #' @return A list consisting of models created via random search and ranked list
 #' of models scores.
 #' @export
 random_search <- function(train_data,
                           y,
-                          models = NULL,
+                          models,
                           engine,
                           type,
-                          max_evals = 10) {
+                          max_evals = 10,
+                          verbose   = FALSE) {
   if (max_evals <= 0) {
     return(NULL)
   }
@@ -94,6 +97,7 @@ random_search <- function(train_data,
     names(ranger_models) <- paste('ranger_RS_', 1:max_ranger_evals, sep = '')
     search_models        <- c(search_models, ranger_models)
     search_engine        <- c(search_engine, rep('ranger', max_ranger_evals))
+    verbose_cat(crayon::green('\u2714'), 'ranger: Tuning with random search was successful!\n', verbose = verbose)
   }
   if ('xgboost' %in% engine) {
     if (type == 'regression') {
@@ -132,6 +136,7 @@ random_search <- function(train_data,
     names(xgboost_models) <- paste('xgboost_RS_', 1:max_xgboost_evals, sep = '')
     search_models         <- c(search_models, xgboost_models)
     search_engine         <- c(search_engine, rep('xgboost', max_xgboost_evals))
+    verbose_cat(crayon::green('\u2714'), 'xgboost: Tuning with random search was successful!\n', verbose = verbose)
   }
   if ('decision_tree' %in% engine) {
     tree_models        <- list()
@@ -156,6 +161,7 @@ random_search <- function(train_data,
     names(tree_models) <- paste('decision_tree_RS_', 1:max_tree_evals, sep = '')
     search_models      <- c(search_models, tree_models)
     search_engine      <- c(search_engine, rep('decision_tree', max_tree_evals))
+    verbose_cat(crayon::green('\u2714'), 'decision_tree: Tuning with random search was successful!\n', verbose = verbose)
   }
   if ('lightgbm' %in% engine) {
     lightgbm_models        <- list()
@@ -196,6 +202,7 @@ random_search <- function(train_data,
     names(lightgbm_models) <- paste('lightgbm_RS_', 1:max_lightgbm_evals, sep = '')
     search_models          <- c(search_models, lightgbm_models)
     search_engine          <- c(search_engine, rep('lightgbm', max_lightgbm_evals))
+    verbose_cat(crayon::green('\u2714'), 'lightgbm: Tuning with random search was successful!\n', verbose = verbose)
   }
   if ('catboost' %in% engine) {
     catboost_models        <- list()
@@ -229,6 +236,7 @@ random_search <- function(train_data,
     names(catboost_models) <- paste('catboost_RS_', 1:max_catboost_evals, sep = '')
     search_models          <- c(search_models, catboost_models)
     search_engine          <- c(search_engine, rep('catboost', max_catboost_evals))
+    verbose_cat(crayon::green('\u2714'), 'catboost: Tuning with random search was successful!\n', verbose = verbose)
   }
 
   return(list(
