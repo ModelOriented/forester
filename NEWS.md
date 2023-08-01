@@ -1,40 +1,42 @@
 # forester 1.3.0
--   In the DESCRIPTION: Added in Imports the VIM package, and in the Suggests sivs, parallel, rmcfs, and varrank packages.
-- 	In `check_data()` function: 
+
+-   In the DESCRIPTION: Added in Imports the `VIM` package, and in the Suggests `sivs`, `parallel`, `rmcfs`, and `varrank` packages.
+-   In `check_data()` function:
     -   removed 'no', and added 'index' to id_names used for id-like columns detection,
-    -	  Fixed minor printing and code formatting issues.
--	  Added a `custom_preprocessing()` function, which is more advanced and customizable approach for the preprocessing pipeline. It executes other new functions implementing three major pillars of preprocessing. The functions are `preprocessing_removal()`, `preprocessing_imputation()`, `preprocessing_feature_selection()`:
-	  -   `preprocessing_removal()` - This function includes 6 modules for the removal of unwanted features / observations. We can remove duplicate columns, the ID-like columns, static columns (with specified staticity threshold), sparse columns (with specified sparsity threshold), and highly correlated ones (with specified high correlation threshold). Additionally we can remove the observations that are too sparse (sparsity threshold), and have missing target value. One can turn on and off each module by setting proper logical values.
-	  -   `preprocessing_imputation()` Imputes missing values according to one of four prepared methods:
-		    -   `median-other` - The numeric features are imputed with median value, whereas the categorical ones with the 'other' string,
-		    -   `median-frequency` -  The numeric features are imputed with median value, whereas the categorical ones with the most frequent value,
-		    -   `knn` - All features are imputed with KNN algorithm,
-		    -   `mice` - All features are imputed with MICE algorithm.
-	  -   `preprocessing_feature_selection()` - Conducts a feature selection process with one out of four proposed methods:
-		    -   `VI` - The variable importance method based on random forest,
-		    -   `MCFS` - The Monte Carlo Feature Selection,
-		    -   `MI` - The Varrank method based on mutual information scores,
-		    -   `BORUTA` - The BORUTA algorithm - short time.
--	  Added tests for the `custom_preprocessing()`, `preprocessing_removal()`, `preprocessing_imputation()`, and `preprocessing_feature_selection()` functions.
+    -   Fixed minor printing and code formatting issues.
+-   Added a `custom_preprocessing()` function, which is more advanced and customizable approach for the preprocessing pipeline. It executes other new functions implementing three major pillars of preprocessing. The functions are `preprocessing_removal()`, `preprocessing_imputation()`, `preprocessing_feature_selection()`:
+    -   `preprocessing_removal()` - This function includes 6 modules for the removal of unwanted features / observations. We can remove duplicate columns, the ID-like columns, static columns (with specified staticity threshold), sparse columns (with specified sparsity threshold), and highly correlated ones (with specified high correlation threshold). Additionally we can remove the observations that are too sparse (sparsity threshold), and have missing target value. One can turn on and off each module by setting proper logical values.
+    -   `preprocessing_imputation()` - Imputes missing values according to one of four prepared methods:
+        -   `median-other` - The numeric features are imputed with median value, whereas the categorical ones with the 'other' string,
+        -   `median-frequency` - The numeric features are imputed with median value, whereas the categorical ones with the most frequent value,
+        -   `knn` - All features are imputed with KNN algorithm,
+        -   `mice` - All features are imputed with MICE algorithm.
+    -   `preprocessing_feature_selection()` - Conducts a feature selection process with one out of four proposed methods:
+        -   `VI` - The variable importance method based on random forest,
+        -   `MCFS` - The Monte Carlo Feature Selection,
+        -   `MI` - The Varrank method based on mutual information scores,
+        -   `BORUTA` - The BORUTA algorithm - short time.
+-   Added tests for the `custom_preprocessing()`, `preprocessing_removal()`, `preprocessing_imputation()`, and `preprocessing_feature_selection()` functions.
 -   In the `train()` function:
     -   Removed `advanced_preprocessing` parameter, as `custom_preprocessing()` is more advanced version of it,
     -   Added `custom_preprocessing` parameter, which takes the output of a `custom_preprocessing()` function,
     -   Added `deleted_rows` value to the output,
     -   Changed output parameter from `columns` to `deleted_columns`.
 -   In the `preprocessing()` function:
-    -   Removed `advanced` parameter, as `custom_preprocessing()` is more advanced version of it, 
+    -   Removed `advanced` parameter, as `custom_preprocessing()` is more advanced version of it,
     -   Changed output parameter from `columns` to `rm_columns`.
     -   Removed the example from this function.
--	  In the `save()` function:
-	  -	  Renamed to `save_forest()`,
-	  -	  Merged parameters `name` and `path` into `file` as it is standard approach
-	  -	  Added an example of loading saved data to documentation.
+-   In the `save()` function:
+    -   Renamed to `save_forest()`,
+    -   Merged parameters `name` and `path` into `file` as it is standard approach
+    -   Added an example of loading saved data to documentation.
 -   In the `prepare_data()` function added encoding for the `ctree` model so it can use columns with more than 30 levels.
--   In the `random_search()` function added parameter `verbose`. When set to TRUE the function provides information about the training. 
--	  Removed plenty of examples from functions that are not meant for the user.
--	  Fixed plenty of formatting issues in various functions.
+-   In the `random_search()` function added parameter `verbose`. When set to TRUE the function provides information about the training.
+-   Removed plenty of examples from functions that are not meant for the user.
+-   Fixed plenty of formatting issues in various functions.
 
-# forester 1.2.1
+## forester 1.2.1
+
 -   In the `train()` function:
     -   Added the `split_seed` parameter which enables the user to set the seed for the train-test split method,
     -   Added the `train_inds`, `test_inds`, and `valid_inds` vectors to the train output, which enable the user to recover the information which observation went to the train, test, and validation sets.
@@ -88,7 +90,6 @@
     -   Changed tuned hyperparameters and their values for all models, which increased the performance of the method.
 -   Updated the majority of `tests` so they match the current version.
 -   Added alternative catboost installation in the `README`.
-    
 
 # forester 1.1.4
 

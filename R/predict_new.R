@@ -37,11 +37,12 @@ predict_new <- function(train_out, data, verbose = TRUE) {
     levels(data[[y]]) <- c(1, 2)
   }
   if (nrow(data) > 29) {
-    tryCatch(
-      data  <- manage_missing(data, y),
-      error = function(e)
+    tryCatch({
+      data <- manage_missing(data, y)
+    },
+    error = function(e) {
         verbose_cat('Too few observations to perform imputation. MICE algorithm requires at least 30 observations. \n', verbose = verbose)
-    )
+    })
   } else if (nrow(data) > 0) {
     verbose_cat('No imputation performed due to only one observation. If any values are missing, user has to handle them by himself. \n', verbose = verbose)
   }

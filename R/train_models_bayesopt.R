@@ -83,7 +83,7 @@ train_models_bayesopt <- function(train_data,
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
           max_metric <- mean(preds == observed) # accuracy
         } else {
-          max_metric <- -model_performance_rmse(preds, observed) # rmse
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
         }
 
         return(list(Score = as.numeric(max_metric)))
@@ -176,7 +176,7 @@ train_models_bayesopt <- function(train_data,
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
           max_metric <- mean(preds == observed) # accuracy
         } else {
-          max_metric <- -model_performance_rmse(preds, observed) # rmse
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
         }
 
         return(list(Score = as.numeric(max_metric)))
@@ -254,7 +254,7 @@ train_models_bayesopt <- function(train_data,
           preds      <- unname(preds)
           max_metric <- mean(preds == observed) # accuracy
         } else {
-          max_metric <- -model_performance_rmse(preds, observed) # rmse
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
         }
         return(list(Score = as.numeric(max_metric)))
       }
@@ -339,7 +339,7 @@ train_models_bayesopt <- function(train_data,
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
           max_metric <- mean(preds == observed) # Accuracy.
         } else {
-          max_metric <- -model_performance_rmse(preds, observed) # RMSE.
+          max_metric <- - model_performance_rmse(preds, observed) # RMSE.
         }
         return(list(Score = as.numeric(max_metric)))
       }
@@ -441,7 +441,7 @@ train_models_bayesopt <- function(train_data,
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
           max_metric <- mean(preds == observed) # accuracy
         } else {
-          max_metric <- -model_performance_rmse(preds, observed) # rmse
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
         }
 
         return(list(Score = as.numeric(max_metric)))

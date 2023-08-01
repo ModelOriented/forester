@@ -178,7 +178,7 @@ check_missing <- function(df, y, verbose = TRUE) {
     verbose_cat(crayon::green('\u2714'), 'No target values are missing. \n\n', verbose = verbose)
     str <- capture.output(cat('**No target values are missing. **\n\n'))
   } else {
-    verbose_cat(crayon::red('\u2716'),' ', missing_y,' Target values are missing. \n', sep = '', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), ' ', missing_y,' Target values are missing. \n', sep = '', verbose = verbose)
     str <- capture.output(cat(missing_y, ' **Target values are missing.**\n\n', sep = ''))
   }
 
@@ -310,8 +310,8 @@ check_cor <- function(df, y, verbose = TRUE) {
           cor_fct[i, j] <- round(rcompanion::cramerV(fct_tbl[, i], fct_tbl[, j]), 2)
         } else {
           cor_fct[i, j] <- NA
-          verbose_cat(crayon::red('\nWARNING!'), ' Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. \n', verbose = verbose)
-          str <- c(str, capture.output(cat('\nWARNING!', ' Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. **\n')))
+          verbose_cat(crayon::red('\nWARNING!'), ' Correlation: ', colnames(cor_fct)[i], ' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. \n', verbose = verbose)
+          str <- c(str, capture.output(cat('\nWARNING!', ' Correlation: ', colnames(cor_fct)[i], ' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. **\n')))
         }
       }
     }
