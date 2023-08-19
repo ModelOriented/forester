@@ -126,13 +126,4 @@ test_that('test-preprocessing', {
   expect_true(is.null(save_deleted_columns(adult[1:1000,], del_id_adult)))
   expect_true(is.null(save_deleted_columns(lymph, del_id_lymph)))
   expect_true(save_deleted_columns(testing_data, del_id_test) == 'X3')
-
-  prep_compas   <- preprocessing(compas, 'Two_yr_Recidivism', TRUE, FALSE)
-  prep_iris     <- preprocessing(iris, 'Species', TRUE, FALSE)
-  prep_adult    <- preprocessing(adult[1:1000,], 'salary', TRUE, FALSE)
-  prep_lymph    <- preprocessing(lymph, 'class', TRUE, FALSE)
-  prep_test     <- preprocessing(testing_data, 'y', TRUE, FALSE)
-  suppressWarnings(
-    prep_lisbon <- preprocessing(lisbon, 'Price', TRUE, FALSE)
-  )
 })

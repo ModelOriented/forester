@@ -17,12 +17,11 @@
 #' data('lisbon')
 #' train_output <- train(lisbon, 'Price')
 #' report(train_output, 'regression.pdf')
-report <-
-  function(train_output,
-           output_file = NULL,
-           output_format = 'pdf_document',
-           output_dir = getwd(),
-           check_data = TRUE) {
+report <- function(train_output,
+                   output_file   = NULL,
+                   output_format = 'pdf_document',
+                   output_dir    = getwd(),
+                   check_data    = TRUE) {
 
     tryCatch({
       find.package('tinytex')

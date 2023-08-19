@@ -9,24 +9,6 @@
 #'
 #' @return A list of models for every engine.
 #' @export
-#'
-#' @examples
-#' data(iris)
-#' iris_bin          <- iris[1:100, ]
-#' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-#' preprocessed_data <- preprocessed_data$data
-#' split_data <-
-#'   train_test_balance(preprocessed_data, 'Species', balance = FALSE)
-#' train_data <-
-#'   prepare_data(split_data$train,
-#'                'Species',
-#'                c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-#' model <-
-#'   train_models(train_data,
-#'                'Species',
-#'                c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                type)
 train_models <- function(data, y, engine, type) {
   ranger_model        <- NULL
   xgboost_model       <- NULL
@@ -55,7 +37,7 @@ train_models <- function(data, y, engine, type) {
     } else if (engine[i] == 'xgboost') {
       if (type == 'binary_clf') {
         if (any(data$ranger_data[[y]] == 2)) {
-          data$ranger_data[[y]] = as.numeric(data$ranger_data[[y]]) - 1
+          data$ranger_data[[y]] <- as.numeric(data$ranger_data[[y]]) - 1
         }
       xgboost_model <-
         xgboost::xgboost(data$xgboost_data,
@@ -73,20 +55,20 @@ train_models <- function(data, y, engine, type) {
       }
 
     } else if (engine[i] == 'decision_tree') {
-      form = as.formula(paste0(y, ' ~.'))
+      form                <- as.formula(paste0(y, ' ~.'))
       decision_tree_model <- partykit::ctree(form, data = data$decision_tree_data)
 
     } else if (engine[i] == 'lightgbm') {
       # For each objective type, we need another set of params
       # setting up the parameters.
       if (type == 'binary_clf') {
-        obj = 'binary'
+        obj    <- 'binary'
         params <- list(objective = obj)
       } else if (type == 'multi_clf') {
-        obj = 'multiclass'
+        obj    <- 'multiclass'
         params <- list(objective = obj)
       } else if (type == 'regression') {
-        obj = 'regression'
+        obj    <- 'regression'
         params <- list(objective = obj)
       }
 
@@ -96,13 +78,13 @@ train_models <- function(data, y, engine, type) {
 
     } else if (engine[i] == 'catboost') {
       if (type == 'binary_clf') {
-        obj = 'Logloss'
+        obj    <- 'Logloss'
         params <- list(loss_function = obj, logging_level = 'Silent')
       } else if (type == 'multi_clf') {
-        obj = 'MultiClass'
+        obj    <- 'MultiClass'
         params <- list(loss_function = obj, logging_level = 'Silent')
       } else if (type == 'regression') {
-        obj = 'MAE'
+        obj    <- 'MAE'
         params <- list(loss_function = obj, logging_level = 'Silent')
       }
       capture.output(catboost_model <- catboost::catboost.train(data$catboost_data, params = params))

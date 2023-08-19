@@ -15,41 +15,7 @@
 #'
 #' @return A list of predictions for every engine.
 #' @export
-#'
-#' @examples
-#' data(iris)
-#' iris_bin          <- iris[1:100, ]
-#' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-#' preprocessed_data <- preprocessed_data$data
-#' split_data <-
-#'   train_test_balance(preprocessed_data,
-#'                      'Species',
-#'                      balance = FALSE)
-#' train_data <-
-#'   prepare_data(split_data$train,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-#' test_data <-
-#'   prepare_data(split_data$test,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                predict = TRUE,
-#'                train = split_data$train)
-#'
-#' model <-
-#'   train_models(train_data,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                type = type)
-#' predictions <-
-#'   predict_models(model,
-#'                  test_data,
-#'                  'Species',
-#'                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                  type = type)
-#'
-#'@importFrom stats as.formula predict
+#' @importFrom stats as.formula predict
 predict_models <- function(models, data, y, engine, type, probability = FALSE) {
   ranger_preds        <- NULL
   xgboost_preds       <- NULL
@@ -61,20 +27,16 @@ predict_models <- function(models, data, y, engine, type, probability = FALSE) {
     for (i in 1:length(engine)) {
       if (engine[i] == 'ranger') {
         ranger_preds <- (predict(models[[i]], data$ranger_data))$predictions
-
       }
       if (engine[i] == 'xgboost') {
         xgboost_preds <- (predict(models[[i]], data$xgboost_data))
-
       }
       if (engine[i] == 'decision_tree') {
         decision_tree_preds <-
           unname(predict(models[[i]], data$decision_tree_data))
-
       }
       if (engine[i] == 'lightgbm') {
         lightgbm_preds <- (predict(models[[i]], data$lightgbm_data))
-
       }
       if (engine[i] == 'catboost') {
         catboost_preds <- (
@@ -94,10 +56,7 @@ predict_models <- function(models, data, y, engine, type, probability = FALSE) {
         xgboost_preds <- (predict(models[[i]], data$xgboost_data))
       }
       if (engine[i] == 'decision_tree') {
-        decision_tree_preds <-
-          (unname(
-            predict(models[[i]], data$decision_tree_data, type = 'prob')[, 2]
-          ))
+        decision_tree_preds <- (unname(predict(models[[i]], data$decision_tree_data, type = 'prob')[, 2]))
       }
       if (engine[i] == 'lightgbm') {
         lightgbm_preds <- (predict(models[[i]], data$lightgbm_data))
@@ -111,7 +70,6 @@ predict_models <- function(models, data, y, engine, type, probability = FALSE) {
       }
     }
   }
-
   if (type == 'binary_clf' && probability == FALSE) {
     treshold            <- 0.5
     ranger_preds        <- (ranger_preds >= treshold) + 1
@@ -120,7 +78,6 @@ predict_models <- function(models, data, y, engine, type, probability = FALSE) {
     xgboost_preds       <- (xgboost_preds >= treshold) + 1
     lightgbm_preds      <- (lightgbm_preds >= treshold) + 1
   }
-
   return(
     list(
       ranger_preds        = ranger_preds,

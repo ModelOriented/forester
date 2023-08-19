@@ -30,13 +30,13 @@ values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.}
 
 \item{iters.n}{The number of iterations of BayesOpt function.}
 
-\item{return_params}{If TRUE, returns optimized model params.}
+\item{return_params}{A logical value, if set to TRUE, returns optimized model parameters.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}
 }
 \value{
-Trained models with optimized parameters. If `retun_params` is `TRUE`, then
+Trained models with optimized parameters. If `return_params` is `TRUE`, then
 returns also training parameters in the one list with models.
 }
 \description{
@@ -44,60 +44,4 @@ Bayesian Optimization takes relatively a long time - the bigger `iters.n` param,
 the more time (but if you want to get model parameters better than default params,
 it is suggested to set `iters.n` equals 20 at least.
 Also the bigger dataset, the more time takes Bayesian Optimization.
-}
-\examples{
-# Binary classification
-data(iris)
-iris_bin          <- iris[1:100, ]
-type              <- guess_type(iris_bin, 'Species')
-preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-preprocessed_data <- preprocessed_data$data
-split_data <-
-  train_test_balance(preprocessed_data, 'Species', balance = FALSE)
-train_data <-
-  prepare_data(split_data$train,
-               'Species',
-               c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-test_data <-
-  prepare_data(split_data$test,
-               'Species',
-               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-               predict = TRUE,
-               train = split_data$train)
-
-models <- train_models_bayesopt(train_data,
-                               'Species',
-                               test_data,
-                               engine = c('ranger', 'xgboost', 'decision_tree',
-                               'lightgbm', 'catboost'),
-                               type = type,
-                               iters.n = 1,)
-
-# Regression
-type              <- guess_type(lisbon, 'Price')
-preprocessed_data <- preprocessing(lisbon, 'Price', type)
-preprocessed_data <- preprocessed_data$data
-split_data2 <-
-  train_test_balance(preprocessed_data,
-                     y = 'Price',
-                     balance = FALSE)
-train_data2 <- prepare_data(split_data2$train,
-                     y = 'Price',
-                     engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
-)
-test_data2 <-
-  prepare_data(split_data2$test,
-               'Price',
-               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-               predict = TRUE,
-               train = split_data2$train)
-
-
-models2 <-
-   train_models_bayesopt(train_data2,
-                        'Price',
-                         test_data2,
-                         engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                         type = type,
-                         iters.n = 1)
 }

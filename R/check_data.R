@@ -24,7 +24,7 @@ check_data <- function(data, y, verbose = TRUE) {
     stop('Target column name not found!')
   }
 
-  df <- as.data.frame(data)
+  df  <- as.data.frame(data)
   str <- capture.output(cat(' -------------------- **CHECK DATA REPORT** -------------------- \n \n'))
   verbose_cat(' -------------------- CHECK DATA REPORT -------------------- \n \n', verbose = verbose)
   str <- c(str, basic_info(df, y, verbose))
@@ -140,7 +140,6 @@ check_duplicate_col <- function(df, verbose = TRUE) {
   if (length(pairs) == 0) {
     verbose_cat(crayon::green('\u2714'), 'No duplicate columns.\n', verbose = verbose)
     str <- capture.output(cat('**No duplicate columns.**\n'))
-
   } else {
     verbose_cat(crayon::red('\u2716'), ' These column pairs are duplicate:\n ', pairs, '\n', sep = '', verbose = verbose)
     str <- capture.output(cat('**These column pairs are duplicate: **\n', pairs, '\n\n',
@@ -172,32 +171,27 @@ check_missing <- function(df, y, verbose = TRUE) {
 
   for (i in 1:nrow(df_sm)) {
     if (length(df[i, ][df[i, ] == '']) != 0) {
-      missing_x = missing_x + 1
+      missing_x <- missing_x + 1
     }
   }
-
   if (missing_y == 0) {
     verbose_cat(crayon::green('\u2714'), 'No target values are missing. \n\n', verbose = verbose)
     str <- capture.output(cat('**No target values are missing. **\n\n'))
-
   } else {
-    verbose_cat(crayon::red('\u2716'), missing_y,' Target values are missing. \n', sep = '', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), ' ', missing_y,' Target values are missing. \n', sep = '', verbose = verbose)
     str <- capture.output(cat(missing_y, ' **Target values are missing.**\n\n', sep = ''))
-
   }
 
   if (missing_x == 0) {
     verbose_cat(crayon::green('\u2714'), 'No predictor values are missing. \n', verbose = verbose)
     str <- c(str, capture.output(cat('**No predictor values are missing. **\n')))
-
   } else {
     verbose_cat(crayon::red('\u2716'), ' ', missing_x, ' observations have missing fields.\n', sep = '', verbose = verbose)
     str <- c(str, capture.output(cat('** ', missing_x, ' observations have missing fields.**\n', sep = '')))
-
   }
+
   verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
-
   return(str)
 }
 
@@ -217,25 +211,19 @@ check_dim <- function(df, verbose = TRUE) {
   cols <- dim(df)[2]
 
   if (cols > 30) {
-    verbose_cat(crayon::red('\u2716'), ' Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
-    str <- capture.output(
-      cat('**Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. **\n', sep = ''))
-
+    verbose_cat(crayon::red('\u2716'), 'Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
+    str <- capture.output(cat('**Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. **\n', sep = ''))
   }
   if (cols >= rows) {
     verbose_cat(crayon::red('\u2716'), 'More features than observations, try reducing dimensionality or add new observations. \n', verbose = verbose)
-    str <- capture.output(
-      cat('**More features than observations, try reducing dimensionality or add new observations. **\n'))
-
+    str <- capture.output(cat('**More features than observations, try reducing dimensionality or add new observations. **\n'))
   }
   if (cols < rows && cols <= 30) {
     verbose_cat(crayon::green('\u2714'), 'No issues with dimensionality. \n', verbose = verbose)
     str <- capture.output(cat('**No issues with dimensionality. **\n'))
-
   }
   verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
-
   return(str)
 }
 
@@ -284,13 +272,11 @@ check_cor <- function(df, y, verbose = TRUE) {
         } else {
           strong_Spearman_cor <- (abs(cor_num[i, j]) >= 0.7)
         }
-
         if (i != j && strong_Spearman_cor) {
           if (no_cor_num) {
             verbose_cat(crayon::red('\u2716'), 'Strongly correlated, by Spearman rank, pairs of numerical values are: \n', verbose = verbose, '\n')
             str <- capture.output(cat('**Strongly correlated, by Spearman rank, pairs of numerical values are: **\n\n'))
             no_cor_num <- FALSE
-
           }
           verbose_cat(' ', num_names[i], ' - ', num_names[j], ': ', cor_num[i, j], ';\n', sep = '', verbose = verbose)
           str <- c(str, capture.output(
@@ -324,11 +310,9 @@ check_cor <- function(df, y, verbose = TRUE) {
           cor_fct[i, j] <- round(rcompanion::cramerV(fct_tbl[, i], fct_tbl[, j]), 2)
         } else {
           cor_fct[i, j] <- NA
-          verbose_cat(crayon::red('\nWARNING!'), ' Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. \n', verbose = verbose)
-          str <- c(str, capture.output(
-            cat('\nWARNING!', ' Correlation: ', colnames(cor_fct)[i],' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. **\n')))
+          verbose_cat(crayon::red('\nWARNING!'), ' Correlation: ', colnames(cor_fct)[i], ' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. \n', verbose = verbose)
+          str <- c(str, capture.output(cat('\nWARNING!', ' Correlation: ', colnames(cor_fct)[i], ' - ', colnames(cor_fct)[j], ' was ommited because of too much unique values. **\n')))
         }
-
       }
     }
     no_cor_fct = TRUE
@@ -347,7 +331,6 @@ check_cor <- function(df, y, verbose = TRUE) {
             verbose_cat(crayon::red('\u2716'), 'Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: \n', verbose = verbose)
             str <- c(str, capture.output(cat('\n', '** Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: **\n\n')))
             no_cor_fct = FALSE
-
           }
           verbose_cat(' ', fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '', verbose = verbose)
           str <- c(str, capture.output(cat(' ', fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '')))
@@ -390,25 +373,25 @@ check_cor <- function(df, y, verbose = TRUE) {
 check_outliers <- function(df, verbose = TRUE) {
   # Methods from: https://www.reneshbedre.com/blog/find-outliers.html
   mean_standard_deviation <- function(x) {
-    mean = mean(x)
-    std  = sd(x)
-    Tmin = mean - (3 * std)
-    Tmax = mean + (3 * std)
+    mean <- mean(x)
+    std  <- sd(x)
+    Tmin <- mean - (3 * std)
+    Tmax <- mean + (3 * std)
     return (which(x < Tmin | x > Tmax))
   }
 
   median_absolute_deviation <- function(x) {
-    med     = median(x)
-    abs_dev = abs(x - med)
-    mad     = 1.4826 * median(abs_dev) # for normally distributed data
-    Tmin    = med - (3 * mad)
-    Tmax    = med + (3 * mad)
+    med     <- median(x)
+    abs_dev <- abs(x - med)
+    mad     <- 1.4826 * median(abs_dev) # for normally distributed data
+    Tmin    <- med - (3 * mad)
+    Tmax    <- med + (3 * mad)
     return (which(x < Tmin | x > Tmax))
   }
 
   inter_quantile_range <- function(x) {
-    Tmin = summary(x)[2] - (1.5 * IQR(x))
-    Tmax = summary(x)[4] + (1.5 * IQR(x))
+    Tmin <- summary(x)[2] - (1.5 * IQR(x))
+    Tmax <- summary(x)[4] + (1.5 * IQR(x))
     return (which(x < Tmin | x > Tmax))
   }
 
@@ -439,15 +422,12 @@ check_outliers <- function(df, verbose = TRUE) {
     if (length(outliers) == 0) {
       verbose_cat(crayon::green('\u2714'), 'No outliers in the dataset. \n', verbose = verbose)
       str <- capture.output(cat('**No outliers in the dataset. **\n'))
-
     } else if (length(outliers) < 50) {
       verbose_cat(crayon::red('\u2716'), 'These observations migth be outliers due to their numerical columns values: \n', outliers, ';\n', verbose = verbose)
-      str <- capture.output(
-        cat('**These observations migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
+      str <- capture.output(cat('**These observations migth be outliers due to their numerical columns values: **\n\n', outliers, ';\n'))
     } else {
       verbose_cat(crayon::red('\u2716'), 'There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \n', verbose = verbose)
-      str <- capture.output(
-        cat('**There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. **\n'))
+      str <- capture.output(cat('**There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. **\n'))
     }
     verbose_cat('\n', verbose = verbose)
 
@@ -540,8 +520,7 @@ check_y_balance <- function(df, y, verbose = TRUE) {
 
     } else {
       verbose_cat(crayon::red('\u2716'), 'Target data is not evenly distributed with quantile bins:', perc_bins, '\n', verbose = verbose)
-      str <- capture.output(
-        cat('**Target data is not evenly distributed with quantile bins:**', perc_bins, '\n'))
+      str <- capture.output(cat('**Target data is not evenly distributed with quantile bins:**', perc_bins, '\n'))
     }
 
   } else if (type == 'multi_clf') {
@@ -566,7 +545,7 @@ check_y_balance <- function(df, y, verbose = TRUE) {
 #' @export
 detect_id_columns <- function(data, verbose = TRUE) {
   names     <- colnames(data)
-  id_names  <- c('id', 'no', 'nr', 'number', 'idx', 'identification')
+  id_names  <- c('id', 'nr', 'number', 'idx', 'identification', 'index')
   sus_names <- c()
   sus_data  <- c()
   for (i in 1:ncol(data)) {
@@ -605,6 +584,5 @@ detect_id_columns <- function(data, verbose = TRUE) {
 
   verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
-
   return(str)
 }

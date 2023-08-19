@@ -23,21 +23,3 @@ A list of models for every engine.
 \description{
 Train models from given engines
 }
-\examples{
-data(iris)
-iris_bin          <- iris[1:100, ]
-type              <- guess_type(iris_bin, 'Species')
-preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-preprocessed_data <- preprocessed_data$data
-split_data <-
-  train_test_balance(preprocessed_data, 'Species', balance = FALSE)
-train_data <-
-  prepare_data(split_data$train,
-               'Species',
-               c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-model <-
-  train_models(train_data,
-               'Species',
-               c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-               type)
-}

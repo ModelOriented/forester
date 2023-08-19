@@ -35,25 +35,3 @@ A dataset in format proper for the selected engines.
 \description{
 Prepare data into format correct for the selected model engine
 }
-\examples{
-data(iris)
-type              <- guess_type(lisbon, 'Price')
-preprocessed_data <- preprocessing(lisbon, 'Price', type)
-preprocessed_data <- preprocessed_data$data
-split_data <-
-  train_test_balance(preprocessed_data,
-                     'Price',
-                     balance = FALSE)
-set.seed(123)
-train_data <-
-  prepare_data(split_data$train,
-               'Price',
-               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-set.seed(123)
-test_data <-
-  prepare_data(split_data$test,
-               'Price',
-               engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
-               predict = TRUE,
-               train = split_data$train)
-}

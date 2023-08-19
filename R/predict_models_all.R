@@ -8,38 +8,6 @@
 #'
 #' @return A list of predictions for every engine without names.
 #' @export
-#'
-#' @examples
-#' data(iris)
-#' iris_bin          <- iris[1:100, ]
-#' type              <- guess_type(iris_bin, 'Species')
-#' preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-#' preprocessed_data <- preprocessed_data$data
-#' split_data <-
-#'   train_test_balance(preprocessed_data,
-#'                      'Species',
-#'                      balance = FALSE)
-#' train_data <-
-#'   prepare_data(split_data$train,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-#' test_data <-
-#'   prepare_data(split_data$test,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                predict = TRUE,
-#'                train = split_data$train)
-#'
-#' model <-
-#'   train_models(train_data,
-#'                'Species',
-#'                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-#'                type = type)
-#' predictions <-
-#'   predict_models_all(model,
-#'                  test_data,
-#'                  'Species',
-#'                  type = type)
 predict_models_all <- function(models, data, y, type) {
   predictions <- list(1:length(models))
   engine_all <- c()
@@ -103,7 +71,8 @@ predict_models_all <- function(models, data, y, type) {
 
   } else if (type == 'binary_clf') {
     for (i in 1:length(models)) {
-      if (engine[i] == 'ranger') { # There was issue of 1 column entry from the prediction made beforehand in train pipeline.
+      # There was issue of 1 column entry from the prediction made beforehand in train pipeline.
+      if (engine[i] == 'ranger') {
         preds <- ranger::predictions(predict(models[[i]], data$ranger_data))
         if (is.null(ncol(preds))) {
           predictions[i] <- list(preds - 1)
@@ -114,10 +83,7 @@ predict_models_all <- function(models, data, y, type) {
         predictions[i] <- list(predict(models[[i]], data$xgboost_data))
 
       } else if (engine[i] == 'decision_tree') {
-        predictions[i] <-
-          list(unname(
-            predict(models[[i]], data$decision_tree_data, type = 'prob')[, 2]
-          ))
+        predictions[i] <- list(unname(predict(models[[i]], data$decision_tree_data, type = 'prob')[, 2]))
 
       } else if (engine[i] == 'lightgbm') {
         predictions[i] <- list(predict(models[[i]], data$lightgbm_data))

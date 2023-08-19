@@ -24,15 +24,15 @@ create_ranked_list <- function(basic,
                                Bayes,
                                type,
                                score,
-                               sort_by = 'auto',
-                               metric_function = NULL,
-                               metric_function_name = 'metric_function',
+                               sort_by                    = 'auto',
+                               metric_function            = NULL,
+                               metric_function_name       = 'metric_function',
                                metric_function_decreasing = TRUE) {
-  ranked_list            <- rbind(basic, random$score, Bayes)[, -1]
+  ranked_list        <- rbind(basic, random$score, Bayes)[, -1]
 
-  metrics_decreasing     <- c('mse' = FALSE, 'rmse' = FALSE, 'r2' = TRUE,
-                          'mad' = FALSE, 'recall' = TRUE, 'precision' = TRUE,
-                          'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE, 'metric_function' = metric_function_decreasing)
+  metrics_decreasing <- c('mse' = FALSE, 'rmse' = FALSE, 'r2' = TRUE, 'mad' = FALSE,
+                          'recall' = TRUE, 'precision' = TRUE, 'accuracy' = TRUE,
+                          'auc' = TRUE, 'f1' = TRUE, 'metric_function' = metric_function_decreasing)
   if (!is.null(metric_function) && sort_by == 'auto') {
     sort_by <- 'metric_function'
   }
@@ -46,8 +46,7 @@ create_ranked_list <- function(basic,
     }
   }
   ranked_list[, sort_by] <- as.numeric(ranked_list[, sort_by])
-  ranked_list            <- ranked_list[order(ranked_list[, sort_by],
-                                        decreasing = metrics_decreasing[sort_by]), ]
+  ranked_list            <- ranked_list[order(ranked_list[, sort_by], decreasing = metrics_decreasing[sort_by]), ]
 
   row.names(ranked_list) <- NULL
 

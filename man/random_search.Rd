@@ -4,7 +4,15 @@
 \alias{random_search}
 \title{Random optimization of hyperparameters}
 \usage{
-random_search(train_data, y, models = NULL, engine, type, max_evals = 10)
+random_search(
+  train_data,
+  y,
+  models,
+  engine,
+  type,
+  max_evals = 10,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{train_data}{A training data for models created by `prepare_data()` function.}
@@ -12,7 +20,7 @@ random_search(train_data, y, models = NULL, engine, type, max_evals = 10)
 \item{y}{A string that indicates a target column name.}
 
 \item{models}{A list of models trained by `train_models()` function.
-They will be compered with models trained with different hyperparameters}
+They will be compered with models trained with different hyperparameters.}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
 values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
@@ -21,6 +29,9 @@ values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
 `binary_clf` or `regression` task.}
 
 \item{max_evals}{The number of trained models for each model type in `engine`.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none. Set to FALSE by default.}
 }
 \value{
 A list consisting of models created via random search and ranked list
@@ -28,49 +39,4 @@ of models scores.
 }
 \description{
 Random optimization of hyperparameters
-}
-\examples{
-data(iris)
-iris_bin          <- iris[1:100, ]
-type              <- guess_type(iris_bin, 'Species')
-preprocessed_data <- preprocessing(iris_bin, 'Species', type)
-preprocessed_data <- preprocessed_data$data
-split_data <-
-  train_test_balance(preprocessed_data,
-                     'Species',
-                     balance = FALSE)
-train_data <-
-  prepare_data(split_data$train,
-               'Species',
-               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
-test_data <-
-  prepare_data(split_data$test,
-               'Species',
-               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-               predict = TRUE,
-               train = split_data$train)
-
-
-model <-
-  train_models(train_data,
-               'Species',
-               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-               type = type)
-
-predictions <-
-  predict_models(model,
-                 test_data,
-                 'Species',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                 type = type)
-
-score <- score_models(model, predictions, test_data$ranger_data$Species, type)
-
-random_best <- random_search(train_data,
-                             test_data,
-                             y = 'Species',
-                             engine = c('ranger', 'xgboost', 'decision_tree',
-                             'lightgbm', 'catboost'),
-                             type = type,
-                             max_evals = 4)
 }
