@@ -1,0 +1,1275 @@
+---
+title: "Ablation study of forester: Paper plots"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+This is the notebook where the visualizations from `ablation_study_results_analysis` were enhanced and modified for the needs of paper.
+
+# Imports and settings
+
+```{r, warning=FALSE}
+library(ggplot2)
+library(patchwork)
+library(scales)
+```
+
+# Data import
+
+```{r}
+duration_train_df               <- readRDS('ablation_processed_results/training_duration.RData')
+duration_preprocessing          <- readRDS('ablation_processed_results/preprocessing_duration.RData')
+extended_training_summary_table <- readRDS('ablation_processed_results/extended_training_summary_table.RData')
+```
+
+# Time analysis
+
+```{r}
+duration_df                                 <- duration_train_df
+full_duration                               <- duration_preprocessing$Duration + duration_df$Duration
+duration_df$Preprocessing_duration          <- duration_preprocessing$Duration
+duration_df$Preprocessing_duration_fraction <- round(duration_df$Preprocessing_duration / full_duration, 3)
+duration_df$Full_duration                   <- full_duration
+rmarkdown::paged_table(duration_df)
+```
+
+## General time complexity
+
+```{r, echo=FALSE}
+column_fractions <- c()
+max_fields_num   <- c()
+task_type        <- c()
+datasets         <- unique(extended_training_summary_table$Dataset)
+for (i in 1:length(unique(extended_training_summary_table$Dataset))) {
+  cols <- extended_training_summary_table[extended_training_summary_table$Dataset == datasets[i], 'Columns']
+  rows <- extended_training_summary_table[extended_training_summary_table$Dataset == datasets[i], 'Rows']
+  column_fractions <- c(column_fractions, round(min(cols) / max(cols), 2))
+  max_fields_num   <- c(max_fields_num, max(rows) * max(cols))
+  if (i > 8) {
+      task_type <- c(task_type, 'regression')
+    } else {
+      task_type <- c(task_type, 'binary_classification')
+    }
+}
+left_columns <- data.frame(Dataset = datasets, Column_fraction = column_fractions, 
+                           Max_fields_number = max_fields_num, Task_type = task_type)
+```
+
+```{r fig.height=6, fig.width=20, echo=FALSE}
+a <- ggplot(data = left_columns, aes(x = Column_fraction * 100, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_col(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Columns left (%)',
+       subtitle = 'after maximal reduction',
+       x = 'Columns [%]',
+       y = '',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+b <- ggplot(data = duration_df, aes(x = Duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Training time [s]',
+       subtitle = '',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+c <- ggplot(data = left_columns, aes(x = Max_fields_number, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_col(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Initial fields',
+       subtitle = '(no. rows times no. columns)',
+       x = 'Number of fields',
+       y = '',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), 
+                     breaks = trans_breaks('log2', function(x) 2^x),
+                     labels = trans_format('log2', math_format(2^.x))) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+d <- ggplot(data = duration_df, aes(x = Preprocessing_duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time [s]',
+       subtitle = '',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "none",
+        strip.text.y.right = element_text(angle = 0)) 
+
+(d | b | c | a) + plot_layout(widths = c(3, 3, 1, 1))
+```
+
+
+```{r fig.height=6, fig.width=20, echo=FALSE}
+e <- ggplot(data = duration_df, aes(x = Full_duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Combined time',
+       subtitle = 'of preprocessing and model training',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "none",
+        strip.text.y.right = element_text(angle = 0)) 
+
+f <- ggplot(data = duration_df, aes(x = Preprocessing_duration_fraction * 100, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time fraction',
+       subtitle = 'as a part of full process length (%)',
+       x = 'Preprocessing time [%]',
+       y = 'Dataset',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C")) +
+  xlim(0, 100) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+(e | f | c | a) + plot_layout(widths = c(3, 3, 1, 1))
+```
+
+## Preprocessing time complexity
+
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+bool_fs <- duration_preprocessing
+bool_fs[bool_fs$Feature_selection != 'none', 'Feature_selection'] <- 'yes'
+
+g <- ggplot(data = bool_fs, aes(x = Duration, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison',
+       subtitle = 'if any feature selection method was used or not',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+g
+```
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+no_fs <- duration_preprocessing[duration_preprocessing$Feature_selection == 'none', ]
+
+h <- ggplot(data = no_fs, aes(x = Duration, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison',
+       subtitle = 'depending on removal strategy when no feature selection method is used',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+h
+```
+
+### Appendix Imputation
+
+```{r fig.height=4, fig.width=10, echo=FALSE}
+no_fs_imp <- no_fs[no_fs$Dataset %in% c('breast-w', 'credit-approval'), ]
+i <- ggplot(data = no_fs_imp, aes(x = Duration, y = Dataset, color = factor(Imputation), fill = factor(Imputation))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison with forester',
+       subtitle = 'for different ML tasks, divided by removal strategy',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Imputation strategy',
+       fill  = 'Imputation strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+i
+```
+
+```{r fig.height=8, fig.width=15, echo=FALSE}
+j <- ggplot(data = no_fs, aes(x = Duration, y = Dataset, color = factor(Imputation), fill = factor(Imputation))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison with forester',
+       subtitle = 'for different ML tasks, divided by imputation strategy',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Imputation strategy',
+       fill  = 'Imputation strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+j
+```
+
+## Feature selection time complexity
+
+```{r fig.height=8, fig.width=15, echo=FALSE}
+only_fs       <- duration_preprocessing[duration_preprocessing$Feature_selection != 'none', ]
+only_fs_niche <- only_fs[only_fs$Feature_selection %in% c('MI', 'MCFS'), ]
+only_fs_top   <- only_fs[only_fs$Feature_selection %in% c('VI', 'BORUTA'), ]
+
+datasets <- unique(only_fs$Dataset)
+VI       <- c()
+MCFS     <- c()
+MI       <- c()
+BORUTA   <- c()
+
+for (i in unique(only_fs$Dataset)) {
+  ds     <- only_fs[only_fs$Dataset == i, ]
+  VI     <- c(VI,     median(ds[ds$Feature_selection == 'VI', 'Duration']))
+  MCFS   <- c(MCFS,   median(ds[ds$Feature_selection == 'MCFS', 'Duration']))
+  MI     <- c(MI,     median(ds[ds$Feature_selection == 'MI', 'Duration']))
+  BORUTA <- c(BORUTA, median(ds[ds$Feature_selection == 'BORUTA', 'Duration']))
+}
+
+median_fs      <- data.frame(Dataset = datasets, VI = VI, MCFS = MCFS, BORUTA = BORUTA, MI = MI)
+long_median_fs <- reshape(median_fs, varying = c('MI' ,'VI', 'MCFS', 'BORUTA'), v.names = c('Duration'), 
+                          times = c('MI' ,'VI', 'MCFS', 'BORUTA'), direction = 'long')
+long_median_fs <- long_median_fs[, 1:3]
+
+rownames(long_median_fs) <- NULL
+colnames(long_median_fs) <- c('Dataset', 'Method', 'Duration')
+
+k <- ggplot(data = only_fs, aes(x = Duration, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison',
+       subtitle = 'depending on feature selection method',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x), limits = c(NA, 4100)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+l <- ggplot(data = long_median_fs, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison',
+       subtitle = 'aggregated with median value',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x), limits = c(NA, 4100)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+k | l
+```
+
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+long_median_fs_slow <- long_median_fs[long_median_fs$Method %in% c('VI', 'MCFS'), ]
+long_median_fs_fast <- long_median_fs[long_median_fs$Method %in% c('BORUTA', 'MI'), ]
+
+m <- ggplot(data = long_median_fs_slow, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing median time comparison',
+       subtitle = 'for slow feature selection methods',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+n <- ggplot(data = long_median_fs_fast, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing median time comparison',
+       subtitle = 'for fast feature selection methods',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+m | n
+```
+
+# Performance
+
+```{r, echo=FALSE}
+all_engines               <- extended_training_summary_table[extended_training_summary_table$Engine == 'all', ]
+all_engines_bin           <- all_engines[all_engines$Task_type == 'binary_classification', ]
+all_engines_reg           <- all_engines[all_engines$Task_type == 'regression', ]
+all_engines_bin_baselines <- all_engines_bin[which(all_engines_bin$Removal =='removal_min' & 
+                                                   all_engines_bin$Imputation =='median-other' & 
+                                                   all_engines_bin$Feature_selection =='none'), ]
+all_engines_bin_baselines <- all_engines_bin_baselines[c(1:3, 7:9, 13:15, 19:21, 25:27, 31:33, 37:39, 43:45), ]
+all_engines_reg_baselines <- all_engines_reg[which(all_engines_reg$Removal =='removal_min' & 
+                                                   all_engines_reg$Imputation =='median-other' & 
+                                                   all_engines_reg$Feature_selection =='none'), ]
+all_engines_reg_baselines <- all_engines_reg_baselines[c(1:4, 9:12, 17:20, 25:28, 33:36, 41:44, 49:52), ]
+```
+
+## Advanced preprocessing vs Baseline
+
+```{r fig.height=8, fig.width=20, echo=FALSE}
+o <- ggplot(data = all_engines_bin, aes(x = Max, y = Dataset, color = factor(Metric), fill = factor(Metric))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines, size = 3, shape = 4, 
+             position = position_jitterdodge(), 
+             aes(x = Max, y = Dataset, color = factor(Metric), fill = factor(Metric))) +
+  theme_minimal() + 
+  labs(title = 'Max metrics values with different preprocessing strategies',
+       subtitle = 'for different binary classification tasks, divided by metric',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+p <- ggplot(data = all_engines_bin, aes(x = Mean, y = Dataset, color = factor(Metric), fill = factor(Metric))) + 
+  geom_boxplot(alpha = 0.5) + 
+  geom_point(data = all_engines_bin_baselines, size = 3, shape = 4, 
+             position = position_jitterdodge(), 
+             aes(x = Mean, y = Dataset, color = factor(Metric), fill = factor(Metric))) +
+  theme_minimal() + 
+  labs(title = 'Mean metrics values',
+       subtitle = 'for different binary classification tasks, divided by metric',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+r <- ggplot(data = all_engines_bin, aes(x = Median, y = Dataset, color = factor(Metric), fill = factor(Metric))) + 
+  geom_boxplot(alpha = 0.5) + 
+  geom_point(data = all_engines_bin_baselines, size = 3, shape = 4, 
+             position = position_jitterdodge(), 
+             aes(x = Median, y = Dataset, color = factor(Metric), fill = factor(Metric))) +
+  theme_minimal() + 
+  labs(title = 'Median metrics values',
+       subtitle = 'for different binary classification tasks, divided by metric',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+o | p | r
+```
+
+```{r echo=FALSE}
+all_engines_reg_min_med <- all_engines_reg[, c(1, 2, 3, 4, 5, 13, 16, 17)]
+median                  <- all_engines_reg_min_med[, 1:7]
+names(median)           <- c(names(median)[1:6], 'Value')
+min                     <- all_engines_reg_min_med[, c(1:6, 8)]
+names(min)              <- c(names(min)[1:6], 'Value')
+all_engines_reg_min_med <- rbind(median, min)
+all_engines_reg_min_med$Aggregation <- rep(c('Median', 'Min'), each = nrow(all_engines_reg))
+```
+
+```{r echo=FALSE}
+all_engines_reg_baselines_min_med <- all_engines_reg_baselines[, c(1, 2, 3, 4, 5, 13, 16, 17)]
+median                            <- all_engines_reg_baselines_min_med[, 1:7]
+names(median)                     <- c(names(median)[1:6], 'Value')
+min                               <- all_engines_reg_baselines_min_med[, c(1:6, 8)]
+names(min)                        <- c(names(min)[1:6], 'Value')
+all_engines_reg_baselines_min_med <- rbind(median, min)
+all_engines_reg_baselines_min_med$Aggregation <- rep(c('Median', 'Min'), each = nrow(all_engines_reg_baselines))
+```
+
+```{r fig.height=8, fig.width=15, echo=FALSE, warning=FALSE}
+metric <- 'mse'
+s <- ggplot(data = all_engines_reg_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated MSE (Magnified)',
+       subtitle = 'for different regression tasks and preprocessing strategies',
+       x        = 'Value',
+       y        = 'Dataset',
+       color    = 'Aggregation',
+       fill     = 'Aggregation') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 2)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+t <- ggplot(data = all_engines_reg_min_med[all_engines_reg_min_med$Metric == metric, ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated MSE',
+       x        = 'Value',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+metric <- 'mae'
+u <- ggplot(data = all_engines_reg_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated MAE (Magnified)',
+       x        = 'Value',
+       y        = 'Dataset',
+       color    = 'Aggregation',
+       fill     = 'Aggregation') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 2)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+v <- ggplot(data = all_engines_reg_min_med[all_engines_reg_min_med$Metric == metric, ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated MAE',
+       x        = 'Value',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+metric <- 'rmse'
+w <- ggplot(data = all_engines_reg_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated RMSE (Magnified)',
+       x        = 'Value',
+       y        = 'Dataset',
+       color    = 'Aggregation',
+       fill     = 'Aggregation') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 2)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+x <- ggplot(data = all_engines_reg_min_med[all_engines_reg_min_med$Metric == metric, ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated RMSE',
+       x        = 'Value',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+(s | t) / (u | v) / (w | x)
+```
+
+
+## FS impact on performance
+
+```{r echo=FALSE}
+all_engines_bin_fs <- all_engines_bin
+all_engines_bin_fs <- all_engines_bin_fs[all_engines_bin_fs$Metric == 'accuracy', ]
+all_engines_bin_fs$Feature_selection <- ifelse(all_engines_bin_fs$Feature_selection != 'none', 'yes', 'none')
+all_engines_reg_min_med_fs <- all_engines_reg_min_med
+all_engines_reg_min_med_fs <- all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Metric == 'rmse', ]
+all_engines_reg_min_med_fs$Feature_selection <- ifelse(all_engines_reg_min_med_fs$Feature_selection != 'none', 'yes', 'none')
+```
+
+```{r fig.height=6, fig.width=20, echo=FALSE, warning=FALSE}
+a1 <- ggplot(data = all_engines_bin_fs, aes(x = Max, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Max, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Max Accuracy values',
+       subtitle = 'if FS methods were used for binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.35, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+b1 <- ggplot(data = all_engines_bin_fs, aes(x = Mean, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) + 
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Mean, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Mean Accuracy values',
+       subtitle = '',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.35, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+d1 <- ggplot(data = all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Aggregation == 'Min', ],
+            aes(x = Value, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Min'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title    = 'Minimal RMSE values (Magnified)',
+       subtitle = 'if FS methods were used for regression tasks',
+       x        = 'RMSE',
+       y        = 'Dataset',
+       color    = 'Feature_selection',
+       fill     = 'Feature_selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 1.5)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+e1 <- ggplot(data = all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Aggregation == 'Min', ],  
+            aes(x = Value, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Min'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title    = 'Minimal RMSE values',
+       x        = 'RMSE',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  scale_y_discrete(position = "right") +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+f1 <- ggplot(data = all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Aggregation == 'Median', ],
+            aes(x = Value, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Median'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title    = 'Median RMSE values (Magnified)',
+       x        = 'RMSE',
+       y        = 'Dataset',
+       color    = 'Feature_selection',
+       fill     = 'Feature_selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 1.5)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+g1 <- ggplot(data = all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Aggregation == 'Median', ], 
+            aes(x = Value, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Median'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title    = 'Median RMSE values',
+       x        = 'RMSE',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  scale_y_discrete(position = "right") +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+((a1 / b1) | (plot_spacer() / plot_spacer()) | (d1 / f1) | (e1 / g1)) + plot_layout(widths = c(5, 0.5, 4, 4))
+
+```
+
+## Removal impact on performance
+
+### Binary Classification
+
+```{r echo=FALSE}
+all_engines_bin_no_fs <- all_engines_bin_fs[all_engines_bin_fs$Feature_selection == 'none', ]
+all_engines_reg_no_fs <- all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Feature_selection == 'none', ]
+```
+
+```{r fig.height=6, fig.width=20, echo=FALSE, warning=FALSE}
+h1 <- ggplot(data = all_engines_bin_no_fs, aes(x = Max, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Max, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Max Accuracy',
+       subtitle = 'without FS used for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.93, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+i1 <- ggplot(data = all_engines_bin_no_fs, aes(x = Mean, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Mean, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Mean Accuracy',
+       subtitle = 'for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.8, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+l1 <- ggplot(data = all_engines_reg_no_fs[all_engines_reg_no_fs$Aggregation == 'Median', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Median'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Median RMSE (Magnified)',
+       subtitle = 'without FS used for different regression tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, 1.3) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+m1 <- ggplot(data = all_engines_reg_no_fs[all_engines_reg_no_fs$Aggregation == 'Median', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Median'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Median RMSE',
+       subtitle = 'without FS used for different regression tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(8.5, NA) +
+  scale_y_discrete(position = "right") +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+n1 <- ggplot(data = all_engines_reg_no_fs[all_engines_reg_no_fs$Aggregation == 'Min', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Min'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Minimal (Magnified)',
+       subtitle = 'for different regression tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, 0.25) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+o1 <- ggplot(data = all_engines_reg_no_fs[all_engines_reg_no_fs$Aggregation == 'Min', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Min'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Minimal RMSE',
+       subtitle = 'for different regression tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, NA) +
+  scale_y_discrete(position = "right") +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+
+((h1 / i1) | (plot_spacer() / plot_spacer()) | (l1 / n1) | (m1 / o1)) + plot_layout(widths = c(5, 0.5, 4, 4))
+```
+
+### Binary classification
+
+```{r echo=FALSE}
+all_engines_bin_fs_only <- all_engines_bin_fs[all_engines_bin_fs$Feature_selection == 'yes', ]
+all_engines_reg_fs_only <- all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Feature_selection == 'yes', ]
+```
+
+```{r fig.height=6, fig.width=20, echo=FALSE, warning=FALSE}
+p1 <- ggplot(data = all_engines_bin_fs_only, aes(x = Max, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Max, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Max Accuracy',
+       subtitle = 'with FS for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.93, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+r1 <- ggplot(data = all_engines_bin_fs_only, aes(x = Mean, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Mean, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Mean Accuracy',
+       subtitle = 'with FS for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.65, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+u1 <- ggplot(data = all_engines_reg_fs_only[all_engines_reg_fs_only$Aggregation == 'Median', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Median'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Median RMSE (Magnified)',
+       subtitle = 'with FS for different regression tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, 1.5) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+v1 <- ggplot(data = all_engines_reg_fs_only[all_engines_reg_fs_only$Aggregation == 'Median', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Median'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Median RMSE',
+       subtitle = 'with FS for different regression tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(8.5, NA) +
+  scale_y_discrete(position = "right") +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+w1 <- ggplot(data = all_engines_reg_fs_only[all_engines_reg_fs_only$Aggregation == 'Min', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Min'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Minimal RMSE (Magnified)',
+       subtitle = 'with FS for different regression tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, 1.5) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+x1 <- ggplot(data = all_engines_reg_fs_only[all_engines_reg_fs_only$Aggregation == 'Min', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Min'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Minimal RMSE',
+       subtitle = 'with FS for different regression tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, NA) +
+  scale_y_discrete(position = "right") +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+((p1 / r1) | (plot_spacer() / plot_spacer()) | (u1 / w1) | (v1 / x1)) + plot_layout(widths = c(5, 0.5, 4, 4))
+```
