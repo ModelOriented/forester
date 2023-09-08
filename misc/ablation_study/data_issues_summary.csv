@@ -1,0 +1,16 @@
+Data set;Task type;Rows;Columns;Static;Duplicate pairs;Missing target;Missing fields;Dimensionality;Correlation pairs;Imbalance;ID-like
+kr-vs-kp;binary ;3196;37;4;0;0;0;Yes;0;No;No
+breast-w;binary ;699;10;0;0;0;16;No;9;Yes;No
+credit-approval;binary ;690;16;0;0;0;37;No;1;No;No
+credit-g;binary ;1000;21;0;0;0;0;No;0;Yes;No
+diabetes;binary ;768;9;0;0;0;0;No;0;Yes;No
+phoneme;binary ;5403;6;0;0;0;0;No;0;Yes;No
+banknote-authentication;binary ;1372;5;0;0;0;0;No;1;No;No
+blood-transfusion-service-center;binary ;748;5;0;0;0;0;No;1;Yes;No
+bank32nh;regression;8192;33;0;0;0;0;Yes;0;Yes;No
+wine_quality;regression;6497;12;0;0;0;0;No;1;Yes;No
+Mercedes_Benz_Greener_Manufacturing;regression;4209;378;145;134;0;0;Yes;522;No;Yes
+kin8nm;regression;8192;9;0;0;0;0;No;0;Mo;No
+pol;regression;15000;49;22;156;0;0;Yes;2;Yes;No
+2dplanes;regression;40768;11;0;0;0;0;No;0;No;No
+elevators;regression;16599;19;2;0;0;0;No;11;Yes;No
