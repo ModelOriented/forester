@@ -1,13 +1,33 @@
 ---
-title: '**Forester report**'
+title: '**forester report**'
 subtitle: 'version `r packageVersion("forester")`'
 output:
   html_document:
     df_print: paged
+    toc: true
+    toc_depth: 2
 date: '`r Sys.time()`'
 version: 'forester `r packageVersion("forester")`'
 params:
-  train_output: NULL
+  models: NULL
+  data: NULL
+  y: NULL
+  test_data: NULL
+  train_data: NULL
+  observed: NULL
+  train_observed: NULL
+  score: NULL
+  best_models: NULL
+  predictions: NULL
+  metric_name: NULL
+  type: 'regression'
+  check_data: FALSE
+  engine : NULL
+  predictions_all : NULL
+  raw_train : NULL
+  predictions_best : NULL
+  n_models: 10
+  metric: NULL
   
 ---
 
@@ -19,9 +39,10 @@ knitr::opts_chunk$set(echo = FALSE, comment = NA, warning = FALSE, message = FAL
 
 This report contains details about the best trained model, table with metrics for every trained model, scatter plot for chosen metric and info about used data.
 
-## The best models
-This is the **`r params$train_output$type`** task.  
-The best model is: 
+# The best models
+This is the **`r if(params$type == 'binary_clf'){'binary classification'}else{'regression'}`** task.  
+
+ The best model is: 
 **`r paste(names(params$train_output$best_models_on_valid[[1]][1]), sep="' '", collapse=", ")`**.
 
 The names of the models were created by a pattern *Engine_TuningMethod_Id*, where:
@@ -41,7 +62,12 @@ score_rounded        <- score_frame
 for(i in 5:ncol(score_rounded)) {
   score_rounded[, i] <- round(as.numeric(score_rounded[, i]), 4)
 }
-score_rounded <- score_rounded[-c(3, 4)]
+if(!is.null(metric)){
+  # & metric %in% c('rmse', 'mse', 'r2', 'mae', 'accuracy', 'auc', 'f1')
+  score_rounded <- score_rounded[order(score_rounded[metric]), ]
+  
+} 
+score_rounded <- score_rounded[1:n_models, -c(3, 4)]
 knitr::kable(score_rounded)
 ```
 
@@ -50,7 +76,7 @@ train_predictions <- params$train_output$predictions_train
 test_predictions  <- params$train_output$predictions_test
 ```
 
-## Plots for all models
+# Model comparison
 
 ```{r radar_plot, out.width = '90%'}
 tryCatch({

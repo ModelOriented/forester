@@ -428,8 +428,7 @@ train <- function(data,
   verbose_cat(crayon::green('\u2714'), 'Created human-readable labels for observables and predictions. \n', verbose = verbose)
 
   if (type == 'binary_clf') {
-    return(
-      list(
+    binary_clf_models <- list(
         data                    = data,
         y                       = y,
         type                    = type,
@@ -483,10 +482,10 @@ train <- function(data,
         train_observed_labels   = train_observed_labels,
         valid_observed_labels   = valid_observed_labels
       )
-    )
+    class(binary_clf_models) <- c("binary_clf", "list")
+    return(binary_clf_models)
   } else {
-    return(
-      list(
+    regression_models <- list(
         type                    = type,
         deleted_columns         = preprocessed_data$rm_colnames,
         preprocessed_data       = preprocessed_data$data,
@@ -528,6 +527,7 @@ train <- function(data,
         train_observed          = train_observed,
         valid_observed          = valid_observed
       )
-    )
+    class(regression_models) <- c("regression", "list")
+    return(regression_models)
   }
 }
