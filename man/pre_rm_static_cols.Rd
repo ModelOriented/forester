@@ -18,6 +18,3 @@ A dataset with deleted unwanted columns.
 \description{
 Remove columns with one value for all rows
 }
-\examples{
-prep_data <- pre_rm_static_cols(compas,'Two_yr_Recidivism')
-}

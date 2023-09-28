@@ -8,7 +8,10 @@ score_models(
   models,
   predictions,
   observed,
+  data,
   type,
+  time = NULL,
+  status = NULL,
   metrics = "auto",
   sort_by = "auto",
   metric_function = NULL,
@@ -25,7 +28,16 @@ score_models(
 
 \item{observed}{A vector of true values from the test data.}
 
-\item{type}{A string, determines if the future task is `binary_clf` or `regression`.}
+\item{data}{A data for models created by `prepare_data()` function, used for
+Brier score calculations.}
+
+\item{type}{A string, determines if the future task is `binary_clf`, `regression`, or `survival`.}
+
+\item{time}{A string that indicates a time column name for survival analysis task.
+Either y, or pair: time, status can be used.}
+
+\item{status}{A string that indicates a status column name for survival analysis task.
+Either y, or pair: time, status can be used.}
 
 \item{metrics}{A vector of metrics names. By default param set for `auto`,
 most important metrics are returned. For `all` all metrics are returned.

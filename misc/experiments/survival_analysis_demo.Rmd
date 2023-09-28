@@ -1,0 +1,85 @@
+---
+title: "Survival analysis demo"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Downloads
+
+The necessary downloads required for the forester package to work properly, if downloaded, the user can skip this part.
+
+```{r eval = FALSE}
+install.packages("devtools")
+devtools::install_github("ModelOriented/forester")
+devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')
+devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
+install.packages('tinytex')
+tinytex::install_tinytex()
+```
+
+# Imports
+
+Importing the forester library handles everything for us.
+
+```{r warning = FALSE, message = FALSE}
+library(forester)
+```
+
+# Train
+
+In the beginning we import a survival analysis task called peakV02, and later proceed with the forester training. Let's notice that this time we don't provide any y value, as the task is described by the pair `ttodead`, and `died`. The first step is the description of our dataset, which outlines multiple issues with the dataset, even though the `forester` successfully prepares the results.
+
+```{r}
+data(peakVO2, package = 'randomForestSRC')
+results <- train(
+  data             = peakVO2,
+  y                = NULL,
+  time             = 'ttodead',
+  status           = 'died',
+  type             = 'auto',
+  verbose          = TRUE,
+  train_test_split = c(0.6, 0.2, 0.2),
+  split_seed       = NULL,
+  bayes_iter       = 10,
+  random_evals     = 10,
+  metrics          = 'auto',
+  sort_by          = 'auto'
+)
+```
+
+# Results
+
+Finally we can see the results presented as a ranked list of evaluated models. The models are compared with the Brier Score (the smaller the better), and Concordance Index (the bigger the better).
+
+```{r}
+results$score_test
+```
+
+```{r}
+results$score_valid
+```

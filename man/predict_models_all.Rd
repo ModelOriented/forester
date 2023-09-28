@@ -14,7 +14,7 @@ predict_models_all(models, data, y, type)
 \item{y}{A string that indicates a target column name.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`binary_clf` or `regression` task.}
+`binary_clf`, `regression`, or `survival` task.}
 }
 \value{
 A list of predictions for every engine without names.

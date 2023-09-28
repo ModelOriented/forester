@@ -2,7 +2,12 @@
 #'
 #' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix, and so on.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
@@ -17,26 +22,38 @@
 #' check_data(lymph, 'class')
 #' @importFrom stats IQR cor median sd
 #' @importFrom utils capture.output
-check_data <- function(data, y, verbose = TRUE) {
+check_data <- function(data, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
   options(warn = -1)
 
-  if (!y %in% colnames(data)) {
-    stop('Target column name not found!')
+  if (is.null(y)) {
+    if (is.null(time) | is.null(status)) {
+      verbose_cat(crayon::red('\u2716'), 'Lack of target variables. Please specify',
+                  'either y (for classification or regression tasks), or time and',
+                  'status (for survival analysis). \n\n', verbose = verbose)
+      return(NULL)
+    }
+  } else {
+    if (!is.null(time) | !is.null(status)) {
+      verbose_cat(crayon::red('\u2716'), 'Provided too many targets. Please specify',
+                  'either y (for classification or regression tasks), or time and',
+                  'status (for survival analysis). \n\n', verbose = verbose)
+      return(NULL)
+    }
   }
 
   df  <- as.data.frame(data)
   str <- capture.output(cat(' -------------------- **CHECK DATA REPORT** -------------------- \n \n'))
   verbose_cat(' -------------------- CHECK DATA REPORT -------------------- \n \n', verbose = verbose)
-  str <- c(str, basic_info(df, y, verbose))
+  str <- c(str, basic_info(df, y, time, status, verbose))
   str <- c(str, check_static(df, verbose))
   str <- c(str, check_duplicate_col(df, verbose))
-  str <- c(str, check_missing(df, y, verbose))
+  str <- c(str, check_missing(df, y, time, status, verbose))
   df  <- manage_missing(df, y)
   str <- c(str, check_dim(df, verbose))
-  str <- c(str, check_cor(df, y, verbose)$str)
+  str <- c(str, check_cor(df, y, time, status, verbose)$str)
   rtr <- check_outliers(df, verbose)
   str <- c(str, rtr$str)
-  str <- c(str, check_y_balance(df, y, verbose))
+  str <- c(str, check_y_balance(df, y, time, status, verbose))
   str <- c(str, detect_id_columns(df, verbose))
   verbose_cat(' -------------------- CHECK DATA REPORT END -------------------- \n \n', verbose = verbose)
   str <- c(str,
@@ -54,20 +71,33 @@ check_data <- function(data, y, verbose = TRUE) {
 #'
 #' @param df A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix, and so on.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-basic_info <- function(df, y, verbose = TRUE) {
+basic_info <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
+  # Distinction between survival analysis and other tasks.
+  if (!is.null(y)) {
+    target <- paste0('a column ', y, '.')
+    target2 <- paste0('a column** ', y, '.')
+  } else {
+    target <- paste0('columns ', time, ' for time and ', status, ' for status.')
+    target2 <- paste0('columns** ', time, ' for time and ', status, ' for status.')
+  }
   verbose_cat('The dataset has ', nrow(df), ' observations and ', ncol(df),
       ' columns, which names are: \n', paste0(colnames(df), sep='; '),
-      '\n\nWith the target value described by a column ', y, '.', '\n\n', sep = '', verbose = verbose)
+      '\n\nWith the target described by ', target, '\n\n', sep = '', verbose = verbose)
   str <- capture.output(cat('**The dataset has ', nrow(df), ' observations and ', ncol(df),
                             ' columns which names are: **\n\n', paste0(colnames(df), sep='; '),
-                            '\n\n**With the target value described by a column:** ', y, '.', '\n \n', sep = ''))
+                            '\n\n**With the target described by ', target, '\n \n', sep = ''))
   return(str)
 }
 
@@ -156,17 +186,27 @@ check_duplicate_col <- function(df, verbose = TRUE) {
 #'
 #' @param df A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix, and so on.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_missing <- function(df, y, verbose = TRUE) {
-
-  df_sm     <- df[, !names(df) %in% y]
-  missing_y <- length(df[[y]][df[[y]] == ''])
+check_missing <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
+  # Distinction between survival analysis and other tasks.
+  if (!is.null(y)) {
+    df_sm     <- df[, !names(df) %in% y]
+    missing_y <- length(df[[y]][df[[y]] == ''])
+  } else {
+    df_sm     <- df[, !names(df) %in% c(time, status)]
+    missing_y <- length(df[df[[time]] == '' & df[[status]] == '', ])
+  }
   missing_x <- 0
 
   for (i in 1:nrow(df_sm)) {
@@ -178,7 +218,7 @@ check_missing <- function(df, y, verbose = TRUE) {
     verbose_cat(crayon::green('\u2714'), 'No target values are missing. \n\n', verbose = verbose)
     str <- capture.output(cat('**No target values are missing. **\n\n'))
   } else {
-    verbose_cat(crayon::red('\u2716'), ' ', missing_y,' Target values are missing. \n', sep = '', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), ' ', missing_y,' Target values are missing. \n\n', sep = '', verbose = verbose)
     str <- capture.output(cat(missing_y, ' **Target values are missing.**\n\n', sep = ''))
   }
 
@@ -186,7 +226,7 @@ check_missing <- function(df, y, verbose = TRUE) {
     verbose_cat(crayon::green('\u2714'), 'No predictor values are missing. \n', verbose = verbose)
     str <- c(str, capture.output(cat('**No predictor values are missing. **\n')))
   } else {
-    verbose_cat(crayon::red('\u2716'), ' ', missing_x, ' observations have missing fields.\n', sep = '', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), ' ', missing_x, ' observations have missing fields.\n',   sep = '', verbose = verbose)
     str <- c(str, capture.output(cat('** ', missing_x, ' observations have missing fields.**\n', sep = '')))
   }
 
@@ -211,15 +251,15 @@ check_dim <- function(df, verbose = TRUE) {
   cols <- dim(df)[2]
 
   if (cols > 30) {
-    verbose_cat(crayon::red('\u2716'), 'Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), ' Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. \n', sep = '', verbose = verbose)
     str <- capture.output(cat('**Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. **\n', sep = ''))
   }
   if (cols >= rows) {
-    verbose_cat(crayon::red('\u2716'), 'More features than observations, try reducing dimensionality or add new observations. \n', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), ' More features than observations, try reducing dimensionality or add new observations. \n', verbose = verbose)
     str <- capture.output(cat('**More features than observations, try reducing dimensionality or add new observations. **\n'))
   }
   if (cols < rows && cols <= 30) {
-    verbose_cat(crayon::green('\u2714'), 'No issues with dimensionality. \n', verbose = verbose)
+    verbose_cat(crayon::green('\u2714'), ' No issues with dimensionality. \n', verbose = verbose)
     str <- capture.output(cat('**No issues with dimensionality. **\n'))
   }
   verbose_cat('\n', verbose = verbose)
@@ -233,15 +273,25 @@ check_dim <- function(df, verbose = TRUE) {
 #'
 #' @param df A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix, and so on.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_cor <- function(df, y, verbose = TRUE) {
-  data    <- df[, !names(df) %in% y]
+check_cor <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
+  # Distinction between survival analysis and other tasks.
+  if (!is.null(y)) {
+    data  <- df[, !names(df) %in% y]
+  } else {
+    data  <- df[, !names(df) %in% c(time, status)]
+  }
   data    <- as.data.frame(unclass(data), stringsAsFactors = TRUE)
   num_idx <- c()
   fct_idx <- c()
@@ -453,18 +503,28 @@ check_outliers <- function(df, verbose = TRUE) {
 #'
 #' @param df A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix, and so on.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_y_balance <- function(df, y, verbose = TRUE) {
-  type   <- guess_type(df, y)
-  target <- df[[y]]
+check_y_balance <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
+  type     <- guess_type(df, y)
+  # Distinction between survival analysis and other tasks.
+  if (!is.null(y)) {
+    target <- df[[y]]
+  } else {
+    target <- df[[status]]
+  }
 
-  if (type %in% c('binary_clf')) {
+  if (type %in% c('binary_clf', 'survival')) {
     if (table(target)[1] / table(target)[2] > 1.5 || table(target)[1] / table(target)[2] < 0.75) {
       if (table(target)[1] > table(target)[2]) {
         dominating <- rownames(table(target))[1]
@@ -496,7 +556,6 @@ check_y_balance <- function(df, y, verbose = TRUE) {
         bins[4] <- bins[4] + 1
       }
     }
-
     balanced <- TRUE
     for (i in 1:4) {
       for (j in i:4) {
@@ -511,7 +570,6 @@ check_y_balance <- function(df, y, verbose = TRUE) {
         }
       }
     }
-
     perc_bins <- round(bins / sum(bins), 2)
 
     if (balanced) {
@@ -529,7 +587,6 @@ check_y_balance <- function(df, y, verbose = TRUE) {
   }
   verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))
-
   return(str)
 }
 
