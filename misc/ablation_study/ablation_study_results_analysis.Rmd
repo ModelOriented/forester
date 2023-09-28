@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "Ablation study of forester: Results analysis"
 author: "Hubert Ruczyński"
@@ -1500,3 +1501,1507 @@ And again we can notice, that main differences consider `pol`, and `Mercedes_Ben
 1.  The most influential part of the preprocessing module is Feature Selection. It takes most of the modelling (preprocessing + training) times. The order from fastest to slowest feature selection method is: MI, BORUTA, MCFS, VI (\~20's of seconds, 10's - 100's, 100's - 1000's, 100's - 1000's). Unfortunately, the method doesn't prove to be efficient enough combined with the tree-based models. It is very time consuming, and mostly leads to worse results, even though in some cases it can provide outcomes better than the baselines.
 2.  Other steps of preprocessing pipeline, which are removal strategies and data imputation last much shorter, and doesn't change a modelling time a lot, as removal of columns makes the training faster.
 3.  The removal strategies, doesn't make huge performance differences, although if the task is complex, and the data is corrupted, then with cautious tuning of the preprocessing step we are able to obtain higher performance, than without it.
+=======
+---
+title: "Ablation study of forester: Results analysis"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Imports and settings
+
+```{r, warning=FALSE}
+library(ggplot2)
+library(patchwork)
+library(scales)
+```
+
+# Data import
+
+```{r}
+duration_train_df               <- readRDS('ablation_processed_results/training_duration.RData')
+duration_preprocessing          <- readRDS('ablation_processed_results/preprocessing_duration.RData')
+extended_training_summary_table <- readRDS('ablation_processed_results/extended_training_summary_table.RData')
+```
+
+# Time analysis
+
+An important aspect of our analysis is the time complexity of different approaches, as extended preprocessing module leads to more time consuming computations, which could be spent for example on training the models. On the other hand, thorough preparation step might result in removing lots of unnecessary columns, so the model should be able to learn faster. Despite the absolute preprocessing time, another important aspect is the relative duration to training time. Ex. if the training takes 1000 seconds than preprocessing lasting 100 is not so much as in the case when training takes 100 seconds. We will work on slightly modified data frame presented below.
+
+```{r}
+duration_df                                 <- duration_train_df
+full_duration                               <- duration_preprocessing$Duration + duration_df$Duration
+duration_df$Preprocessing_duration          <- duration_preprocessing$Duration
+duration_df$Preprocessing_duration_fraction <- round(duration_df$Preprocessing_duration / full_duration, 3)
+duration_df$Full_duration                   <- full_duration
+rmarkdown::paged_table(duration_df)
+```
+
+## Training time
+
+```{r, echo=FALSE}
+column_fractions <- c()
+max_fields_num   <- c()
+task_type        <- c()
+datasets         <- unique(extended_training_summary_table$Dataset)
+for (i in 1:length(unique(extended_training_summary_table$Dataset))) {
+  cols <- extended_training_summary_table[extended_training_summary_table$Dataset == datasets[i], 'Columns']
+  rows <- extended_training_summary_table[extended_training_summary_table$Dataset == datasets[i], 'Rows']
+  column_fractions <- c(column_fractions, round(min(cols) / max(cols), 2))
+  max_fields_num   <- c(max_fields_num, max(rows) * max(cols))
+  if (i > 8) {
+      task_type <- c(task_type, 'regression')
+    } else {
+      task_type <- c(task_type, 'binary_classification')
+    }
+}
+left_columns <- data.frame(Dataset = datasets, Column_fraction = column_fractions, 
+                           Max_fields_number = max_fields_num, Task_type = task_type)
+```
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+a <- ggplot(data = left_columns, aes(x = Column_fraction, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_col(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Fraction of columns',
+       subtitle = 'left after maximal reduction',
+       x = 'Fraction',
+       y = '',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+b <- ggplot(data = duration_df, aes(x = Duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Training time comparison with forester',
+       subtitle = 'for different ML tasks',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+(b | a) + plot_layout(widths = c(3, 1))
+```
+
+The visualization above presents training duration box-plots for different ML tasks. Each box-plot is based on 39 different preprocessing strategies. An intention behind this analysis is to find out if training times differ significantly depending on the preprocessing strategy used before. The x scale on the plot was transformed by applying the log2 in order to easily detect if maximal and minimal values (which are not outliers) differ more than two times. We will say that the training times differ significantly if this min-max ratio is bigger than 2 times. After considering such definition we can say that training times differ significantly on in 4 of 15 datasets being: pol, Mercedes_Benz_Greener_Manufacturing, kr-vs-kp, and bank32nh datasets. It's quite interesting, as the subplot on the right indicates that these datasets have lost more than 50% of features during the most rigorous preprocessing strategies. This shows us that more thorough preprocessing can reduce the training time.
+
+## Preprocessing time
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+c <- ggplot(data = left_columns, aes(x = Max_fields_number, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_col(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Number of initial fields',
+       subtitle = '',
+       x = 'Number of fields',
+       y = '',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), 
+                     breaks = trans_breaks('log2', function(x) 2^x),
+                     labels = trans_format('log2', math_format(2^.x))) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+d <- ggplot(data = duration_df, aes(x = Preprocessing_duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison with forester',
+       subtitle = 'for different ML tasks',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0)) 
+(d | a | c) + plot_layout(widths = c(3, 1, 1))
+```
+
+In this case we can't see any correlation between the variaty of training time and final number of features in the most rigorous strategy. On the other hand we can notice that the preprocessing of regression tasks lasted longer than the binary classification tasks in general. It is due to the fact that the regression tasks had much more observations and columns than the binary classification tasks. We can observe that the time of preprocessing is highly dependent on the dimensionality of considered dataset. We should delve deeper to find when the preprocessing is faster and when it is slower in further sections.
+
+## Combined time
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+e <- ggplot(data = duration_df, aes(x = Full_duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing and training time comparison with forester',
+       subtitle = 'for different ML tasks',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0)) 
+
+(e | a | c) + plot_layout(widths = c(3, 1, 1))
+```
+
+Finally we want to analyse the combined times of both preprocessing and training. It is crucial as the process of preparing the data and training of models is always connected. The plot shows us that the duration of whole process was shorter for smaller tasks which were also the binary classification ones. Moreover, we can witness smaller duration deviance in this group than for the regression tasks. In general the number of significantly differing datasets limits to 6 of them: pol, Mercedes_Benz_Greener_Manufacturing, kr-vs-kp, elevators, bank32nh, and 2dplanes. It is less than for the preprocessing stage, which lets us believe than longer preprocessing times, in the end balance off with the shorter training times.
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+f <- ggplot(data = duration_df, aes(x = Preprocessing_duration_fraction, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time fraction in comparison to full process',
+       subtitle = 'for different ML tasks',
+       x = 'Fraction',
+       y = 'Dataset',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  xlim(0, 1) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+(f | a | c) + plot_layout(widths = c(3, 1, 1))
+```
+
+Probably even more insightful analysis can be derived from the analysis of fraction of time spent on preprocessing compared to the one of training. Intuitively we can understand that the more on the left is the observation, the shorter the relative preprocessing time. As we can see for almost every dataset we can witness that some preprocessing options are disproportionately time consuming to the training time, thus comes the conclusion that we always have to be sensitive when it comes to the choice of preprocessing methods. Quite interestingly, the fractions doesn't depend so much on the number of initial size of the dataset, but the combination of both this and the number of deleted columns. The kin8m perfectly shows, that when the dataset has plenty of fields, but also all columns are relevant, then we spend less time during the preprocessing stage. However the effect is not as strong as it may seem, as the number of outliers detected in this case is relatively big.
+
+## Preprocessing components analysis
+
+It is also extremely important to analyse the execution times depending on different preprocessing strategies. Those times are not only crucial for evaluation of different preprocessing steps, but more importantly let us gain the intuition which steps are time consuming, and which ones are almost cost-free.
+
+### Feature selection impact
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+bool_fs <- duration_preprocessing
+bool_fs[bool_fs$Feature_selection != 'none', 'Feature_selection'] <- 'yes'
+
+g <- ggplot(data = bool_fs, aes(x = Duration, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison with forester',
+       subtitle = 'for different ML tasks, divided by presence of feature selection',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+g
+```
+
+As we can see, if we compare the preprocessing times of those strategies that use feature selection methods and those which don't we can observe a significant difference in preprocessing times for all datasets. In some cases the strategies with feature selection may last even 32 times longer than the ones without them. Firstly let's analyse other components on those observations that don't use any FS method, as we already know that it will provide a significant noise to the data.
+
+### No feature selection removal strategies
+
+Let's consider 18 observations which don't use any feature selection method and compare 3 removal strategies represented with 6 observation per each type.
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+no_fs <- duration_preprocessing[duration_preprocessing$Feature_selection == 'none', ]
+
+h <- ggplot(data = no_fs, aes(x = Duration, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison with forester',
+       subtitle = 'for different ML tasks, divided by removal strategy',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+h
+```
+
+The plot above clearly shows us that only significant differences happen between minimal removal strategy, and two other options, although it is still a reasonable difference, smaller than 2 times. It's quite surprising, as the max strategy contains the removal of highly correlated columns which in general is a time consuming task, whereas our example shows that it is insignificant, even for the Mercedes_Benz_Greener_Manufacturing where we calculate correlations of over 300 columns! These outcomes show us that in terms of time comparison we can ignore different preprocessing times, as the results are fairly similar.
+
+### No feature selection Imputation methods
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+no_fs_imp <- no_fs[no_fs$Dataset %in% c('breast-w', 'credit-approval'), ]
+i <- ggplot(data = no_fs_imp, aes(x = Duration, y = Dataset, color = factor(Imputation), fill = factor(Imputation))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison with forester',
+       subtitle = 'for different ML tasks, divided by removal strategy',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+j <- ggplot(data = no_fs, aes(x = Duration, y = Dataset, color = factor(Imputation), fill = factor(Imputation))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison with forester',
+       subtitle = 'for different ML tasks, divided by imputation strategy',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+i
+```
+
+The time analysis of imputation methods is extremely narrow, as we only have two datasets that contain missing fields, and even though their amounts are rather small (16, and 37). Even though we can notice that the only method that indeed differs in terms of computational expenses is the mice algorithm, which for the credit-approval task lasted 32 times longer than other methods. As these times are again fairly similar, and they don't affect whole preprocessing time a lot (see next plot), we can ignore their impact in other analysis.
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+j
+```
+
+### Different feature selection methods
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+only_fs       <- duration_preprocessing[duration_preprocessing$Feature_selection != 'none', ]
+only_fs_niche <- only_fs[only_fs$Feature_selection %in% c('MI', 'MCFS'), ]
+only_fs_top   <- only_fs[only_fs$Feature_selection %in% c('VI', 'BORUTA'), ]
+
+k <- ggplot(data = only_fs, aes(x = Duration, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time comparison with forester',
+       subtitle = 'for different ML tasks, divided by feature selection method',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x), limits = c(NA, 4100)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+k
+```
+
+In this case we are left with 24 records per dataset, where MI and MCFS has 3 of them whereas VI and BORUTA 9. Even at first glance we can notice significant differences between the execution times of the methods. Moreover, in general we can say that the duration doesn't differ a lot inside a single FS method. We want to use that assumptions in order to compare all methods in a more readable way by the comparison of their medians, as the abundance of colors and box-plots is hardly understandable here.
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+datasets <- unique(only_fs$Dataset)
+VI       <- c()
+MCFS     <- c()
+MI       <- c()
+BORUTA   <- c()
+
+for (i in unique(only_fs$Dataset)) {
+  ds     <- only_fs[only_fs$Dataset == i, ]
+  VI     <- c(VI,     median(ds[ds$Feature_selection == 'VI', 'Duration']))
+  MCFS   <- c(MCFS,   median(ds[ds$Feature_selection == 'MCFS', 'Duration']))
+  MI     <- c(MI,     median(ds[ds$Feature_selection == 'MI', 'Duration']))
+  BORUTA <- c(BORUTA, median(ds[ds$Feature_selection == 'BORUTA', 'Duration']))
+}
+
+median_fs      <- data.frame(Dataset = datasets, VI = VI, MCFS = MCFS, BORUTA = BORUTA, MI = MI)
+long_median_fs <- reshape(median_fs, varying = c('MI' ,'VI', 'MCFS', 'BORUTA'), v.names = c('Duration'), 
+                          times = c('MI' ,'VI', 'MCFS', 'BORUTA'), direction = 'long')
+long_median_fs <- long_median_fs[, 1:3]
+
+rownames(long_median_fs) <- NULL
+colnames(long_median_fs) <- c('Dataset', 'Method', 'Duration')
+
+l <- ggplot(data = long_median_fs, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing median time comparison with forester',
+       subtitle = 'for different ML tasks, divided by feature selection',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+l
+```
+
+The visualization above clearly indicates that in the forester package we can witness the division between slow and fast feature selection methods, where VI and MCFS are in the first group, whereas, BORUTA and MI in the second one. In order to analyse them thoroughly let's create two subplots that separate those two.
+
+```{r fig.height=6, fig.width=15, echo=FALSE}
+long_median_fs_slow <- long_median_fs[long_median_fs$Method %in% c('VI', 'MCFS'), ]
+long_median_fs_fast <- long_median_fs[long_median_fs$Method %in% c('BORUTA', 'MI'), ]
+
+m <- ggplot(data = long_median_fs_slow, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing median time comparison with forester',
+       subtitle = 'for slow feature selection methods',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.text.y = element_text(colour = "black", size = 9),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+n <- ggplot(data = long_median_fs_fast, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing median time comparison with forester',
+       subtitle = 'for fast feature selection methods',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature Selection',
+       fill  = 'Feature Selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) +
+  theme(plot.title = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x = element_text(colour = 'black', size = 12),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(colour = "black", size = 9)) + 
+  theme(strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ), 
+        legend.position = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+m | n
+```
+
+This time we can easily distinguish which preprocessing methods are faster and slower among considered pairs. In the case of less time-demanding ones presented on the right plot, every time MI method is faster than BORUTA, and in some cases the differences are significant as the cane reach up to 16 times difference. For the slow methods it is not so clear which one is more demanding, as sometimes VI is faster and sometimes MCFS. We could say that the slowest algorithm is the VI method, as there are 5 datasets where MCFS is incredibly fast, whereas the VI is much slower then.
+
+Summing up, the order from fastest to slowest feature selection method is: MI, BORUTA, MCFS, VI.
+
+## Summary
+
+1.  The training duration depends on the number of removed features during the preprocessing. The bigger the dataset, and more deleted columns, the more those times differ. If only a few columns are removed, then training durations are very similar.
+
+2.  The preprocessing duration greatly depends on the dimensionality of provided dataset. The bigger the dataset, the longer preprocessing lasts.
+
+3.  If we consider full duration (preprocessing + training), we observe that those two components balance themselves, and the differences are much smaller between full times than for particular types.
+
+4.  The imputation type doesn't effect a preprocessing duration a lot unless it's mice.
+
+5.  Inclusion of the removal of highly correlated features doesn't affect the execution time a lot. The only difference is between minimal and med/max preprocessing strategies, but they are still insignificant to other factors.
+
+6.  The most influential part is the choice of feature selection method. If no method is used, then we obtain very fast preprocessing. The order from fastest to slowest feature selection method is: MI, BORUTA, MCFS, VI (\~20's of seconds, 10's - 100's, 100's - 1000's, 100's - 1000's).
+
+# Performance
+
+Now, let's analyse the performance of the models obtained in our experiment.
+
+```{r, echo=FALSE}
+all_engines               <- extended_training_summary_table[extended_training_summary_table$Engine == 'all', ]
+all_engines_bin           <- all_engines[all_engines$Task_type == 'binary_classification', ]
+all_engines_reg           <- all_engines[all_engines$Task_type == 'regression', ]
+all_engines_bin_baselines <- all_engines_bin[which(all_engines_bin$Removal =='removal_min' & 
+                                                   all_engines_bin$Imputation =='median-other' & 
+                                                   all_engines_bin$Feature_selection =='none'), ]
+all_engines_bin_baselines <- all_engines_bin_baselines[c(1:3, 7:9, 13:15, 19:21, 25:27, 31:33, 37:39, 43:45), ]
+all_engines_reg_baselines <- all_engines_reg[which(all_engines_reg$Removal =='removal_min' & 
+                                                   all_engines_reg$Imputation =='median-other' & 
+                                                   all_engines_reg$Feature_selection =='none'), ]
+all_engines_reg_baselines <- all_engines_reg_baselines[c(1:4, 9:12, 17:20, 25:28, 33:36, 41:44, 49:52), ]
+```
+
+## Comparison to baseline preprocessing
+
+### Binary classification
+
+```{r fig.height=12, fig.width=15, echo=FALSE}
+o <- ggplot(data = all_engines_bin, aes(x = Max, y = Dataset, color = factor(Metric), fill = factor(Metric))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines, size = 3, shape = 4, 
+             position = position_jitterdodge(), 
+             aes(x = Max, y = Dataset, color = factor(Metric), fill = factor(Metric))) +
+  theme_minimal() + 
+  labs(title = 'Max metrics values with different preprocessing strategies',
+       subtitle = 'for different binary classification tasks, divided by metric',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.35, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+p <- ggplot(data = all_engines_bin, aes(x = Mean, y = Dataset, color = factor(Metric), fill = factor(Metric))) + 
+  geom_boxplot(alpha = 0.5) + 
+  geom_point(data = all_engines_bin_baselines, size = 3, shape = 4, 
+             position = position_jitterdodge(), 
+             aes(x = Mean, y = Dataset, color = factor(Metric), fill = factor(Metric))) +
+  theme_minimal() + 
+  labs(title = 'Mean metrics values with different preprocessing strategies',
+       subtitle = 'for different binary classification tasks, divided by metric',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.35, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+r <- ggplot(data = all_engines_bin, aes(x = Median, y = Dataset, color = factor(Metric), fill = factor(Metric))) + 
+  geom_boxplot(alpha = 0.5) + 
+  geom_point(data = all_engines_bin_baselines, size = 3, shape = 4, 
+             position = position_jitterdodge(), 
+             aes(x = Median, y = Dataset, color = factor(Metric), fill = factor(Metric))) +
+  theme_minimal() + 
+  labs(title = 'Median metrics values with different preprocessing strategies',
+       subtitle = 'for different binary classification tasks, divided by metric',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.35, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+o / p / r
+```
+
+The first step of this analysis is to determine whether there are any significant differences depending between all preprocessing strategies. In order to check that we will use the visualization above which compares Maximum, Mean, and Median values of Accuracy, AUC, and F1 on box-plots for all classification tasks. Additionally we've marked the baseline outcomes obtained with minimal preprocessing strategy with X-marks.
+
+If we consider the best obtained results (Max) we will notice that most of them were fairly similar, and very close to the perfect score, and the same goes for the baseline models. The processing was unable to provide significantly better results. Additionally in two cases the usage of preprocessing worsened results a bit. This behavior was noticed for two most challenging tasks being: `kr-vs-kp` (3196 x 37), and `credit-g` (1000 x 21).
+
+This disturbing behavior is also noticeable in case of Mean values, where the baselines are mostly on the right side of boxes. In this case however, we can also witness, that preprocessing lets us achieve better results which is the case for `breast-w` (699 x 10), `blood-transfusion-service-center` (748 x 5), and `credit-approval` (690 x 16). Moreover, this time there are more tasks which have significantly varying results depending on the preprocessing method. These factors show us that the same preprocessing strategies applied to different data sets may yield very different results.
+
+The last subplot presenting Median values only underlines the conclusions derived from the second one.
+
+### Regression
+
+```{r echo=FALSE}
+all_engines_reg_min_med <- all_engines_reg[, c(1, 2, 3, 4, 5, 13, 16, 17)]
+median                  <- all_engines_reg_min_med[, 1:7]
+names(median)           <- c(names(median)[1:6], 'Value')
+min                     <- all_engines_reg_min_med[, c(1:6, 8)]
+names(min)              <- c(names(min)[1:6], 'Value')
+all_engines_reg_min_med <- rbind(median, min)
+all_engines_reg_min_med$Aggregation <- rep(c('Median', 'Min'), each = nrow(all_engines_reg))
+```
+
+```{r echo=FALSE}
+all_engines_reg_baselines_min_med <- all_engines_reg_baselines[, c(1, 2, 3, 4, 5, 13, 16, 17)]
+median                            <- all_engines_reg_baselines_min_med[, 1:7]
+names(median)                     <- c(names(median)[1:6], 'Value')
+min                               <- all_engines_reg_baselines_min_med[, c(1:6, 8)]
+names(min)                        <- c(names(min)[1:6], 'Value')
+all_engines_reg_baselines_min_med <- rbind(median, min)
+all_engines_reg_baselines_min_med$Aggregation <- rep(c('Median', 'Min'), each = nrow(all_engines_reg_baselines))
+```
+
+```{r fig.height=10, fig.width=15, echo=FALSE, warning=FALSE}
+metric <- 'mse'
+s <- ggplot(data = all_engines_reg_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated MSE values (Magnified)',
+       subtitle = 'for different regression tasks and preprocessing strategies',
+       x        = 'Value',
+       y        = 'Dataset',
+       color    = 'Aggregation',
+       fill     = 'Aggregation') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 2)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+t <- ggplot(data = all_engines_reg_min_med[all_engines_reg_min_med$Metric == metric, ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated MSE values (All)',
+       x        = 'Value',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+metric <- 'mae'
+u <- ggplot(data = all_engines_reg_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated MAE values (Magnified)',
+       x        = 'Value',
+       y        = 'Dataset',
+       color    = 'Aggregation',
+       fill     = 'Aggregation') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 2)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+v <- ggplot(data = all_engines_reg_min_med[all_engines_reg_min_med$Metric == metric, ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated MAE values (All)',
+       x        = 'Value',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+metric <- 'rmse'
+w <- ggplot(data = all_engines_reg_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated RMSE values (Magnified)',
+       x        = 'Value',
+       y        = 'Dataset',
+       color    = 'Aggregation',
+       fill     = 'Aggregation') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 2)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+x <- ggplot(data = all_engines_reg_min_med[all_engines_reg_min_med$Metric == metric, ], 
+            aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_min_med$Metric == metric), ], 
+             size = 3, shape = 4,position = position_jitterdodge(), 
+             aes(x = Value, y = Dataset, color = factor(Aggregation), fill = factor(Aggregation))) +
+  theme_minimal() + 
+  labs(title    = 'Aggregated RMSE values (All)',
+       x        = 'Value',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+(s | t) / (u | v) / (w | x)
+```
+
+As regression metrics can reach huge results in terms of RMSE, MSE, and MAE, we will consider minimal, and median aggregations only, as they omit the impact of the outliers in some way.
+
+In case of the regression we can witness even bigger disadvantages of the models trained on preprocessed datasets. Despite the `pol` task, all other baselines achieved results from the 'better border' of the box-plot. It means that in general, preprocessing methods doesn't improve the quality of the models a lot, however they definitely can worsen models performance significantly.
+
+Let's find out which preprocessing steps affect the outcomes the most.
+
+## Feature Selection Impact
+
+Following the time analysis of each preprocessing step, we will start from the performance analysis depending on Feature Selection. Additionally, as the previous results suggest, that there aren't huge differences between metric, we will use the most common accuracy, and RMSE.
+
+### Binary classification
+
+```{r echo=FALSE}
+all_engines_bin_fs <- all_engines_bin
+all_engines_bin_fs <- all_engines_bin_fs[all_engines_bin_fs$Metric == 'accuracy', ]
+all_engines_bin_fs$Feature_selection <- ifelse(all_engines_bin_fs$Feature_selection != 'none', 'yes', 'none')
+
+```
+
+```{r fig.height=8, fig.width=15, echo=FALSE, warning=FALSE}
+a1 <- ggplot(data = all_engines_bin_fs, aes(x = Max, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Max Accuracy values wheter FS methods were used',
+       subtitle = 'for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.35, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+b1 <- ggplot(data = all_engines_bin_fs, aes(x = Mean, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Mean Accuracy values wheter FS methods were used',
+       subtitle = 'for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.35, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+c1 <- ggplot(data = all_engines_bin_fs, aes(x = Median, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme_minimal() + 
+  labs(title = 'Median Accuracy values wheter FS methods were used',
+       subtitle = 'for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Metric',
+       fill  = 'Metric') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.35, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+a1 / b1 / c1
+
+```
+
+Similarly to previous plots considering binary classification tasks, the Max values subplot indicate major differences only for `kr-vs-kp` task, and FS is the reson of worsening the performance.
+
+In case of the mean values, we will notice that the similarities existing before are also present in this case. The datasets like `phoneme`, `diabetes`, `credit-approval`, and `blood-transfusion-service-center` doesn't differ at all depending on FS. The differences such as in case of `kr-vs-kp`, `credit-g`or `breast-w` also hold, and the only interesting case is the `banknote-authentication` task, where both classed have the same distribution, but the baseline is better than preprocessing version, which means, that in this case the FS wasn't the reason for obtaining worse results.
+
+The median results are quite similar, so the conclusion derived beforehand still hold.
+
+### Regression
+
+```{r echo=FALSE}
+all_engines_reg_min_med_fs <- all_engines_reg_min_med
+all_engines_reg_min_med_fs <- all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Metric == 'rmse', ]
+all_engines_reg_min_med_fs$Feature_selection <- ifelse(all_engines_reg_min_med_fs$Feature_selection != 'none', 'yes', 'none')
+```
+
+```{r fig.height=6, fig.width=15, echo=FALSE, warning=FALSE}
+d1 <- ggplot(data = all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Aggregation == 'Min', ],
+            aes(x = Value, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title    = 'Minimal RMSE values (Magnified)',
+       subtitle = 'for different regression tasks and preprocessing strategies',
+       x        = 'RMSE',
+       y        = 'Dataset',
+       color    = 'Feature_selection',
+       fill     = 'Feature_selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 1.5)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+e1 <- ggplot(data = all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Aggregation == 'Min', ],  
+            aes(x = Value, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title    = 'Minimal RMSE values (All)',
+       x        = 'RMSE',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+f1 <- ggplot(data = all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Aggregation == 'Median', ],
+            aes(x = Value, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title    = 'Median RMSE values (Magnified)',
+       x        = 'RMSE',
+       y        = 'Dataset',
+       color    = 'Feature_selection',
+       fill     = 'Feature_selection') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, 1.5)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+g1 <- ggplot(data = all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Aggregation == 'Median', ], 
+            aes(x = Value, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title    = 'Median RMSE values (All)',
+       x        = 'RMSE',) +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  coord_cartesian(xlim = c(0, NA)) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+(d1 | e1) / (f1 | g1)
+
+```
+
+Obtained results show us that meaningful differences between RMSE values happen for `pol` , `Mercedes_Bena_Greener_Manufacturing`, and `2dplanes` tasks, and despite them median value for `pol` dataset, the FS methods seem to worsen the performance of trained models. It is exactly the same as in previous section describing general performance of trained models compared to the baselines. To ensure this theory we will now delve deeply into the methods not using FS methods at all.
+
+## Lack of Feature Selection
+
+### Binary Classification
+
+```{r echo=FALSE}
+all_engines_bin_no_fs <- all_engines_bin_fs[all_engines_bin_fs$Feature_selection == 'none', ]
+```
+
+```{r fig.height=10, fig.width=15, echo=FALSE, warning=FALSE}
+h1 <- ggplot(data = all_engines_bin_no_fs, aes(x = Max, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Max Accuracy',
+       subtitle = 'without FS used for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.93, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+i1 <- ggplot(data = all_engines_bin_no_fs, aes(x = Mean, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Mean Accuracy',
+       subtitle = 'for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.8, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+j1 <- ggplot(data = all_engines_bin_no_fs, aes(x = Median, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Median Accuracy',
+       subtitle = 'for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.8, 1) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+k1 <- ggplot(data = all_engines_bin_no_fs, aes(x = Min, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Min Accuracy',
+       subtitle = 'for different binary classification tasks',
+       x = 'Accuracy',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.2, 0.6) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = "black", size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+h1 / i1 / j1 / k1
+```
+
+As we can see the removal strategies make almost no impact in case of binary classification tasks, and the Accuracy metric, which means that the other metrics also won't differ as accuracy uses all TP, TN, FP, and FN values, so the differences would be visible here. In fact the differences happen mostly fore mean values, yet they are too small to make a big impact on general performance. Let's also notice, that the minimal removal strategy is in fact our baseline method.
+
+### Regression
+
+```{r echo=FALSE}
+all_engines_reg_no_fs <- all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Feature_selection == 'none', ]
+```
+
+```{r fig.height=6, fig.width=15, echo=FALSE, warning=FALSE}
+l1 <- ggplot(data = all_engines_reg_no_fs[all_engines_reg_no_fs$Aggregation == 'Median', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Median RMSE (Magnified)',
+       subtitle = 'without FS used for different binary classification tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, 1.3) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+m1 <- ggplot(data = all_engines_reg_no_fs[all_engines_reg_no_fs$Aggregation == 'Median', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Median RMSE',
+       subtitle = 'without FS used for different binary classification tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(8.5, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+n1 <- ggplot(data = all_engines_reg_no_fs[all_engines_reg_no_fs$Aggregation == 'Min', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Minimal (Magnified)',
+       subtitle = 'for different binary classification tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, 0.25) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+o1 <- ggplot(data = all_engines_reg_no_fs[all_engines_reg_no_fs$Aggregation == 'Min', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() + 
+  labs(title = 'Minimal RMSE',
+       subtitle = 'for different binary classification tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+(l1 | m1) / (n1 | o1)
+
+```
+
+In this case, the results are more varying between different removal strategies, especially in the case of `pol`, and `Mercedes_Benz_Greener_Manufacturing` datasets. Those two tasks were the most complex ones (15000 x 49, and 4209 x 378), and contained big number of static, duplicated, and correlated columns, which resulted in various results from different preporcessing approaches. Quite interestingly we can witness that different strategies resulted in various outcomes, we can see that if we consider the median values, then minimal removal can benefit from substracting duplicate or static columns, however removing the highly correlated ones (for `Mercedes_Benz_Greener_Manufacturing`, it was 522 pairs) lead to worsening of the models. On the other hand, if we consider the best obtained values, then the minimal strategy achieves best results, instead of the median approach.
+
+It shows that in general complex datasets with more problems can benefit from extensive removal strategies, but they have to be suited well for our dataset.
+
+## With feature selection
+
+To further ensure ourselves in our believes let's take a look at the same plots, but for outcomes that used FS.
+
+### Binary classification
+
+```{r echo=FALSE}
+all_engines_bin_fs_only <- all_engines_bin_fs[all_engines_bin_fs$Feature_selection == 'yes', ]
+```
+
+```{r fig.height=10, fig.width=15, echo=FALSE, warning=FALSE}
+p1 <- ggplot(data = all_engines_bin_fs_only, aes(x = Max, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Max, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Max Accuracy',
+       subtitle = 'with FS used for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.93, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+r1 <- ggplot(data = all_engines_bin_fs_only, aes(x = Mean, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Mean, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Mean Accuracy',
+       subtitle = 'for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.65, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+s1 <- ggplot(data = all_engines_bin_fs_only, aes(x = Median, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Median, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Median Accuracy',
+       subtitle = 'for different binary classification tasks',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0.7, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+t1 <- ggplot(data = all_engines_bin_fs_only, aes(x = Min, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_bin_baselines[all_engines_bin_baselines$Metric == 'accuracy', ], 
+             size = 5, shape = 4, aes(x = Min, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Min Accuracy',
+       subtitle = 'for different binary classification tasks',
+       x = 'Accuracy',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = "black", size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+p1 / r1 / s1 / t1
+```
+
+The outcomes of experiments for FS differ much more withing one removal strategy than without it as we use 4 different FS methods, but the results between different removal strategies doesn't differ almost at all, which is similar to our previous analysis. Let's also notice, that although for most tasks, we obtained results worse than baseline, in some rare cases, like mean accuracy for `breast-w` in some cases we could get slightly better outcomes.
+
+### Regression
+
+```{r echo=FALSE}
+all_engines_reg_fs_only <- all_engines_reg_min_med_fs[all_engines_reg_min_med_fs$Feature_selection == 'yes', ]
+```
+
+```{r fig.height=6, fig.width=15, echo=FALSE, warning=FALSE}
+u1 <- ggplot(data = all_engines_reg_fs_only[all_engines_reg_fs_only$Aggregation == 'Median', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Median'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Median RMSE (Magnified)',
+       subtitle = 'with FS used for different binary classification tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, 1.5) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+v1 <- ggplot(data = all_engines_reg_fs_only[all_engines_reg_fs_only$Aggregation == 'Median', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Median'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Median RMSE',
+       subtitle = 'without FS used for different binary classification tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(8.5, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_text(colour = 'black', size = 12),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "none",
+        strip.text.y.right = element_text(angle = 0))
+
+w1 <- ggplot(data = all_engines_reg_fs_only[all_engines_reg_fs_only$Aggregation == 'Min', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Min'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Minimal (Magnified)',
+       subtitle = 'for different binary classification tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, 1.5) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_text(colour = "black", size = 9),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+x1 <- ggplot(data = all_engines_reg_fs_only[all_engines_reg_fs_only$Aggregation == 'Min', ], 
+             aes(x = Value, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = all_engines_reg_baselines_min_med[which(all_engines_reg_baselines_min_med$Metric == 'rmse' & 
+                                                            all_engines_reg_baselines_min_med$Aggregation == 'Min'), ], 
+             size = 4, shape = 4, aes(x = Value, y = Dataset), color = '#B1805B', fill = '#B1805B') +
+  theme_minimal() + 
+  labs(title = 'Minimal RMSE',
+       subtitle = 'for different binary classification tasks',
+       x = 'RMSE',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_color_manual(values = c("#74533d", "#afc968", "#7C843C", "#B1805B")) +
+  scale_fill_manual(values  = c("#74533d", "#afc968",  "#7C843C", "#B1805B")) +
+  xlim(0, NA) +
+  theme(plot.title    = element_text(colour = 'black', size = 15),
+        plot.subtitle = element_blank(),
+        axis.title.x  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
+        axis.text.y   = element_blank(),
+        axis.text.x   = element_text(colour = "black", size = 9)) + 
+  theme(strip.background   = element_rect(fill = "white", color = "white"),
+        strip.text         = element_text(size = 6 ), 
+        legend.position    = "bottom",
+        strip.text.y.right = element_text(angle = 0))
+
+(u1 | v1) / (w1 | x1)
+
+```
+
+And again we can notice, that main differences consider `pol`, and `Mercedes_Benz_Greener_Manufacturing` tasks. For `pol` the worst strategy is definitely max removal, whereas it might be the best one for `Mercedes_Benz_Greener_Manufacturing`. Again it underlines our previous assumptions. Unfortunately in this case we were unable to achieve results visibly better than the baseline models, although for pol dataset the median RMSE were higher than it's baseline.
+
+## Summary
+
+1.  In general the preprocessing strategies didn't improve the outcomes a lot, and more often worsen them.
+2.  The biggest negative impact comes from applying any feature selection strategies, those differences were more noticeable on more complex and bigger tasks, which are grouped in our regression experiments.
+3.  When we consider only preprocessing strategies that don't use any FS method, then obtained results are much more stable, whereas with the usage of FS they are fairly unstable.
+4.  For most experiments, removal strategies had marginal impact, they are much more important in case of complex and bigger tasks. The results show that we are able to achieve better results when we choose proper removal strategy, but it can also worsen our results.
+5.  The results show, that the tree-based models doesn't need any time consuming Feature Selection strategies, although if the tasks are complex they can benefit from applying proper removal strategies.
+6.  In some rare cases, applying Feature Selection strategy let us improve obtained results, however it might not be beneficial enough, when we consider long computation times.
+
+# Conclusions
+
+1.  The most influential part of the preprocessing module is Feature Selection. It takes most of the modelling (preprocessing + training) times. The order from fastest to slowest feature selection method is: MI, BORUTA, MCFS, VI (\~20's of seconds, 10's - 100's, 100's - 1000's, 100's - 1000's). Unfortunately, the method doesn't prove to be efficient enough combined with the tree-based models. It is very time consuming, and mostly leads to worse results, even though in some cases it can provide outcomes better than the baselines.
+2.  Other steps of preprocessing pipeline, which are removal strategies and data imputation last much shorter, and doesn't change a modelling time a lot, as removal of columns makes the training faster.
+3.  The removal strategies, doesn't make huge performance differences, although if the task is complex, and the data is corrupted, then with cautious tuning of the preprocessing step we are able to obtain higher performance, than without it.
+>>>>>>> b6c9e7735ce229d9a94dce9db6fcedec62936c73

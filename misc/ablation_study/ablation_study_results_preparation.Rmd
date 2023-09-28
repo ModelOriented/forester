@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "Ablation study of forester: Results preparation"
 author: "Hubert Ruczyński"
@@ -267,3 +268,274 @@ saveRDS(extended_training_summary, 'ablation_processed_results/extended_training
 extended_training_summary <- readRDS('ablation_processed_results/extended_training_summary_table.RData')
 rmarkdown::paged_table(extended_training_summary)
 ```
+=======
+---
+title: "Ablation study of forester: Results preparation"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Preprocessing data preparation
+
+In this notebook we will process the data from training and preprocessing in order to enable easier analysis of the results, and reduction of data size.
+
+```{r warning=FALSE}
+files <- list.files('ablation_preprocessing_data', pattern = 'RData')
+data  <- list()
+for (i in 1:length(files)) {
+  data[[i]] <- readRDS(paste0('ablation_preprocessing_data/', files[i]))
+}
+```
+
+```{r eval=FALSE}
+dataset           <- c()
+removal           <- c()
+imputation        <- c()
+feature_selection <- c()
+duration          <- c()
+task_type         <- c()
+for (i in 1:15) {
+  for (j in 1:39) {
+    stringsplt        <- strsplit(data[[i]]$time_df$name[[j]], ':')[[1]]
+    dataset           <- c(dataset,    substr(stringsplt[2], 2, nchar(stringsplt[2]) - 7))
+    removal           <- c(removal,    substr(stringsplt[3], 1, nchar(stringsplt[3]) - 10))
+    imputation        <- c(imputation, substr(stringsplt[4], 1, nchar(stringsplt[4]) - 17))
+    feature_selection <- c(feature_selection, stringsplt[5])
+    duration          <- c(duration, data[[i]]$time_df$duration[j])
+    if (i > 8) {
+      task_type <- c(task_type, 'regression')
+    } else {
+      task_type <- c(task_type, 'binary_classification')
+    }
+  }
+}
+duration_df <- data.frame(Dataset = dataset, Removal = removal, Imputation = imputation, 
+                          Feature_selection = feature_selection, Task_type = task_type, Duration = duration)
+rmarkdown::paged_table(duration_df)
+```
+
+```{r eval=FALSE}
+dir.create('ablation_processed_results', showWarnings = FALSE)
+saveRDS(duration_df, 'ablation_processed_results/preprocessing_duration.RData')
+```
+
+# Training data preparation
+
+## Time analysis
+
+```{r}
+directories       <- list.dirs('ablation_results')[2:16]
+dataset           <- c()
+removal           <- c()
+imputation        <- c()
+feature_selection <- c()
+duration          <- c()
+task_type         <- c()
+for (i in 1:15) {
+  names <- readRDS(paste0(directories[i], '/names_times.RData'))
+  times <- readRDS(paste0(directories[i], '/list_times.RData'))
+  for (j in 1:39) {
+    stringsplt        <- strsplit(names[j], ' ')[[1]]
+    dataset           <- c(dataset,    stringsplt[2])
+    removal           <- c(removal,    stringsplt[4])
+    imputation        <- c(imputation, stringsplt[6])
+    feature_selection <- c(feature_selection, stringsplt[9])
+    duration          <- c(duration, times[j])
+    if (i > 8) {
+      task_type <- c(task_type, 'regression')
+    } else {
+      task_type <- c(task_type, 'binary_classification')
+    }
+  }
+}
+duration_train_df <- data.frame(Dataset = dataset, Removal = removal, Imputation = imputation, 
+                                Feature_selection = feature_selection, Task_type = task_type, Duration = duration)
+```
+
+```{r eval=FALSE}
+dir.create('ablation_processed_results', showWarnings = FALSE)
+saveRDS(duration_train_df, 'ablation_processed_results/training_duration.RData')
+```
+
+```{r}
+duration_train_df <- readRDS('ablation_processed_results/training_duration.RData')
+rmarkdown::paged_table(duration_train_df)
+```
+
+## Scores and summaries
+
+As analysis of results for every single model is time consuming, and won't provide too much interesting information, we've decided to summarize those results by calculating maximum, mean, median, and minimum value for each metric. Moreover, we've decided to divide it by engine, however the analysis of all engines is also provided. In fact the latter one was used during the results analysis.
+
+```{r}
+res  <- readRDS(paste0(directories[1], '/1.RData'))
+res2 <- readRDS(paste0(directories[9], '/1.RData'))
+```
+
+```{r}
+summarize_results <- function(data, binary) {
+  summary_df <- data.frame()
+  engines <- c(unique(data$engine), 'all')
+  if (binary) {
+    metrics <- c('accuracy', 'auc', 'f1')
+  } else {
+    metrics <- c('rmse', 'mse', 'r2', 'mae')
+  }
+  
+  
+  for (i in 1:length(engines)) {
+    # Choose the engine
+    if (engines[i] == 'all') {
+      df <- data
+    } else {
+      df <- data[data$engine == engines[i], ]
+    }
+    for (j in 1:length(metrics)) {
+      metric <- df[[metrics[j]]]
+      summ   <- summary(metric)
+      record <- data.frame(Engine = engines[i], Metric = metrics[j], Max = summ[[6]],
+                           Mean = summ[[4]], Median = summ[[3]], Min = summ[[1]], 
+                           Range = (summ[[6]] - summ[[1]]))
+      summary_df <- rbind(summary_df, record)
+    }
+  }
+  
+  return(summary_df)
+}
+```
+
+```{r}
+rmarkdown::paged_table(summarize_results(res2$score_test, FALSE))
+```
+
+### Summary
+
+Here we actually use the function defined before and calculate the results.
+
+```{r eval=FALSE}
+directories      <- list.dirs('ablation_results')[2:16]
+training_summary <- list()
+binary           <- TRUE
+
+for (i in 1:15) {
+  training_summary[[i]] <- list()
+  for (j in 1:39) {
+    if (i > 8) {
+      binary <- FALSE
+    }
+    training_summary[[i]][[j]] <- list()
+    
+    results       <- readRDS(paste0(directories[i], '/', j, '.RData'))
+    data          <- results$data
+    data_dim      <- dim(results$data)
+    score_test    <- results$score_test
+    score_train   <- results$score_train
+    score_valid   <- results$score_valid
+    test_summary  <- summarize_results(results$score_test, binary)
+    train_summary <- summarize_results(results$score_train, binary)
+    valid_summary <- summarize_results(results$score_valid, binary)
+    
+    obs <- list(data = data, data_dim = data_dim, score_test = score_test, 
+                score_train = score_train, score_valid = score_valid, 
+                test_summary = test_summary, train_summary = train_summary, 
+                valid_summary = valid_summary)
+    
+    suppressWarnings(training_summary[[i]][[j]] <- obs)
+  }
+  names <- readRDS(paste0(directories[i], '/names_times.RData'))
+  names(training_summary[[i]]) <- names
+}
+
+names(training_summary) <- directories
+```
+
+```{r eval=FALSE}
+directories             <- list.dirs('ablation_results', full.names = FALSE)[2:16]
+names(training_summary) <- directories
+saveRDS(training_summary, 'ablation_processed_results/training_summary.RData')
+```
+
+# Extended training summary table
+
+To provide an easier usage of the data, we've decided to create one big table describing all results combined with preprocessing strategy and each stage durations. The resulting file is used in the results analysis.
+
+```{r eval=FALSE}
+training_summary       <- readRDS('ablation_processed_results/training_summary.RData')
+duration_train_df      <- readRDS('ablation_processed_results/training_duration.RData')
+duration_preprocessing <- readRDS('ablation_processed_results/preprocessing_duration.RData')
+duration_df            <- duration_train_df
+full_duration          <- duration_preprocessing$Duration + duration_df$Duration
+
+duration_df$Preprocessing_duration          <- duration_preprocessing$Duration
+duration_df$Preprocessing_duration_fraction <- round(duration_df$Preprocessing_duration / full_duration, 3)
+duration_df$Full_duration                   <- full_duration
+
+```
+
+```{r eval=FALSE}
+merged_train <- data.frame()
+merged_test  <- data.frame()
+merged_valid <- data.frame()
+merged_dim   <- data.frame()
+
+extended_summary <- duration_df[rep(1:nrow(duration_df), each = 18), ]
+bin_summary      <- duration_df[rep(1:(39*8), each = 18), ]
+reg_summary      <- duration_df[rep((39*8+1):nrow(duration_df), each = 24), ]
+extended_summary <- rbind(bin_summary, reg_summary)
+
+for (i in 1:15) {
+  for (j in 1:39) {
+    merged_train <- rbind(merged_train, training_summary[[i]][[j]]$train_summary)
+    merged_test  <- rbind(merged_test,  training_summary[[i]][[j]]$test_summary)
+    merged_valid <- rbind(merged_valid, training_summary[[i]][[j]]$valid_summary)
+    dim          <- training_summary[[i]][[j]]$data_dim
+    dim_df       <- data.frame(Rows = dim[1], Columns = dim[2])
+    if (i > 8) {
+      each <- 24
+    } else {
+      each <- 18
+    }
+    dim_df       <- dim_df[rep(1:nrow(dim_df), each = each), ]
+    merged_dim   <- rbind(merged_dim, dim_df)
+  }
+}
+```
+
+```{r eval=FALSE}
+extended_training_summary           <- cbind(extended_summary, merged_dim, merged_train)
+rownames(extended_training_summary) <- NULL
+```
+
+```{r eval=FALSE}
+saveRDS(extended_training_summary, 'ablation_processed_results/extended_training_summary_table.RData')
+```
+
+```{r}
+extended_training_summary <- readRDS('ablation_processed_results/extended_training_summary_table.RData')
+rmarkdown::paged_table(extended_training_summary)
+```
+>>>>>>> b6c9e7735ce229d9a94dce9db6fcedec62936c73

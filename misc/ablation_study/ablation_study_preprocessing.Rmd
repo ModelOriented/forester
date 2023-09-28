@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "Ablation study of forester: Preprocessing"
 author: "Hubert Ruczyński"
@@ -418,3 +419,425 @@ update_files <- function(filename) {
 ```{r eval = FALSE}
 update_files('binary_exp_banknote-authentication')
 ```
+=======
+---
+title: "Ablation study of forester: Preprocessing"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Downloads
+
+The necessary downloads required for the forester package to work properly, if downloaded, the user can skip this part.
+
+```{r eval = FALSE}
+install.packages("devtools")
+devtools::install_github("ModelOriented/forester")
+devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')
+devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
+install.packages('tinytex')
+tinytex::install_tinytex()
+```
+
+# Imports
+
+Importing the necessary libraries.
+
+```{r warning=FALSE, message=FALSE}
+library(forester)
+```
+
+# Data summary
+
+This short analysis presents the datasets used for the experiments, describing their basic characteristic as well as issues detected with `check_data()`.
+
+```{r eval = FALSE}
+binary_CC18      <- readRDS("binary_CC18.RData")
+binary_CC18      <- binary_CC18[c(1, 2, 3, 4, 5, 19, 25, 26)]
+regression_bench <- readRDS("regression_bench.RData")
+```
+
+The results of this summary were created manually mostly based on the script `ablation_study_datasets_info.Rmd`. As seen below they are saved in the file named `data_issues_summary.csv`.
+
+```{r eval = FALSE}
+data_summary <- read.csv('data_issues_summary.csv', sep = ';')
+rmarkdown::paged_table(data_summary)
+```
+
+# Single experiment
+
+This section contains the code necessary for running the preprocessing for a single dataset.
+
+## Removal settings
+
+Firstly we define three removal patterns, as testing all possible combinations is unnecessary and incredibly time-consuming. We call those options: removal_min, removal_med, and removal_max. The first option runs a minimal preprocessing pipeline where we remove only observations that have no target value. The second one additionally removes duplicate, id-like, static, and sparse columns removing corrupted rows with too many missing values. The last option additionally includes the removal of highly correlated columns.
+
+```{r eval = FALSE}
+removal_min <- list(active_modules = c(
+                      duplicate_cols = FALSE, id_like_cols = FALSE, static_cols = FALSE,
+                      sparse_cols = FALSE, corrupt_rows = FALSE, correlated_cols = FALSE
+                    ),
+                    id_names                   = c(''),
+                    static_threshold           = 1,
+                    sparse_columns_threshold   = 1,
+                    sparse_rows_threshold      = 1,
+                    high_correlation_threshold = 1
+                  )
+
+removal_med <- list(active_modules = c(
+                      duplicate_cols = TRUE, id_like_cols = TRUE, static_cols = TRUE,
+                      sparse_cols = TRUE, corrupt_rows = TRUE, correlated_cols = FALSE
+                    ),
+                    id_names                   = c(''),
+                    static_threshold           = 0.99,
+                    sparse_columns_threshold   = 0.3,
+                    sparse_rows_threshold      = 0.3,
+                    high_correlation_threshold = 1
+                  )
+
+removal_max <- list(active_modules = c(
+                      duplicate_cols = TRUE, id_like_cols = TRUE, static_cols = TRUE,
+                      sparse_cols = TRUE, corrupt_rows = TRUE, correlated_cols = TRUE
+                    ),
+                    id_names                   = c(''),
+                    static_threshold           = 0.99,
+                    sparse_columns_threshold   = 0.3,
+                    sparse_rows_threshold      = 0.3,
+                    high_correlation_threshold = 0.7
+                  )
+```
+
+## Parameters preparation
+
+To run the preprocessing we prepare lists and vectors of parameters that will be used in the `custom_preprocessing()` function. We want to test various scenarios where:
+
+-   RM - tests all removal options, where other modules are set to most basic options: `median-other` for imputation, and `none` for feature selection. (3)
+-   Imp - tests all imputation methods, where other modules are set to most basic options: `removal_min` for removals, and `none` for feature selection. (4)
+-   FS - tests all feature selection methods, where other modules are set to most basic options: `removal_min` for removals, and `median-other` for imputation. (4)
+-   RM + Imp - tests `med` and `max` removal options combined with all imputation methods. (8)
+-   RM + FS - tests `med` and `max` removal options combined with all feature selection methods. (8)
+-   Imp + FS - tests `median-other` and `knn` imputation methods with `VI` and `BORUTA` feature selection. (4)
+-   RM + Imp + FS - tests tests `med` and `max` removal options combined with `median-other` and `knn` imputation, and `VI` and `BORUTA` feature selection. (8)
+
+Finally we end up with 39 different sets preprocessing for a single dataset.
+
+```{r eval = FALSE}
+removals <- list(removal_min, removal_med, removal_max,              # RM
+                 removal_min, removal_min, removal_min, removal_min, # Imp
+                 removal_min, removal_min, removal_min, removal_min, # FS
+                 removal_med, removal_med, removal_med, removal_med, # RM + Imp 
+                 removal_max, removal_max, removal_max, removal_max, # RM + Imp
+                 removal_med, removal_med, removal_med, removal_med, # RM + FS
+                 removal_max, removal_max, removal_max, removal_max, # RM + FS
+                 removal_min, removal_min, removal_min, removal_min, # Imp + FS 
+                 removal_med, removal_med, removal_med, removal_med, # RM + Imp + FS 
+                 removal_max, removal_max, removal_max, removal_max) # RM + Imp + FS 
+
+imp_method <- c('median-other', 'median-other',     'median-other',                 # RM
+                'median-other', 'median-frequency', 'knn',          'mice',         # Imp
+                'median-other', 'median-other',     'median-other', 'median-other', # FS
+                'median-other', 'median-frequency', 'knn',          'mice',         # RM + Imp 
+                'median-other', 'median-frequency', 'knn',          'mice',         # RM + Imp 
+                'median-other', 'median-other',     'median-other', 'median-other', # RM + FS
+                'median-other', 'median-other',     'median-other', 'median-other', # RM + FS
+                'median-other', 'knn',              'median-other', 'knn',          # Imp + FS 
+                'median-other', 'knn',              'median-other', 'knn',          # RM + Imp + FS 
+                'median-other', 'knn',              'median-other', 'knn')          # RM + Imp + FS
+
+fs_method <- c('none', 'none', 'none',             # RM
+               'none', 'none', 'none',   'none',   # Imp
+               'VI',   'MCFS', 'MI',     'BORUTA', # FS
+               'none', 'none', 'none',   'none',   # RM + Imp 
+               'none', 'none', 'none',   'none',   # RM + Imp 
+               'VI',   'MCFS', 'MI',     'BORUTA', # RM + FS
+               'VI',   'MCFS', 'MI',     'BORUTA', # RM + FS
+               'VI',   'VI',   'BORUTA', 'BORUTA', # Imp + FS 
+               'VI',   'VI',   'BORUTA', 'BORUTA', # RM + Imp + FS
+               'VI',   'VI',   'BORUTA', 'BORUTA') # RM + Imp + FS
+
+rmv_names <- c('removal_min', 'removal_med', 'removal_max',                # RM
+               'removal_min', 'removal_min', 'removal_min', 'removal_min', # Imp
+               'removal_min', 'removal_min', 'removal_min', 'removal_min', # FS
+               'removal_med', 'removal_med', 'removal_med', 'removal_med', # RM + Imp 
+               'removal_max', 'removal_max', 'removal_max', 'removal_max', # RM + Imp
+               'removal_med', 'removal_med', 'removal_med', 'removal_med', # RM + FS
+               'removal_max', 'removal_max', 'removal_max', 'removal_max', # RM + FS
+               'removal_min', 'removal_min', 'removal_min', 'removal_min', # Imp + FS 
+               'removal_med', 'removal_med', 'removal_med', 'removal_med', # RM + Imp + FS 
+               'removal_max', 'removal_max', 'removal_max', 'removal_max') # RM + Imp + FS 
+```
+
+## Experiment function
+
+This is the main experiment function working for a singular dataset. To make it work we need to provide the data, specify the target, provide a string name of the dataset, include previously defined parameter settings (`removals`, `imp_method`, `fs_method`, `rmv_names`), specify if the dataset is binary classification, and choose MI method (in the end it was `estevez` for binary classification, and `peng` for regression). The function can be run in silent or informative mode.
+
+The function prepares particular datasets one by one, and the results are saved after into the sub-directories in order to enable stopping and resuming whole process. It creates a folder `preprocessing_data` in the working directory where the results are held. Inside we will find a sub-directory for each dataset where we hold 39 RData files with preprocessed data, as well as 2 helper RData files with `list_times`, and `names_times`. When the process is finished we will also obtain another RData file with list of all preprocessed versions of the dataset in the main `preprocessing_data` directory. Full analysis consists of 15 sub-directories and final RData files.
+
+```{r eval = FALSE}
+preprocessing_experiment <- function(data, y, removals, imp_method, fs_method, 
+                                     dataset_name, rmv_names, binary = TRUE, verbose = TRUE,
+                                     mi_method = 'estevez') {
+  list_times  <- c()
+  names_times <- c()
+  prep_data   <- list()
+  dir.create('ablation_preprocessing_data', showWarnings = FALSE)
+  
+  if (binary) {
+    dir.create(paste0('ablation_preprocessing_data/binary_exp_', dataset_name), showWarnings = FALSE)
+    tryCatch({
+      suppressWarnings(list_times  <- readRDS(paste0(getwd(), '/ablation_preprocessing_data/binary_exp_', 
+                                                     dataset_name, '/list_times.RData')))
+      suppressWarnings(names_times <- readRDS(paste0(getwd(), '/ablation_preprocessing_data/binary_exp_', 
+                                                     dataset_name, '/names_times.RData')))
+      print('Loaded times list.')
+    }, error = function(cond) {
+      print('No times list.')
+    })
+  } else {
+    dir.create(paste0('ablation_preprocessing_data/regression_exp_', dataset_name), showWarnings = FALSE)
+    tryCatch({
+      suppressWarnings(list_times  <- readRDS(paste0(getwd(), '/ablation_preprocessing_data/regression_exp_', 
+                                                     dataset_name, '/list_times.RData')))
+      suppressWarnings(names_times <- readRDS(paste0(getwd(), '/ablation_preprocessing_data/regression_exp_', 
+                                                     dataset_name, '/names_times.RData')))
+      print('Loaded times list.')
+    }, error = function(cond) {
+      print('No times list.')
+    })
+  }
+  
+  for (i in 1:39) {
+    verbose_cat('\n Iteration:', i, 'Removal:', rmv_names[i], 'Imputation:', 
+                imp_method[i], 'Feature Selection:', fs_method[i], '\n', verbose = verbose)
+
+
+    if (!file.exists(paste0('ablation_preprocessing_data/binary_exp_', dataset_name, '/', i, '.RData')) &&
+        !file.exists(paste0('ablation_preprocessing_data/regression_exp_', dataset_name, '/', i,  '.RData'))) {
+        start          <- as.numeric(Sys.time())
+        names_times[i] <- paste0('Training: ', dataset_name, ' Removal: ', rmv_names[i], 
+                                 ' Imputation: ', imp_method[i], ' Feature Selection: ', fs_method[i])
+        script_wd      <- getwd()
+        prep <- custom_preprocessing(data = data,
+                                     y    = y,
+                                     na_indicators         = c(''),
+                                     removal_parameters    = removals[[i]],
+                                     imputation_parameters = list(
+                                       imputation_method = imp_method[[i]],
+                                       k = 10,
+                                       m = 5
+                                     ),
+                                     feature_selection_parameters = list(
+                                       feature_selection_method = fs_method[[i]],
+                                       max_features       = 'default',
+                                       nperm              = 1,
+                                       cutoffPermutations = 20,
+                                       threadsNumber      = NULL,
+                                       method             = mi_method
+                                     ),
+                                     verbose = TRUE)
+        setwd(script_wd)
+        stop           <- as.numeric(Sys.time())
+        list_times[i]  <- round(stop - start, 1)
+        prep_data[[i]] <- prep
+        
+        if (binary) {
+          saveRDS(prep, paste0(getwd(), '/ablation_preprocessing_data/binary_exp_', dataset_name, '/', i, '.RData'))
+          saveRDS(list_times,  paste0(getwd(), '/ablation_preprocessing_data/binary_exp_', dataset_name, '/list_times.RData'))
+          saveRDS(names_times, paste0(getwd(), '/ablation_preprocessing_data/binary_exp_', dataset_name, '/names_times.RData'))
+        } else {
+          saveRDS(prep, paste0(getwd(), '/ablation_preprocessing_data/regression_exp_', dataset_name, '/', i, '.RData'))
+          saveRDS(list_times,  paste0(getwd(), '/ablation_preprocessing_data/regression_exp_', dataset_name, '/list_times.RData'))
+          saveRDS(names_times, paste0(getwd(), '/ablation_preprocessing_data/regression_exp_', dataset_name, '/names_times.RData'))
+        }
+    } else if (binary) {
+      prep_data[[i]] <- readRDS(paste0('ablation_preprocessing_data/binary_exp_', dataset_name, '/', i, '.RData'))
+    } else{
+      prep_data[[i]] <- readRDS(paste0('ablation_preprocessing_data/regression_exp_', dataset_name, '/', i, '.RData'))
+    }
+
+  }
+  names(prep_data) <- names_times
+  time_df          <- data.frame(name = names_times, duration = list_times)
+  
+  outcome <- list(
+    time_df   = time_df,
+    prep_data = prep_data
+  )
+  
+  if (binary) {
+    saveRDS(outcome, paste0('ablation_preprocessing_data/binary_exp_', dataset_name, '.RData'))
+  } else {
+    saveRDS(outcome, paste0('ablation_preprocessing_data/regression_exp_', dataset_name, '.RData'))
+  }
+}
+```
+
+# All datasets experiments
+
+In this section we present the function conducting multiple experiments for different datasets.
+
+## Parameters preparation
+
+Firstly we prepare lists of additional parameters describing the datasets.
+
+```{r eval = FALSE}
+targets_binary     <- c('class', 'Class', 'class', 'class', 'class', 'Class', 'Class', 'Class')
+targets_regression <- c('rej', 'quality', 'y', 'y', 'foo', 'y', 'Goal')
+names_binary       <- c('kr-vs-kp', 'breast-w', 'credit-approval', 'credit-g', 'diabetes', 
+                        'phoneme', 'banknote-authentication', 'blood-transfusion-service-center')
+names_regression   <- c('bank32nh', 'wine_quality', 'Mercedes_Benz_Greener_Manufacturing', 
+                        'kin8nm', 'pol', '2dplanes', 'elevators')
+```
+
+## Multiple experiments function
+
+The function is similar to the previous one, and it helps with executing the preprocessing of multiple datasets at once.
+
+```{r eval = FALSE}
+multiple_experiments <- function(datasets, targets, removals, imp_method, fs_method, 
+                                 dataset_names, rmv_names, binary = TRUE, verbose = 'part',
+                                 mi_method = 'estevez') {
+  
+  if (verbose == 'part') {
+    text_verbose <- TRUE
+    exp_verbose  <- FALSE
+  } else if (verbose == 'all') {
+    text_verbose <- TRUE
+    exp_verbose  <- TRUE
+  } else if (verbose == 'none') {
+    text_verbose <- FALSE
+    exp_verbose  <- FALSE
+  }
+  
+  for (i in 1:length(targets)) {
+    if (!file.exists(paste0('ablation_preprocessing_data/binary_exp_', dataset_names[i], '.RData')) &&
+        !file.exists(paste0('ablation_preprocessing_data/regression_exp_', dataset_names[i], '.RData'))) {
+      
+      verbose_cat('The file for the', i, 'dataset, called', dataset_names[i], 
+                  'does not exist, proceeding with preprocessing.\n', verbose = text_verbose)
+      
+      preprocessing_experiment(data         = datasets[[i]], 
+                               y            = targets[i], 
+                               removals     = removals, 
+                               imp_method   = imp_method, 
+                               fs_method    = fs_method,
+                               dataset_name = dataset_names[i],
+                               rmv_names    = rmv_names,
+                               binary       = binary,
+                               verbose      = exp_verbose,
+                               mi_method    = mi_method)
+    } else {
+      verbose_cat('The file for the', i, 'dataset, called', dataset_names[i], 
+                  'exists, skipping the preprocessing.\n', verbose = text_verbose)
+    }
+  }
+}
+```
+
+# Preprocessing execution
+
+The code executing the preprocessing for both binary classification and regression tasks.
+
+## Binary classification
+
+```{r eval = FALSE}
+idx <- 1:8
+multiple_experiments(datasets      = binary_CC18[idx], 
+                     targets       = targets_binary[idx], 
+                     removals      = removals, 
+                     imp_method    = imp_method, 
+                     fs_method     = fs_method, 
+                     dataset_names = names_binary[idx], 
+                     rmv_names     = rmv_names, 
+                     binary        = TRUE, 
+                     verbose       = 'part',
+                     mi_method     = 'estevez')
+```
+
+## Regression
+
+```{r eval = FALSE}
+idx <- 9:15
+multiple_experiments(datasets      = regression_bench[idx], 
+                     targets       = targets_regression[idx], 
+                     removals      = removals, 
+                     imp_method    = imp_method, 
+                     fs_method     = fs_method, 
+                     dataset_names = names_regression[idx], 
+                     rmv_names     = rmv_names, 
+                     binary        = FALSE, 
+                     verbose       = 'part',
+                     mi_method     = 'peng')
+```
+
+# Other
+
+The code used during the development of the results.
+
+## Update of corrupted data
+
+During the development of this notebook some bugs have occurred, thus it made us execute part of the experiments again, and we had to merge the results with the function below.
+
+```{r eval = FALSE}
+update_files <- function(filename) {
+  x <- readRDS(paste0('ablation_preprocessing_data/',filename,'.RData'))
+  z <- readRDS(paste0('ablation_preprocessing_data/results_from_before_zeroed_times_they_are_ok/',filename,'.RData'))
+  y <- readRDS(paste0('ablation_preprocessing_data/',filename,'/list_times.RData'))
+  w <- readRDS(paste0('ablation_preprocessing_data/',filename,'/names_times.RData'))
+  
+  if (nrow(x$time_df) < 39) {
+    for (i in (1 + nrow(x$time_df)):39) {
+      x$time_df[i, ] <- c(NA, NA)
+      y[i]           <- NA
+      w[i]           <- NA
+    }
+  }
+  # Update names in the final file.
+  names(x$prep_data) <- names(z$prep_data)
+  # Update names in the time_df and the names_times.
+  x$time_df$name <- names(z$prep_data)
+  w <- names(z$prep_data)
+  saveRDS(w, paste0('ablation_preprocessing_data/',filename,'/names_times.RData'))
+  # Update names of time_df.
+  names(x$time_df) <- c('name', 'duration')
+  # Update list_times in the time_df and the list_times.
+  for(i in 1:39) {
+    if(is.na(x$time_df$duration[i])) {
+      x$time_df$duration[i] <- z$time_df$duration[i]
+      y[i] <- z$time_df$duration[i]
+    }
+  }
+  saveRDS(x, paste0('ablation_preprocessing_data/',filename,'.RData'))
+  saveRDS(y, paste0('ablation_preprocessing_data/',filename,'/list_times.RData'))
+}
+```
+
+```{r eval = FALSE}
+update_files('binary_exp_banknote-authentication')
+```
+>>>>>>> b6c9e7735ce229d9a94dce9db6fcedec62936c73
