@@ -20,12 +20,12 @@
 
 report <-
   function(train_output,
-           output_file = NULL,
+           output_file   = NULL,
            output_format = 'pdf_document',
-           output_dir = getwd(),
-           check_data = TRUE,
-           n_models = 10,
-           metric = NULL) {
+           output_dir    = getwd(),
+           check_data    = TRUE,
+           n_models      = 10,
+           metric        = NULL) {
 
     tryCatch({
       find.package('tinytex')
@@ -46,9 +46,7 @@ report <-
       output_file   = output_file,
       output_dir    = output_dir,
       params        = list(
-
         train_output = train_output
-
       )
     )
   }

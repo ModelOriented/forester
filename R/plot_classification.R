@@ -21,8 +21,8 @@
 
 plot.classification <- function(train_output,
                             models = NULL,
-                            type = 'comparison',
-                            metric = 'rmse'){
+                            type   = 'comparison',
+                            metric = 'accuracy'){
 
   if (!(c('binary_clf') %in% class(train_output)))
     stop('The plot() function requires an object created with train() function for binary classification task.')
@@ -34,12 +34,12 @@ plot.classification <- function(train_output,
 
   if (is.null(models)) {
     models_names <- train_output$score_test$name[1:3]
-    models_num <- 1:3
+    models_num   <- 1:3
   } else{
     if (is.character(models)) {
       if (any(models %in% names(train_output$models_list))) {
         models_names <- models[models %in% names(train_output$models_list)]
-        models_num <- which(names(train_output$models_list) %in% models)
+        models_num   <- which(names(train_output$models_list) %in% models)
         if (length(models_num) < length(models)) {
           message(paste0(
             'Check the given models.',
@@ -53,10 +53,8 @@ plot.classification <- function(train_output,
       }
     } else{
       if (any(models %in% 1:length(train_output$models_list))) {
-        models_names <-
-          names(train_output$models_list)[which(1:length(train_output$models_list) %in% models)]
-        models_num <-
-          which(1:length(train_output$models_list) %in% models)
+        models_names <- names(train_output$models_list)[which(1:length(train_output$models_list) %in% models)]
+        models_num   <- which(1:length(train_output$models_list) %in% models)
         if (length(models_num) < length(models)) {
           message(paste0(
             'Check the given models.',
@@ -72,22 +70,18 @@ plot.classification <- function(train_output,
   }
 
   if (type == 'comparison') {
-    scores <-
-      data.frame(t(train_output$score_test[, (NCOL(train_output$score_test) - 2):NCOL(train_output$score_test)]))
+    scores <- data.frame(t(train_output$score_test[, (NCOL(train_output$score_test) - 2):NCOL(train_output$score_test)]))
 
-    y <- data.frame(metric = rownames(scores),
-                    value = unlist(scores))
+    y <- data.frame(metric = rownames(scores), value = unlist(scores))
 
     data <- train_output$score_test
-    all <-
-      cbind(data[rep(seq_len(nrow(data)), each = 3),], data.frame(metric = rownames(scores),
-                                                                  value = unlist(scores)))
-
-    all <- all[, c('name', 'engine', 'tuning', 'metric', 'value')]
+    all  <- cbind(data[rep(seq_len(nrow(data)), each = 3),], data.frame(metric = rownames(scores),
+                                                                        value = unlist(scores)))
+    all  <- all[, c('name', 'engine', 'tuning', 'metric', 'value')]
 
     ggplot(all, aes(
-      x = name,
-      y = value,
+      x     = name,
+      y     = value,
       color = metric,
       group = metric
     )) +
@@ -98,8 +92,8 @@ plot.classification <- function(train_output,
       geom_point() +
       labs(
         title = 'Model comparison',
-        y = 'Value of metric',
-        x = 'Model',
+        y     = 'Value of metric',
+        x     = 'Model',
         color = 'Metric'
       )
 
