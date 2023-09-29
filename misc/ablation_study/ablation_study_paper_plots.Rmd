@@ -89,8 +89,8 @@ a <- ggplot(data = left_columns, aes(x = Column_fraction * 100, y = Dataset, col
        subtitle = 'after maximal reduction',
        x = 'Columns [%]',
        y = '',
-       color = 'Task_type',
-       fill  = 'Task_type') +
+       color = 'Task type',
+       fill  = 'Task type') +
   scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
   scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
   theme(plot.title = element_text(colour = 'black', size = 15),
@@ -111,8 +111,8 @@ b <- ggplot(data = duration_df, aes(x = Duration, y = Dataset, color = Task_type
        subtitle = '',
        x = 'Duration [s]',
        y = 'Dataset',
-       color = 'Task_type',
-       fill  = 'Task_type') +
+       color = 'Task type',
+       fill  = 'Task type') +
   scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
   scale_fill_manual(values = c("#afc968", "#74533d", "#7C843C")) +
   scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
@@ -135,8 +135,8 @@ c <- ggplot(data = left_columns, aes(x = Max_fields_number, y = Dataset, color =
        subtitle = '(no. rows times no. columns)',
        x = 'Number of fields',
        y = '',
-       color = 'Task_type',
-       fill  = 'Task_type') +
+       color = 'Task type',
+       fill  = 'Task type') +
   scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
   scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C")) +
   scale_x_continuous(trans = log2_trans(), 
@@ -161,8 +161,8 @@ d <- ggplot(data = duration_df, aes(x = Preprocessing_duration, y = Dataset, col
        subtitle = '',
        x = 'Duration [s]',
        y = 'Dataset',
-       color = 'Task_type',
-       fill  = 'Task_type') +
+       color = 'Task type',
+       fill  = 'Task type') +
   scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
   scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C")) +
   scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
@@ -170,7 +170,7 @@ d <- ggplot(data = duration_df, aes(x = Preprocessing_duration, y = Dataset, col
   theme(plot.title = element_text(colour = 'black', size = 15),
         plot.subtitle = element_text(colour = 'black', size = 12),
         axis.title.x = element_text(colour = 'black', size = 12),
-        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.title.y = element_blank(),
         axis.text.y = element_text(colour = "black", size = 9),
         axis.text.x = element_text(colour = "black", size = 9)) + 
   theme(strip.background = element_rect(fill = "white", color = "white"),
@@ -190,8 +190,8 @@ e <- ggplot(data = duration_df, aes(x = Full_duration, y = Dataset, color = Task
        subtitle = 'of preprocessing and model training',
        x = 'Duration [s]',
        y = 'Dataset',
-       color = 'Task_type',
-       fill  = 'Task_type') +
+       color = 'Task type',
+       fill  = 'Task type') +
   scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
   scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C")) +
   scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
@@ -199,7 +199,7 @@ e <- ggplot(data = duration_df, aes(x = Full_duration, y = Dataset, color = Task
   theme(plot.title    = element_text(colour = 'black', size = 15),
         plot.subtitle = element_text(colour = 'black', size = 12),
         axis.title.x  = element_text(colour = 'black', size = 12),
-        axis.title.y  = element_text(colour = 'black', size = 12),
+        axis.title.y  = element_blank(),
         axis.text.y   = element_text(colour = "black", size = 9),
         axis.text.x   = element_text(colour = "black", size = 9)) + 
   theme(strip.background = element_rect(fill = "white", color = "white"),
@@ -214,8 +214,8 @@ f <- ggplot(data = duration_df, aes(x = Preprocessing_duration_fraction * 100, y
        subtitle = 'as a part of full process length (%)',
        x = 'Preprocessing time [%]',
        y = 'Dataset',
-       color = 'Task_type',
-       fill  = 'Task_type') +
+       color = 'Task type',
+       fill  = 'Task type') +
   scale_color_manual(values = c("#afc968", "#74533d", "#7C843C")) +
   scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C")) +
   xlim(0, 100) +
@@ -256,7 +256,7 @@ g <- ggplot(data = bool_fs, aes(x = Duration, y = Dataset, color = factor(Featur
   theme(plot.title = element_text(colour = 'black', size = 15),
         plot.subtitle = element_text(colour = 'black', size = 12),
         axis.title.x = element_text(colour = 'black', size = 12),
-        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.title.y = element_blank(),
         axis.text.y = element_text(colour = "black", size = 9),
         axis.text.x = element_text(colour = "black", size = 9)) + 
   theme(strip.background = element_rect(fill = "white", color = "white"),
@@ -286,7 +286,7 @@ h <- ggplot(data = no_fs, aes(x = Duration, y = Dataset, color = factor(Removal)
   theme(plot.title = element_text(colour = 'black', size = 15),
         plot.subtitle = element_text(colour = 'black', size = 12),
         axis.title.x = element_text(colour = 'black', size = 12),
-        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.title.y = element_blank(),
         axis.text.y = element_text(colour = "black", size = 9),
         axis.text.x = element_text(colour = "black", size = 9)) + 
   theme(strip.background = element_rect(fill = "white", color = "white"),
@@ -317,7 +317,7 @@ i <- ggplot(data = no_fs_imp, aes(x = Duration, y = Dataset, color = factor(Impu
   theme(plot.title = element_text(colour = 'black', size = 15),
         plot.subtitle = element_text(colour = 'black', size = 12),
         axis.title.x = element_text(colour = 'black', size = 12),
-        axis.title.y = element_text(colour = 'black', size = 12),
+        axis.title.y = element_blank(),
         axis.text.y = element_text(colour = "black", size = 9),
         axis.text.x = element_text(colour = "black", size = 9)) + 
   theme(strip.background = element_rect(fill = "white", color = "white"),
