@@ -5,13 +5,20 @@
 \title{Check whether the target column is unbalanced (for regression it bins values
 via quantiles)}
 \usage{
-check_y_balance(df, y, verbose = TRUE)
+check_y_balance(df, y = NULL, time = NULL, status = NULL, verbose = TRUE)
 }
 \arguments{
 \item{df}{A data source, that is one of the major R formats: data.table, data.frame,
 matrix, and so on.}
 
-\item{y}{A string that indicates a target column name.}
+\item{y}{A string that indicates a target column name for regression or classification.
+Either y, or pair: time, status can be used. By default NULL.}
+
+\item{time}{A string that indicates a time column name for survival analysis task.
+Either y, or pair: time, status can be used. By default NULL.}
+
+\item{status}{A string that indicates a status column name for survival analysis task.
+Either y, or pair: time, status can be used. By default NULL.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}

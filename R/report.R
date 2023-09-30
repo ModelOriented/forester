@@ -13,10 +13,12 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(forester)
 #' data('lisbon')
-#' train_output <- train(lisbon, 'Price')
-#' report(train_output, 'regression.pdf')
+#' train_output <- train(lisbon, 'Price', random_evals = 10, bayes_iter = 1)
+#' report(train_output)
+#' }
 
 report <-
   function(train_output,

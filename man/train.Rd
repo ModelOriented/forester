@@ -6,7 +6,9 @@
 \usage{
 train(
   data,
-  y,
+  y = NULL,
+  time = NULL,
+  status = NULL,
   type = "auto",
   engine = c("ranger", "xgboost", "decision_tree", "lightgbm"),
   verbose = TRUE,
@@ -28,19 +30,30 @@ train(
 used to build models. By default model will be trained
 on all columns in the `data`.}
 
-\item{y}{A target variable. It can be either
-(1) a vector of the same number of observations as `data` or
-(2) a character name of variable in the `data` that contains
-the target variable.}
+\item{y}{A target variable, being a character name of variable in the `data`
+that contains the target variable for classification and regression tasks.
+By default set to NULL. If you use y, don't use time, and status, which are
+reserved for survival analysis.}
 
-\item{type}{A character, one of `binary_clf`/`regression`/`guess` that
-sets the type of the task. If `guess` (the default option) then
+\item{time}{A target variable, being a character name of variable in the `data`
+that describes the time column for survival analysis task. By default set to NULL.
+You have to use both time, and status together. If you use it, you cannot use y
+as it is reserved for classification and regression tasks.}
+
+\item{status}{A target variable, being a character name of variable in the `data`
+that describes the status for survival analysis task. By default set to NULL.
+You have to use both time, and status together. If you use it, you cannot use y
+as it is reserved for classification and regression tasks.}
+
+\item{type}{A character, one of `binary_clf`/`regression`/`survival`/`auto` that
+sets the type of the task. If `auto` (the default option) then
 forester will figure out `type` based on the number of unique values
-in the `y` variable.}
+in the `y` variable, or the presence of time/status columns.}
 
 \item{engine}{A vector of tree-based models that shall be tested.
 Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
-All models from this vector will be trained and the best one will be returned.}
+All models from this vector will be trained and the best one will be returned.
+It doesn't matter for survival analysis.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 training process, if FALSE gives none.}
@@ -88,9 +101,11 @@ A list of all necessary objects for other functions. It contains:
 \itemize{
 \item \code{`data`} The original data.
 \item \code{`y`} The original target column name.
+\item \code{`time`} The original column name describing time for survival analysis task.
+\item \code{`status`} The original column name describing status for survival analysis task.
 \item \code{`type`} The type of the ML task. If the user did not specify a type in the
 input parameters, the algorithm recognizes, uses and returns the same type.
-It could be 'regression' or 'classification'.
+It could be `binary_clf`, `regression`, or `survival`.
 
 \item \code{`deleted_columns`} Column names from the original data frame that have been
 removed in the data preprocessing process, e.g. due to too high correlation
@@ -185,9 +200,15 @@ validation strategy, tested model families, and so on.
 }
 \examples{
 \dontrun{
+# Regression task example.
 library(forester)
 data('lisbon')
 train_output <- train(lisbon, 'Price')
+train_output$score_valid
+
+# Survival analysis example
+data('peakVO2')
+train_output <- train(peakVO2, time = 'ttodead', status = 'died')
 train_output$score_valid
 }
 }

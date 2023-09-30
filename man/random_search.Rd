@@ -6,7 +6,9 @@
 \usage{
 random_search(
   train_data,
-  y,
+  y = NULL,
+  time = NULL,
+  status = NULL,
   models,
   engine,
   type,
@@ -17,16 +19,24 @@ random_search(
 \arguments{
 \item{train_data}{A training data for models created by `prepare_data()` function.}
 
-\item{y}{A string that indicates a target column name.}
+\item{y}{A string that indicates a target column name for regression or classification.
+Either y, or pair: time, status can be used.}
+
+\item{time}{A string that indicates a time column name for survival analysis task.
+Either y, or pair: time, status can be used.}
+
+\item{status}{A string that indicates a status column name for survival analysis task.
+Either y, or pair: time, status can be used.}
 
 \item{models}{A list of models trained by `train_models()` function.
 They will be compered with models trained with different hyperparameters.}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
-values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.}
+values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
+matter for survival analysis.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`binary_clf` or `regression` task.}
+`binary_clf`, `regression`, or `survival`.}
 
 \item{max_evals}{The number of trained models for each model type in `engine`.}
 

@@ -53,11 +53,14 @@ Suggests:
     ggradar,
     tinytex,
     knitr,
-    sivs,
     parallel,
     rmcfs,
     varrank,
-    arules
+    arules,
+    SurvMetrics,
+    survival,
+    randomForestSRC,
+    sivs
 Config/testthat/edition: 3
 VignetteBuilder:
     knitr

@@ -67,4 +67,17 @@ test_that('test-train', {
   expect_false(list(NULL) %in% output_test$predictions)
 
   expect_true(colnames(output_metrics$score_test)[5] == 'custom')
-  })
+
+  # Survival analysis.
+  library(randomForestSRC)
+  data('peakVO2')
+  output_peak <- train(peakVO2, time = 'ttodead', status = 'died', random_evals = 3, bayes_iter = 1)
+
+  expect_true(output_peak$type == 'survival')
+  expect_true(is.null(output_peak$deleted_columns))
+  expect_equal(dim(output_peak$preprocessed_data), c(2231, 41))
+  expect_false(list(NULL) %in% output_peak$train_data)
+  expect_false(list(NULL) %in% output_peak$test_data)
+  expect_false(list(NULL) %in% output_peak$valid_data)
+  expect_false(list(NULL) %in% output_peak$predictions)
+})

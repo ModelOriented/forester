@@ -4,13 +4,20 @@
 \alias{check_data}
 \title{Run data check pipeline to seek for potential problems with the data}
 \usage{
-check_data(data, y, verbose = TRUE)
+check_data(data, y = NULL, time = NULL, status = NULL, verbose = TRUE)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
 matrix, and so on.}
 
-\item{y}{A string that indicates a target column name.}
+\item{y}{A string that indicates a target column name for regression or classification.
+Either y, or pair: time, status can be used. By default NULL.}
+
+\item{time}{A string that indicates a time column name for survival analysis task.
+Either y, or pair: time, status can be used. By default NULL.}
+
+\item{status}{A string that indicates a status column name for survival analysis task.
+Either y, or pair: time, status can be used. By default NULL.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}

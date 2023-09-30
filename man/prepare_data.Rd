@@ -6,7 +6,9 @@
 \usage{
 prepare_data(
   data,
-  y,
+  y = NULL,
+  time = NULL,
+  status = NULL,
   engine = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
   predict = FALSE,
   train = NULL
@@ -16,11 +18,18 @@ prepare_data(
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
 matrix and so on.}
 
-\item{y}{A string that indicates a target column name.}
+\item{y}{A string that indicates a target column name for regression or classification.
+Either y, or pair: time, status can be used. By default NULL.}
+
+\item{time}{A string that indicates a time column name for survival analysis task.
+Either y, or pair: time, status can be used. By default NULL.}
+
+\item{status}{A string that indicates a status column name for survival analysis task.
+Either y, or pair: time, status can be used. By default NULL.}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
 values are: `ranger`, `xgboost`, `lightgbm`, `catboost`, `decision_tree`.
-Determines which models will be later learnt.}
+Determines which models will be later learnt. It doesn't matter for survival analysis.}
 
 \item{predict}{A logical value, determines whether the data set will be used
 for prediction or training. It is necessary, because lightgbm model can't predict

@@ -1,0 +1,429 @@
+<<<<<<< HEAD
+---
+title: "Ablation study of forester: Datasets Information"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Downloads
+
+The necessary downloads required for the forester package to work properly, if downloaded, the user can skip this part.
+
+```{r eval = FALSE}
+install.packages("devtools")
+devtools::install_github("ModelOriented/forester")
+devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')
+devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
+install.packages('tinytex')
+tinytex::install_tinytex()
+```
+
+# Imports
+
+Importing the necessary libraries.
+
+```{r warning=FALSE, message=FALSE}
+library(forester)
+library(farff)
+```
+
+# Datasets analysis
+
+In this section we will describe the datasets with the usage of `data_check()` function from the forester package.
+
+## Binary classification
+
+```{r}
+binary_CC18 <- readRDS("binary_CC18.RData")
+binary_CC18 <- binary_CC18[c(1, 2, 3, 4, 5, 19, 25, 26)]
+```
+
+### Data Check
+
+#### kr-vs-kp
+
+```{r}
+s <- check_data(binary_CC18$`kr-vs-kp`, 'class')
+```
+
+#### breast-w
+
+```{r}
+s <- check_data(binary_CC18$`breast-w`, 'Class')
+```
+
+#### credit-approval
+
+```{r}
+s <- check_data(binary_CC18$`credit-approval`, 'class')
+```
+
+#### credit-g
+
+```{r}
+s <- check_data(binary_CC18$`credit-g`, 'class')
+```
+
+#### diabetes
+
+```{r}
+s <- check_data(binary_CC18$diabetes, 'class')
+```
+
+#### phoneme
+
+```{r}
+s <- check_data(binary_CC18$phoneme, 'Class')
+```
+
+#### banknote-authentication
+
+```{r}
+s <- check_data(binary_CC18$`banknote-authentication`, 'Class')
+```
+
+#### blood-transfusion-service-center
+
+```{r}
+s <- check_data(binary_CC18$`blood-transfusion-service-center`, 'Class')
+```
+
+## Regression
+
+Loading widely used datasets from OpenML. If you are reproducing the paper step by step, skip this one, as we will load a specially prepared version in another cell.
+
+```{r warning=FALSE, message=FALSE, eval=FALSE}
+wind              <- readARFF('regression_datasets/wind.arff') # Not regression task
+communities_crime <- readARFF('regression_datasets/phpeZQVCe.arff') # ViolentCrimesPerPop
+bank32nh          <- readARFF('regression_datasets/phpYYZ4Qc.arff') # Target: rej
+wine_quality      <- readARFF('regression_datasets/wine_quality.arff') # Target: quality
+Mercedes_Benz     <- readARFF('regression_datasets/dataset.arff') # Target: y (2nd col)
+Mercedes_Benz_y   <- Mercedes_Benz$y
+Mercedes_Benz     <- Mercedes_Benz[, -2]
+Mercedes_Benz$y   <- Mercedes_Benz_y # the last one
+kin8nm            <- readARFF('regression_datasets/dataset_2175_kin8nm.arff') # Target: y
+pol               <- readARFF('regression_datasets/dataset_2187_pol.arff') # Target: foo (really streched)
+planes2d          <- readARFF('regression_datasets/dataset_2201_2dplanes.arff') # Target: y
+elevators         <- readARFF('regression_datasets/dataset_2202_elevators.arff') # Target: Goal
+stock             <- readARFF('regression_datasets/dataset_2209_stock.arff') # Not regression task
+
+regression_bench <- list()
+
+regression_bench[[1]]  <- as.data.frame(wind)
+regression_bench[[2]]  <- as.data.frame(communities_crime)
+regression_bench[[3]]  <- as.data.frame(bank32nh)
+regression_bench[[4]]  <- as.data.frame(wine_quality)
+regression_bench[[5]]  <- as.data.frame(Mercedes_Benz)
+regression_bench[[6]]  <- as.data.frame(kin8nm)
+regression_bench[[7]]  <- as.data.frame(pol)
+regression_bench[[8]]  <- as.data.frame(planes2d)
+regression_bench[[9]]  <- as.data.frame(elevators)
+regression_bench[[10]] <- as.data.frame(stock)
+
+names(regression_bench) <- c('wind', 'us_crime', 'bank32nh', 'wine_quality', 
+                             'Mercedes_Benz_Greener_Manufacturing', 'kin8nm', 'pol', 
+                             '2dplanes', 'elevators', 'stock')
+
+regression_bench <- regression_bench[3:9]
+```
+
+```{r eval=FALSE}
+saveRDS(regression_bench, 'regression_bench.RData')
+```
+
+### Data Check
+
+```{r}
+regression_bench <- readRDS("regression_bench.RData")
+```
+
+#### bank32nh
+
+```{r}
+s <- check_data(regression_bench$bank32nh, 'rej')
+```
+
+#### wine_quality
+
+```{r}
+s <- check_data(regression_bench$wine_quality, 'quality')
+```
+
+#### Mercedes_Benz_Greener_Manufacturing
+
+```{r}
+s <- check_data(regression_bench$Mercedes_Benz_Greener_Manufacturing, 'y')
+```
+
+#### kin8nm
+
+```{r}
+s <- check_data(regression_bench$kin8nm, 'y')
+```
+
+#### pol
+
+```{r}
+s <- check_data(regression_bench$pol, 'foo')
+```
+
+#### 2dplanes
+
+```{r}
+s <- check_data(regression_bench$'2dplanes', 'y')
+```
+
+#### elevators
+
+```{r}
+s <- check_data(regression_bench$elevators, 'Goal')
+```
+
+## Summary
+
+The results of this summary were created manually mostly based on this script. As seen below they are saved in the file named `data_issues_summary.csv` .
+
+```{r}
+data_summary <- read.csv('data_issues_summary.csv', sep = ';')
+rmarkdown::paged_table(data_summary)
+```
+=======
+---
+title: "Ablation study of forester: Datasets Information"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Downloads
+
+The necessary downloads required for the forester package to work properly, if downloaded, the user can skip this part.
+
+```{r eval = FALSE}
+install.packages("devtools")
+devtools::install_github("ModelOriented/forester")
+devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')
+devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
+install.packages('tinytex')
+tinytex::install_tinytex()
+```
+
+# Imports
+
+Importing the necessary libraries.
+
+```{r warning=FALSE, message=FALSE}
+library(forester)
+library(farff)
+```
+
+# Datasets analysis
+
+In this section we will describe the datasets with the usage of `data_check()` function from the forester package.
+
+## Binary classification
+
+```{r}
+binary_CC18 <- readRDS("binary_CC18.RData")
+binary_CC18 <- binary_CC18[c(1, 2, 3, 4, 5, 19, 25, 26)]
+```
+
+### Data Check
+
+#### kr-vs-kp
+
+```{r}
+s <- check_data(binary_CC18$`kr-vs-kp`, 'class')
+```
+
+#### breast-w
+
+```{r}
+s <- check_data(binary_CC18$`breast-w`, 'Class')
+```
+
+#### credit-approval
+
+```{r}
+s <- check_data(binary_CC18$`credit-approval`, 'class')
+```
+
+#### credit-g
+
+```{r}
+s <- check_data(binary_CC18$`credit-g`, 'class')
+```
+
+#### diabetes
+
+```{r}
+s <- check_data(binary_CC18$diabetes, 'class')
+```
+
+#### phoneme
+
+```{r}
+s <- check_data(binary_CC18$phoneme, 'Class')
+```
+
+#### banknote-authentication
+
+```{r}
+s <- check_data(binary_CC18$`banknote-authentication`, 'Class')
+```
+
+#### blood-transfusion-service-center
+
+```{r}
+s <- check_data(binary_CC18$`blood-transfusion-service-center`, 'Class')
+```
+
+## Regression
+
+Loading widely used datasets from OpenML. If you are reproducing the paper step by step, skip this one, as we will load a specially prepared version in another cell.
+
+```{r warning=FALSE, message=FALSE, eval=FALSE}
+wind              <- readARFF('regression_datasets/wind.arff') # Not regression task
+communities_crime <- readARFF('regression_datasets/phpeZQVCe.arff') # ViolentCrimesPerPop
+bank32nh          <- readARFF('regression_datasets/phpYYZ4Qc.arff') # Target: rej
+wine_quality      <- readARFF('regression_datasets/wine_quality.arff') # Target: quality
+Mercedes_Benz     <- readARFF('regression_datasets/dataset.arff') # Target: y (2nd col)
+Mercedes_Benz_y   <- Mercedes_Benz$y
+Mercedes_Benz     <- Mercedes_Benz[, -2]
+Mercedes_Benz$y   <- Mercedes_Benz_y # the last one
+kin8nm            <- readARFF('regression_datasets/dataset_2175_kin8nm.arff') # Target: y
+pol               <- readARFF('regression_datasets/dataset_2187_pol.arff') # Target: foo (really streched)
+planes2d          <- readARFF('regression_datasets/dataset_2201_2dplanes.arff') # Target: y
+elevators         <- readARFF('regression_datasets/dataset_2202_elevators.arff') # Target: Goal
+stock             <- readARFF('regression_datasets/dataset_2209_stock.arff') # Not regression task
+
+regression_bench <- list()
+
+regression_bench[[1]]  <- as.data.frame(wind)
+regression_bench[[2]]  <- as.data.frame(communities_crime)
+regression_bench[[3]]  <- as.data.frame(bank32nh)
+regression_bench[[4]]  <- as.data.frame(wine_quality)
+regression_bench[[5]]  <- as.data.frame(Mercedes_Benz)
+regression_bench[[6]]  <- as.data.frame(kin8nm)
+regression_bench[[7]]  <- as.data.frame(pol)
+regression_bench[[8]]  <- as.data.frame(planes2d)
+regression_bench[[9]]  <- as.data.frame(elevators)
+regression_bench[[10]] <- as.data.frame(stock)
+
+names(regression_bench) <- c('wind', 'us_crime', 'bank32nh', 'wine_quality', 
+                             'Mercedes_Benz_Greener_Manufacturing', 'kin8nm', 'pol', 
+                             '2dplanes', 'elevators', 'stock')
+
+regression_bench <- regression_bench[3:9]
+```
+
+```{r eval=FALSE}
+saveRDS(regression_bench, 'regression_bench.RData')
+```
+
+### Data Check
+
+```{r}
+regression_bench <- readRDS("regression_bench.RData")
+```
+
+#### bank32nh
+
+```{r}
+s <- check_data(regression_bench$bank32nh, 'rej')
+```
+
+#### wine_quality
+
+```{r}
+s <- check_data(regression_bench$wine_quality, 'quality')
+```
+
+#### Mercedes_Benz_Greener_Manufacturing
+
+```{r}
+s <- check_data(regression_bench$Mercedes_Benz_Greener_Manufacturing, 'y')
+```
+
+#### kin8nm
+
+```{r}
+s <- check_data(regression_bench$kin8nm, 'y')
+```
+
+#### pol
+
+```{r}
+s <- check_data(regression_bench$pol, 'foo')
+```
+
+#### 2dplanes
+
+```{r}
+s <- check_data(regression_bench$'2dplanes', 'y')
+```
+
+#### elevators
+
+```{r}
+s <- check_data(regression_bench$elevators, 'Goal')
+```
+
+## Summary
+
+The results of this summary were created manually mostly based on this script. As seen below they are saved in the file named `data_issues_summary.csv` .
+
+```{r}
+data_summary <- read.csv('data_issues_summary.csv', sep = ';')
+rmarkdown::paged_table(data_summary)
+```
+>>>>>>> b6c9e7735ce229d9a94dce9db6fcedec62936c73

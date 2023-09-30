@@ -9,39 +9,43 @@ test_that('test-random_search', {
                        balance = FALSE)
   train_data <-
     prepare_data(split_data$train,
-                 'Species',
+                 y      = 'Species',
                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   test_data <-
     prepare_data(split_data$test,
-                 'Species',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Species',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 train = split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   'Species',
+                   y      = 'Species',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
 
   suppressWarnings(
     predictions <-
       predict_models(model,
                      test_data,
-                     'Species',
+                     y      = 'Species',
                      engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                     type = type)
+                     type   = type)
   )
 
-  score <- score_models(model, predictions, test_data$ranger_data$Species, type)
+  score <- score_models(model,
+                        predictions,
+                        observed  = test_data$ranger_data$Species,
+                        data      = test_data,
+                        type      = type)
 
   suppressWarnings(
     random_best <- random_search(train_data,
                                  test_data,
-                                 y = 'Species',
-                                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                                 type = type,
+                                 y         = 'Species',
+                                 engine    = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                 type      = type,
                                  max_evals = 4)
   )
   expect_true(length(random_best$engine) == 20)

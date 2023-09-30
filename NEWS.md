@@ -1,3 +1,40 @@
+# forester 1.4.1
+
+-   In the DESCRIPTION:
+    -   Added in Imports the `patchwork` package, and moved `arules` from Imports to Suggests,
+    -   Updated the authors of the package.
+-   In `report()` function:
+    -   Added separate generation of binary classification and regression reports,
+    -   Enhanced the quality of plots in the report,
+    -   Fixed the bugs leading to lower quality of the report,
+    -   Added detailed description of how to interpret the visualizations for the beginners.
+-   Created `plot_classifcation` file, which overrides `plot()` function for the binary classification object returned by `train()`. The function lets us create plots for binary classification tasks, such as metrics comparison line plot, ROC curve, confusion matrix, and train vs test plot.
+-   Created `plot_regression` file, which overrides `plot()` function for the regression object returned by `train()`. The function lets us create plots for regression tasks, such as residuals box plot, observed vs prediction plot, and train vs test plot.
+-   Removed `report.Rmd` file, and created two separate files for different tasks called `report_binary.Rmd`, and `report_regression.Rmd`.
+-   In `train()` function: added different classes for the outcomes, depending on the task type.
+-   In `plot_metrics()`, changed color palette to `colors_discrete_forester`.
+-   In `check_data()`, added a small fix for the report.
+
+# forester 1.4.0
+
+-   In the DESCRIPTION: Added in Suggests `SurvMetrics`, `randomForestSRC`, and `survival` packages.
+-   In `train()` function:
+    -   Added parameters `time`, and `status` describing the survival analysis task,
+    -   Added parameters `time`, and `status` to the functions output,
+    -   Modified inner methods, to work with survival analysis task.
+-   In `check data()` function:
+    -   Added parameters `time`, and `status` describing the survival analysis task,
+    -   Modified the methods: `basic_info()`, `check_missing()`, `check_cor()`, and `check_y_balance()`, so they also work for the survival analysis.
+-   In `preprocessing()` function, added the binarization of survival task target (status).
+-   In `prepare_data()` function, added a method for the survival analysis task.
+-   In `train_models()` function, added a method for training a survival analysis model from `randomForestSRC` package.
+-   In `random_search()` function, added a method for tuning a survival analysis model.
+-   In `train_models_bayesopt()` function, added a method for tuning a survival analysis model.
+-   In `predict_models_all()`, `predict_models()` , and `predict_new` functions, added a method for predicting a survival analysis model.
+-   In `score_models()`, added a method for evaluation of survival analysis models with `Brier Score`, and `Concordance Index (CIN)`.
+-   In `guess_type()`, added method of detecting the survival analysis task.
+-   Modified `tests` of the package, to cover the changes made in the package.
+
 # forester 1.3.0
 
 -   In the DESCRIPTION: Added in Imports the `VIM` package, and in the Suggests `sivs`, `parallel`, `rmcfs`, and `varrank` packages.

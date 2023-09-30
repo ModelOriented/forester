@@ -7,4 +7,6 @@ test_that('test-train_test_balance', {
   expect_true(guess_type(iris[1:100, ], 'Species') == 'binary_clf')
   expect_true(guess_type(testing_data, 'y') == 'regression')
   expect_true(guess_type(testing_data, 'X11') == 'multi_clf')
+  data('peakVO2')
+  expect_true(guess_type(peakVO2, NULL) == 'survival')
 })

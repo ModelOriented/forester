@@ -7,6 +7,8 @@
 train_models_bayesopt(
   train_data,
   y,
+  time,
+  status,
   test_data,
   engine,
   type,
@@ -18,15 +20,23 @@ train_models_bayesopt(
 \arguments{
 \item{train_data}{A training data for models created by `prepare_data()` function.}
 
-\item{y}{A string that indicates a target column name.}
+\item{y}{A string that indicates a target column name for regression or classification.
+Either y, or pair: time, status can be used.}
+
+\item{time}{A string that indicates a time column name for survival analysis task.
+Either y, or pair: time, status can be used.}
+
+\item{status}{A string that indicates a status column name for survival analysis task.
+Either y, or pair: time, status can be used.}
 
 \item{test_data}{A test data for models created by `prepare_data()` function.}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
-values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.}
+values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
+matter for survival analysis.}
 
-\item{type}{A string which determines if Machine Learning task is the
-`binary_clf` or `regression`.}
+\item{type}{A string that determines if Machine Learning task is the
+`binary_clf`, `regression`, or `survival`.}
 
 \item{iters.n}{The number of iterations of BayesOpt function.}
 

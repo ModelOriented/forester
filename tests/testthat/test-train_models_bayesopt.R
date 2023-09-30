@@ -6,28 +6,28 @@ test_that('test-train_models_bayesopt', {
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       'Species',
+                       y       = 'Species',
                        balance = FALSE)
   train_data <-
     prepare_data(split_data$train,
-                 'Species',
+                 y       = 'Species',
                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
 
   test_data <-
     prepare_data(split_data$test,
-                 'Species',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Species',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 train = split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <- train_models_bayesopt(train_data,
-                                   'Species',
-                                   test_data,
-                                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                                   type = type,
-                                   iters.n = 1,
+                                   y         = 'Species',
+                                   test_data = test_data,
+                                   engine    = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                   type      = type,
+                                   iters.n   = 1,
                                    return_params = FALSE,
-                                   verbose = FALSE)
+                                   verbose   = FALSE)
   )
 
   # Iris dataset for classification.
@@ -39,13 +39,13 @@ test_that('test-train_models_bayesopt', {
   expect_true(class(model$catboost_bayes) == 'catboost.Model')
 
   model <- train_models_bayesopt(train_data,
-                                 'Species',
-                                 test_data,
-                                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                                 type = type,
-                                 iters.n = 1,
+                                 y         = 'Species',
+                                 test_data = test_data,
+                                 engine    = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                 type      = type,
+                                 iters.n   = 1,
                                  return_params = TRUE,
-                                 verbose = FALSE)
+                                 verbose   = FALSE)
   expect_true(length(model) == 6)
 
 
@@ -55,27 +55,27 @@ test_that('test-train_models_bayesopt', {
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Two_yr_Recidivism',
+                       y       = 'Two_yr_Recidivism',
                        balance = FALSE)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   y = 'Two_yr_Recidivism',
+                   y      = 'Two_yr_Recidivism',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')))
   test_data <-
     prepare_data(split_data$test,
-                 'Two_yr_Recidivism',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Two_yr_Recidivism',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 train = split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <- train_models_bayesopt(train_data,
-                                   'Two_yr_Recidivism',
-                                   test_data,
-                                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                                   type = type,
-                                   iters.n = 1,
-                                   verbose = FALSE))
+                                   y         = 'Two_yr_Recidivism',
+                                   test_data = test_data,
+                                   engine    = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                   type      = type,
+                                   iters.n   = 1,
+                                   verbose   = FALSE))
 
   expect_true(length(model) == 5)
   expect_true(class(model$ranger_bayes) == 'ranger')
@@ -95,28 +95,28 @@ test_that('test-train_models_bayesopt', {
 
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Price',
+                       y       = 'Price',
                        balance = FALSE)
   suppressWarnings(
     train_data <- prepare_data(split_data$train,
-                               y = 'Price',
+                               y      = 'Price',
                                engine = c('ranger', 'xgboost', 'decision_tree',
                                           'lightgbm', 'catboost')))
 
   test_data <-
     prepare_data(split_data$test,
-                 'Price',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Price',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 train = split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <- train_models_bayesopt(train_data,
-                                   'Price',
-                                   test_data,
-                                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                                   type = type,
-                                   iters.n = 1,
-                                   verbose = FALSE))
+                                   y         = 'Price',
+                                   test_data = test_data,
+                                   engine    = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                   type      = type,
+                                   iters.n   = 1,
+                                   verbose   = FALSE))
 
   expect_true(length(model) == 5)
   expect_true(class(model$ranger_bayes) == 'ranger')

@@ -59,7 +59,7 @@ test_that('test-check_data', {
 
   df_test       <- manage_missing(df_test, y_test)
 
-  no_dim_issues <- '<U\\+2714> No issues with dimensionality.'
+  no_dim_issues <- '<U\\+2714>  No issues with dimensionality.'
 
   expect_output(check_dim(df_iris), no_dim_issues)
   expect_output(check_dim(df_lisbon), no_dim_issues)
@@ -115,4 +115,29 @@ test_that('test-check_data', {
   expect_output(detect_id_columns(df_iris2), no_id)
   expect_output(detect_id_columns(df_adult), no_id)
   suppressWarnings(expect_output(detect_id_columns(df_test), no_id))
+
+
+  # Survival analysis.
+  library(randomForestSRC)
+  data('peakVO2')
+
+  df_peak     <- peakVO2
+  time_peak   <- 'ttodead'
+  status_peak <- 'died'
+  expect_output(check_data(df_test, time_peak, status_peak))
+  expect_equal(length(basic_info(df_peak, time_peak, status_peak, verbose = FALSE)), 6)
+  static_peak <- '<U\\+2716> Static columns are: dilver; \nWith dominating values: 0;'
+  expect_equal(length(check_static(df_peak, verbose = FALSE)), 5)
+  expect_output(check_duplicate_col(df_peak), no_duplicate)
+  expect_output(check_missing(df_peak, time_peak, status_peak), no_missing)
+  dim_peak <- '<U\\+2716> Too big dimensionality with 41 colums. Forest models wont use so many of them. \\n'
+  expect_output(check_dim(df_peak), dim_peak)
+  cor_peak <- '<U\\+2716> Strongly correlated, by Spearman rank, pairs of numerical values are: \\n \\n peak.vo2 - interval: 0.87;\\n'
+  expect_output(check_cor(df_peak, time_peak, status_peak), cor_peak)
+  out_peak <- '<U\\+2716> There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \\n'
+  expect_output(check_outliers(df_peak), out_peak)
+  balance_peak <- '<U\\+2714> Target data is evenly distributed. \\n'
+  expect_output(check_y_balance(df_peak, time_peak, status_peak), balance_peak)
+  expect_output(detect_id_columns(df_peak), no_id)
+
 })

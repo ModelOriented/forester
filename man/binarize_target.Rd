@@ -4,20 +4,21 @@
 \alias{binarize_target}
 \title{Binarize the target column}
 \usage{
-binarize_target(data, y)
+binarize_target(data, y = NULL, status = NULL)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
 matrix, and so on.}
 
-\item{y}{A string that indicates a target column name.}
+\item{y}{A string that indicates a target column name for regression or classification.
+Either y, or status can be used. By default NULL.}
+
+\item{status}{A string that indicates a status column name for survival analysis task.
+Either y, or status can be used. By default NULL.}
 }
 \value{
 A dataset with binarized target column.
 }
 \description{
 Binarize the target column
-}
-\examples{
-binarize_target(iris[1:100, ], 'Species')
 }

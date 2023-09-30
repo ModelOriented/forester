@@ -6,18 +6,18 @@ test_that('test-train_models', {
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Species',
+                       y       = 'Species',
                        balance = FALSE)
   train_data <-
     prepare_data(split_data$train,
-                 y = 'Species',
+                 y      = 'Species',
                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   suppressWarnings(
     model <-
       train_models(train_data,
-                   y = 'Species',
+                   y      = 'Species',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type)
+                   type   = type)
   )
 
 
@@ -34,20 +34,20 @@ test_that('test-train_models', {
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Two_yr_Recidivism',
+                       y       = 'Two_yr_Recidivism',
                        balance = FALSE)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   y = 'Two_yr_Recidivism',
+                   y      = 'Two_yr_Recidivism',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   suppressWarnings(
     model <-
       train_models(train_data,
-                   y = 'Two_yr_Recidivism',
+                   y      = 'Two_yr_Recidivism',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type)
+                   type   = type)
   )
 
   expect_true(length(model) == 5)
@@ -66,18 +66,18 @@ test_that('test-train_models', {
   preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Price',
+                       y       = 'Price',
                        balance = FALSE)
   suppressWarnings(
     train_data <- prepare_data(split_data$train,
-                               y = 'Price',
+                               y      = 'Price',
                                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   suppressWarnings(
     model <- train_models(train_data,
-                          y = 'Price',
+                          y      = 'Price',
                           engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                          type)
+                          type   = type)
   )
 
 
@@ -95,18 +95,18 @@ test_that('test-train_models', {
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'y',
+                       y       = 'y',
                        balance = FALSE)
   suppressWarnings(
     train_data <- prepare_data(split_data$train,
-                               y = 'y',
+                               y      = 'y',
                                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   suppressWarnings(
     model <- train_models(train_data,
-                          y = 'y',
+                          y      = 'y',
                           engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                          type)
+                          type   = type)
   )
 
   expect_true(length(model) == 5)
