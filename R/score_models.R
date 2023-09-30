@@ -3,7 +3,13 @@
 #' @param models A list of models trained by `train_models()` function.
 #' @param predictions A list of predictions of every engine from the test data.
 #' @param observed A vector of true values from the test data.
-#' @param type A string, determines if the future task is `binary_clf` or `regression`.
+#' @param data A data for models created by `prepare_data()` function, used for
+#' Brier score calculations.
+#' @param type A string, determines if the future task is `binary_clf`, `regression`, or `survival`.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used.
 #' @param metrics A vector of metrics names. By default param set for `auto`,
 #' most important metrics are returned. For `all` all metrics are returned.
 #' For `NULL` no metrics returned but still sorted by `sort_by`. The metrics
@@ -31,7 +37,10 @@
 score_models <- function(models,
                          predictions,
                          observed,
+                         data,
                          type,
+                         time    = NULL,
+                         status  = NULL,
                          metrics = 'auto',
                          sort_by = 'auto',
                          metric_function = NULL,
@@ -39,89 +48,139 @@ score_models <- function(models,
                          metric_function_decreasing = TRUE,
                          engine = NULL,
                          tuning = NULL) {
-  metrics_reggresion <- c('mse', 'rmse', 'r2', 'mad', 'mae')
-  metrics_binary_clf <- c('accuracy', 'auc', 'f1', 'recall', 'precision',
-                          'sensitivity', 'specificity', 'balanced_accuracy')
-  metrics_decreasing <- c('mse' = FALSE, 'rmse' = FALSE, 'r2' = TRUE,
-                          'mad' = FALSE, 'mae' = FALSE, 'recall' = TRUE, 'precision' = TRUE,
-                          'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE, 'sensitivity' = TRUE,
-                          'specificity' = TRUE, 'balanced_accuracy' = TRUE,
-                          'metric_function' = metric_function_decreasing)
+  if (type == 'survival') {
 
-  metrics        <- c(metrics)
-  colnames_basic <- c('no.', 'name')
-  nr_add_col     <- 2
-  if (!is.null(engine)) {
-    nr_add_col     <- nr_add_col + 1
-    colnames_basic <- c(colnames_basic, 'engine')
-  }
-  if (!is.null(tuning)) {
-    nr_add_col     <- nr_add_col + 1
-    colnames_basic <- c(colnames_basic, 'tuning')
-  }
+    metrics            <- c('Brier Score', 'Concordance Index (CIN)')
+    metrics_decreasing <- c('Brier Score' = FALSE, 'Concordance Index (CIN)' = TRUE)
+    # metrics            <- c('Brier Score', 'Concordance Index (CIN)',
+    #                         'Integrated Absolute Error (IAE)', 'Integrated Square Error (ISE)')
+    # metrics_decreasing <- c('Brier' = FALSE, 'Concordance Index (CIN)' = TRUE,
+    #                         'Integrated Absolute Error (IAE)' = FALSE,
+    #                         'Integrated Square Error (ISE)' = FALSE)
+    colnames_basic     <- c('no.', 'name', 'engine', 'tuning')
+    nr_add_col         <- 4
 
-    if (is.null(metric_function)) {
-    metric_function_name <- NULL
-  } else {
-    metrics_reggresion <- c('metric_function', metrics_reggresion)
-    metrics_binary_clf <- c('metric_function', metrics_binary_clf)
-
-    if (is.null(metric_function_name)) {
-      metric_function_name <- 'metric_function'
-    }
-    if (sort_by == 'auto') {
-      sort_by <- 'metric_function'
-    }
-  }
-
-  if ('auto' %in% metrics) {
-    if (type == 'regression') {
-      metrics <- c(if (!is.null(metric_function)) {'metric_function'},
-                   'rmse', 'mse', 'r2', 'mae')
-    }
-    else if (type == 'binary_clf') {
-      metrics <- c(if (!is.null(metric_function)) {'metric_function'},
-                   'accuracy', 'auc', 'f1')
-    }
-  } else if ('all' %in% metrics) {
-    if (type == 'regression') {
-      metrics <- metrics_reggresion
-    }
-    if (type =='binary_clf') {
-      metrics <- metrics_binary_clf
-    }
-  }
-
-  if (type == 'regression') {
-    is_valid_metrics <- metrics %in% metrics_reggresion
-    if (any(!is_valid_metrics)) {
-      metrics <- metrics[is_valid_metrics]
-      warning(paste('Not valid metrics ommited: ', paste(metrics[!is_valid_metrics], collapse = ', ')))
-    }
-    if (!(sort_by %in% metrics_reggresion)) {
+    if (!(sort_by %in% metrics)) {
       if (sort_by != 'auto') {
-        warning(paste('sort_by need to by one of regression metrics. Default metric applied : rmse.
+        warning(paste('sort_by need to by one of regression metrics. Default metric applied : Brier Score.
+                      Choose one of the them: auto, ', paste(metrics_reggresion, collapse = ', ')))
+      }
+      sort_by <- 'Brier Score'
+    }
+
+    models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics) + nr_add_col))
+    colnames(models_frame) <- c(colnames_basic, metrics)
+
+    for (i in 1:length(models)) {
+      pred          <- randomForestSRC::predict.rfsrc(models[[i]], data$ranger_data)
+      predictions   <- pred$survival
+      ordered_times <- models[[i]]$time.interest
+      median_idx    <- median(1:length(ordered_times))
+      surv_object   <- survival::Surv(data$ranger_data[[time]], data$ranger_data[[status]])
+      med_time      <- median(ordered_times)
+
+      brier         <- SurvMetrics::Brier(object = surv_object, pre_sp = predictions[, ceiling(ncol(predictions) / 2)], t_star = med_time)
+      cin           <- SurvMetrics::Cindex(object = surv_object, predictions[, ceiling(ncol(predictions) / 2)])
+      #iaeise        <- SurvMetrics::IAEISE(object = surv_object, predictions, ordered_times)
+      #iae           <- iaeise[1]
+      #ise           <- iaeise[2]
+
+      models_frame[i, ] <- c(i,
+                             names(models)[i],
+                             'rfsrc',
+                             tuning[i],
+                             brier,
+                             cin)
+
+      models_frame <- models_frame[order(models_frame[, sort_by],
+                                         decreasing = unname(metrics_decreasing[sort_by])),
+                                   c(colnames_basic, metrics)]
+    }
+
+  # Classification and regression
+  } else {
+    metrics_reggresion <- c('mse', 'rmse', 'r2', 'mad', 'mae')
+    metrics_binary_clf <- c('accuracy', 'auc', 'f1', 'recall', 'precision',
+                            'sensitivity', 'specificity', 'balanced_accuracy')
+    metrics_decreasing <- c('mse' = FALSE, 'rmse' = FALSE, 'r2' = TRUE,
+                            'mad' = FALSE, 'mae' = FALSE, 'recall' = TRUE, 'precision' = TRUE,
+                            'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE, 'sensitivity' = TRUE,
+                            'specificity' = TRUE, 'balanced_accuracy' = TRUE,
+                            'metric_function' = metric_function_decreasing)
+
+    metrics        <- c(metrics)
+    colnames_basic <- c('no.', 'name')
+    nr_add_col     <- 2
+    if (!is.null(engine)) {
+      nr_add_col     <- nr_add_col + 1
+      colnames_basic <- c(colnames_basic, 'engine')
+    }
+    if (!is.null(tuning)) {
+      nr_add_col     <- nr_add_col + 1
+      colnames_basic <- c(colnames_basic, 'tuning')
+    }
+    if (is.null(metric_function)) {
+      metric_function_name <- NULL
+    } else {
+      metrics_reggresion <- c('metric_function', metrics_reggresion)
+      metrics_binary_clf <- c('metric_function', metrics_binary_clf)
+
+      if (is.null(metric_function_name)) {
+        metric_function_name <- 'metric_function'
+      }
+      if (sort_by == 'auto') {
+        sort_by <- 'metric_function'
+      }
+    }
+
+    if ('auto' %in% metrics) {
+      if (type == 'regression') {
+        metrics <- c(if (!is.null(metric_function)) {'metric_function'},
+                     'rmse', 'mse', 'r2', 'mae')
+      }
+      else if (type == 'binary_clf') {
+        metrics <- c(if (!is.null(metric_function)) {'metric_function'},
+                     'accuracy', 'auc', 'f1')
+      }
+    } else if ('all' %in% metrics) {
+      if (type == 'regression') {
+        metrics <- metrics_reggresion
+      }
+      if (type =='binary_clf') {
+        metrics <- metrics_binary_clf
+      }
+    }
+
+    if (type == 'regression') {
+      is_valid_metrics <- metrics %in% metrics_reggresion
+      if (any(!is_valid_metrics)) {
+        metrics <- metrics[is_valid_metrics]
+        warning(paste('Not valid metrics ommited: ', paste(metrics[!is_valid_metrics], collapse = ', ')))
+      }
+      if (!(sort_by %in% metrics_reggresion)) {
+        if (sort_by != 'auto') {
+          warning(paste('sort_by need to by one of regression metrics. Default metric applied : rmse.
                       Choose one of the them: auto, metric_function (in case of usage custom function) ',
                       paste(metrics_reggresion, collapse = ', ')))
+        }
+        sort_by <- 'rmse'
       }
-      sort_by <- 'rmse'
-    }
-  } else if (type == 'binary_clf') {
-    is_valid_metrics <- metrics %in% metrics_binary_clf
-    if (!all(is_valid_metrics)) {
-      warning(paste('Not valid metrics ommited: ', paste(metrics[!is_valid_metrics], collapse = ', ')))
-      metrics <- metrics[is_valid_metrics]
-    }
-    if (!(sort_by %in% metrics_binary_clf)) {
-      if (sort_by != 'auto') {
-        warning(paste('sort_by need to by one of binary classification metrics. Default metric applied : accuracy.',
-                      'You can choose one of the them: auto, metric_function (in case of usage custom function) ',
-                      paste(metrics_binary_clf, collapse = ', ')))
+    } else if (type == 'binary_clf') {
+      is_valid_metrics <- metrics %in% metrics_binary_clf
+      if (!all(is_valid_metrics)) {
+        warning(paste('Not valid metrics ommited: ', paste(metrics[!is_valid_metrics], collapse = ', ')))
+        metrics <- metrics[is_valid_metrics]
       }
+      if (!(sort_by %in% metrics_binary_clf)) {
+        if (sort_by != 'auto') {
+          warning(paste('sort_by need to by one of binary classification metrics. Default metric applied : accuracy.',
+                        'You can choose one of the them: auto, metric_function (in case of usage custom function) ',
+                        paste(metrics_binary_clf, collapse = ', ')))
+        }
         sort_by <- 'accuracy'
+      }
     }
-  }
-  if (type == 'regression') {
+    if (type == 'regression') {
       models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_reggresion) + nr_add_col))
       colnames(models_frame) <- c(colnames_basic, metrics_reggresion)
 
@@ -131,15 +190,15 @@ score_models <- function(models,
                                names(models)[i],
                                engine[i],
                                tuning[i],
-                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed)}, # czemu tu było -1?
+                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed)},
                                model_performance_mse(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_rmse(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_r2(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_mad(unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_mae(unlist(predictions[[i]], use.names = FALSE), observed)
-                               )
-    }
-  } else if (type == 'binary_clf') {
+        )
+      }
+    } else if (type == 'binary_clf') {
       models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_binary_clf) + nr_add_col))
       colnames(models_frame) <- c(colnames_basic, metrics_binary_clf)
       set.seed(1)
@@ -163,16 +222,18 @@ score_models <- function(models,
                                model_performance_sensitivity(tp, fp, tn, fn),
                                model_performance_specificity(tp, fp, tn, fn),
                                model_performance_balanced_accuracy(tp, fp, tn, fn)
-                               )
+        )
+      }
+    }
+    models_frame[, -c(2:4)] <- sapply(models_frame[, -c(2:4)], as.numeric)
+    models_frame            <- models_frame[order(models_frame[, sort_by],
+                                                  decreasing = unname(metrics_decreasing[sort_by])),
+                                            c(colnames_basic, metrics)]
+    if (!is.null(metric_function)) {
+      colnames(models_frame)[colnames(models_frame) == 'metric_function'] <- metric_function_name
     }
   }
-  models_frame[, -c(2:4)] <- sapply(models_frame[, -c(2:4)], as.numeric)
-  models_frame            <- models_frame[order(models_frame[, sort_by],
-                                          decreasing = unname(metrics_decreasing[sort_by])),
-                                          c(colnames_basic, metrics)]
-  if (!is.null(metric_function)) {
-    colnames(models_frame)[colnames(models_frame) == 'metric_function'] <- metric_function_name
-  }
+
   rownames(models_frame) <- NULL
   return(models_frame)
 }

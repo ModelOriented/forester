@@ -10,30 +10,30 @@ test_that('test-predict_models_all', {
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Species',
+                       y       = 'Species',
                        balance = FALSE)
   train_data <-
     prepare_data(split_data$train,
-                 y = 'Species',
+                 y      = 'Species',
                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   test_data <-
     prepare_data(split_data$test,
-                 y = 'Species',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Species',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 split_data$train)
+                 train   = split_data$train)
 
   suppressWarnings(
     model <-
       train_models(train_data,
-                   'Species',
+                   y      ='Species',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   predictions <-
     predict_models_all(model,
                    test_data,
-                   y = 'Species',
+                   y    = 'Species',
                    type = type)
 
   expect_true(length(predictions) == 5)
@@ -49,32 +49,32 @@ test_that('test-predict_models_all', {
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Two_yr_Recidivism',
+                       y       = 'Two_yr_Recidivism',
                        balance = FALSE)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   y = 'Two_yr_Recidivism',
+                   y      = 'Two_yr_Recidivism',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   test_data <-
     prepare_data(split_data$test,
-                 y = 'Two_yr_Recidivism',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Two_yr_Recidivism',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   y = 'Two_yr_Recidivism',
+                   y      = 'Two_yr_Recidivism',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   suppressWarnings(
     predictions <-
       predict_models_all(model,
                      test_data,
-                     y = 'Two_yr_Recidivism',
+                     y    = 'Two_yr_Recidivism',
                      type = type)
   )
 
@@ -93,31 +93,31 @@ test_that('test-predict_models_all', {
   preprocessed_data   <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Price',
+                       y       = 'Price',
                        balance = FALSE)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   y = 'Price',
+                   y      = 'Price',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   test_data <-
     prepare_data(split_data$test,
-                 y = 'Price',c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
+                 y       = 'Price',c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
                  predict = TRUE,
-                 train = split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   y = 'Price',
+                   y      = 'Price',
                    engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   suppressWarnings(
     predictions <-
       predict_models_all(model,
                      test_data,
-                     y = 'Price',
+                     y    = 'Price',
                      type = type)
   )
 

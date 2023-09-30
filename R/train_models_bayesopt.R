@@ -6,12 +6,18 @@
 #' Also the bigger dataset, the more time takes Bayesian Optimization.
 #'
 #' @param train_data A training data for models created by `prepare_data()` function.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or pair: time, status can be used.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used.
 #' @param test_data A test data for models created by `prepare_data()` function.
 #' @param engine A vector of tree-based models that shall be created. Possible
-#' values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
-#' @param type A string which determines if Machine Learning task is the
-#' `binary_clf` or `regression`.
+#' values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
+#' matter for survival analysis.
+#' @param type A string that determines if Machine Learning task is the
+#' `binary_clf`, `regression`, or `survival`.
 #' @param return_params A logical value, if set to TRUE, returns optimized model parameters.
 #' @param iters.n The number of iterations of BayesOpt function.
 #' @param verbose A logical value, if set to TRUE, provides all information about
@@ -22,6 +28,8 @@
 #' @export
 train_models_bayesopt <- function(train_data,
                                   y,
+                                  time,
+                                  status,
                                   test_data,
                                   engine,
                                   type,
@@ -47,6 +55,103 @@ train_models_bayesopt <- function(train_data,
   if (type == 'multi_clf') {
     stop('Multilabel classification is not supported currently!')
   }
+
+  if (type == 'survival') {
+    fitness_fun_rfsrc <- function(ntree, nodesize, nsplit) {
+
+      # Our optimized metric is the Brier score.
+
+      model <- randomForestSRC::rfsrc(
+        formula   = as.formula(paste0('Surv(',time,',', status,') ~ .')),
+        # We use ranger data, as rfsrc doesn't need preprocessing.
+        data      = train_data$ranger_data,
+        na.action = 'na.omit',
+        ntree     = ntree,
+        nodesize  = nodesize,
+        nsplit    = nsplit,
+        splitrule = "logrankscore"
+      )
+      # Brier Score
+      pred          <- randomForestSRC::predict.rfsrc(model, test_data$ranger_data)
+      predictions   <- pred$survival
+      ordered_times <- model$time.interest
+      median_idx    <- median(1:length(ordered_times))
+      surv_object   <- survival::Surv(test_data$ranger_data[[time]], test_data$ranger_data[[status]])
+      med_time      <- median(ordered_times)
+      max_metric    <- -SurvMetrics::Brier(object = surv_object, pre_sp = predictions[, median_idx], t_star = med_time)
+
+      return(list(Score = as.numeric(max_metric)))
+    }
+
+    bounds <- list(
+      ntree    = c(5L, 1000L),
+      nodesize = c(5L, 30L),
+      nsplit   = c(1L, 100L)
+    )
+
+    bayes <- NULL
+    tryCatch(
+      expr = {
+        if (verbose) {
+          bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_rfsrc,
+                                                     bounds     = bounds,
+                                                     initPoints = length(bounds) + 5,
+                                                     iters.n    = iters.n,
+                                                     verbose    = 1)
+        } else {
+          bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_rfsrc,
+                                                     bounds     = bounds,
+                                                     initPoints = length(bounds) + 5,
+                                                     iters.n    = iters.n,
+                                                     verbose    = 0)
+        }
+      },
+      error = function(e) {
+        print(e)
+      }
+    )
+
+    if (is.null(bayes)) {
+      rfsrc_model <- randomForestSRC::rfsrc(
+        formula   = as.formula(paste0('Surv(',time,',', status,') ~ .')),
+        data      = train_data$ranger_data,
+        splitrule = 'logrankscore'
+      )
+      verbose_cat(crayon::red('\u2716'), 'rfsrc: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
+    } else {
+      if (return_params == TRUE) {
+        models_params$ranger_params$ntree    <- as.integer(ParBayesianOptimization::getBestPars(bayes)$ntree)
+        models_params$ranger_params$nodesize <- as.integer(ParBayesianOptimization::getBestPars(bayes)$nodesize)
+        models_params$ranger_params$nsplit   <- as.integer(ParBayesianOptimization::getBestPars(bayes)$nsplit)
+      }
+      rfsrc_model <- randomForestSRC::rfsrc(
+        formula   = as.formula(paste0('Surv(',time,',', status,') ~ .')),
+        data      = train_data$ranger_data,
+        na.action = 'na.omit',
+        ntree     = as.integer(ParBayesianOptimization::getBestPars(bayes)$ntree),
+        nodesize  = as.integer(ParBayesianOptimization::getBestPars(bayes)$nodesize),
+        nsplit    = as.integer(ParBayesianOptimization::getBestPars(bayes)$nsplit),
+        splitrule = 'logrankscore'
+      )
+      verbose_cat(crayon::green('\u2714'), 'rfsrc: Bayesian Optimization was successful!\n', verbose = verbose)
+    }
+
+    if (return_params == TRUE) {
+      # To remove models that are NULL.
+      return_list <- list(
+        rfsrc_bayes   = rfsrc_model,
+        models_params = models_params
+      )
+    }
+    else {
+      # To remove models that are NULL.
+      return_list <- list(
+        rfsrc_bayes  = rfsrc_model
+      )
+    }
+    return(return_list)
+  }
+
   for (i in 1:length(engine)) {
     if (engine[i] == 'ranger') {
       if (type == 'regression') {
@@ -554,3 +659,21 @@ train_models_bayesopt <- function(train_data,
     return(return_list)
   }
 }
+
+#' #' Creates SurvProb for ranger model
+#' #'
+#' #' @param object The ranger object.
+#' #' @param newdata Dataset.
+#' #' @param times Time.
+#' #' @param ... Other variables.
+#' #'
+#' #' @return Survival probability
+#' #' @export
+#' predictSurvProb.ranger <- function (object, newdata, times, ...) {
+#'   ptemp <- ranger:::predict.ranger(object, data = newdata, importance = 'none')$survival
+#'   print('xddd')
+#'   pos   <- prodlim::sindex(jump.times = object$unique.death.times, eval.times = times)
+#'   p     <- cbind(1, ptemp)[, pos + 1, drop = FALSE]
+#'   if (nrow(p) != nrow(newdata) || ncol(p) != length(times)) stop()
+#'   return(p)
+#' }

@@ -1,13 +1,19 @@
 #' Random optimization of hyperparameters
 #'
 #' @param train_data A training data for models created by `prepare_data()` function.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or pair: time, status can be used.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used.
 #' @param models A list of models trained by `train_models()` function.
 #' They will be compered with models trained with different hyperparameters.
 #' @param engine A vector of tree-based models that shall be created. Possible
-#' values are: `ranger`, `xgboost`, `desicion tree`, `lightgbm`, `catboost`.
+#' values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
+#' matter for survival analysis.
 #' @param type A string that determines if Machine Learning task is the
-#' `binary_clf` or `regression` task.
+#' `binary_clf`, `regression`, or `survival`.
 #' @param max_evals The number of trained models for each model type in `engine`.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none. Set to FALSE by default.
@@ -16,13 +22,16 @@
 #' of models scores.
 #' @export
 random_search <- function(train_data,
-                          y,
+                          y      = NULL,
+                          time   = NULL,
+                          status = NULL,
                           models,
                           engine,
                           type,
                           max_evals = 10,
                           verbose   = FALSE) {
   if (max_evals <= 0) {
+    verbose_cat(crayon::green('\u2714'), 'Random search was turned off. \n\n', verbose = verbose)
     return(NULL)
   }
 
@@ -63,184 +72,224 @@ random_search <- function(train_data,
     min_data_in_leaf = c(1, 3, 10)
   )
 
+  rfsrc_grid <- list(
+    ntree    = c(50, 500, 1000),
+    nodesize = c(5, 15, 30),
+    nsplit   = c(1, 10, 100)
+  )
+
   search_models <- list()
   search_engine <- c()
+  # Survival analysis.
+  if (is.null(y)) {
+    rfsrc_models        <- list()
+    expanded_rfsrc_grid <- expand.grid(rfsrc_grid)
+    max_rfsrc_evals     <- min(max_evals, dim(expanded_rfsrc_grid)[1])
+    sample_rfsrc_grid   <- expanded_rfsrc_grid[sample(1:dim(expanded_rfsrc_grid)[1], max_rfsrc_evals), ]
 
-  if ('ranger' %in% engine) {
-    if (type == 'regression') {
-      classification <- NULL
-      probability    <- FALSE
-    } else if (type == 'binary_clf') {
-      classification <- TRUE
-      probability    <- TRUE
-    }
-    ranger_models        <- list()
-    expanded_ranger_grid <- expand.grid(ranger_grid)
-    max_ranger_evals     <- min(max_evals, dim(expanded_ranger_grid)[1])
-    sample_ranger_grid   <- expanded_ranger_grid[sample(1:dim(expanded_ranger_grid)[1], max_ranger_evals), ]
-
-    for (i in 1:max_ranger_evals) {
-      ranger_models[i] <-
+    for (i in 1:max_rfsrc_evals) {
+      rfsrc_models[i] <-
         list(
-          ranger::ranger(
-            data            = train_data$ranger_data,
-            dependent.variable.name = y,
-            num.trees       = unlist(sample_ranger_grid[i, 'num.trees']),
-            sample.fraction = unlist(sample_ranger_grid[i, 'sample.fraction']),
-            min.node.size   = unlist(sample_ranger_grid[i, 'min.node.size']),
-            max.depth       = unlist(sample_ranger_grid[i, 'max.depth']),
-            classification  = classification,
-            probability     = probability
+          randomForestSRC::rfsrc(
+            formula   = as.formula(paste0('Surv(',time,',', status,') ~ .')),
+            # We use ranger data, as rfsrc doesn't need preprocessing.
+            data      = train_data$ranger_data,
+            na.action = 'na.omit',
+            ntree     = unlist(sample_rfsrc_grid[i, 'ntree']),
+            nodesize  = unlist(sample_rfsrc_grid[i, 'nodesize']),
+            nsplit    = unlist(sample_rfsrc_grid[i, 'nsplit']),
+            splitrule = 'logrankscore'
           )
         )
     }
-    names(ranger_models) <- paste('ranger_RS_', 1:max_ranger_evals, sep = '')
-    search_models        <- c(search_models, ranger_models)
-    search_engine        <- c(search_engine, rep('ranger', max_ranger_evals))
-    verbose_cat(crayon::green('\u2714'), 'ranger: Tuning with random search was successful!\n', verbose = verbose)
-  }
-  if ('xgboost' %in% engine) {
-    if (type == 'regression') {
-      objective <- 'reg:squarederror'
-      label     <- as.vector(train_data$ranger_data[[y]])
-    } else if (type == 'binary_clf') {
-      objective <- 'binary:logistic'
-      if (any(train_data$ranger_data[[y]] == 2)) {
-        label <- as.numeric(train_data$ranger_data[[y]]) - 1
-      } else {
-        label <- as.numeric(train_data$ranger_data[[y]])
-      }
-      label <- as.vector(label)
-    }
-    xgboost_models        <- list()
-    expanded_xgboost_grid <- expand.grid(xgboost_grid)
-    max_xgboost_evals     <- min(max_evals, dim(expanded_xgboost_grid)[1])
-    sample_xgboost_grid   <- expanded_xgboost_grid[sample(1:dim(expanded_xgboost_grid)[1], max_xgboost_evals), ]
+    names(rfsrc_models) <- paste('rfsrc_RS_', 1:max_rfsrc_evals, sep = '')
+    search_models       <- c(search_models, rfsrc_models)
+    search_engine       <- c(search_engine, rep('rfsrc', max_rfsrc_evals))
+    verbose_cat(crayon::green('\u2714'), 'rfsrc: Tuning with random search was successful!\n', verbose = verbose)
 
-    for (i in 1:max_xgboost_evals) {
-      xgboost_models[i] <-
-        list(
-          xgboost::xgboost(
-            data      = train_data$xgboost_data,
-            label     = label,
-            objective = objective,
-            verbose   = 0,
-            nrounds   = unlist(sample_xgboost_grid[i, 'nrounds']),
-            subsample = unlist(sample_xgboost_grid[i, 'subsample']),
-            gamma     = unlist(sample_xgboost_grid[i, 'gamma']),
-            eta       = unlist(sample_xgboost_grid[i, 'eta']),
-            max_depth = unlist(sample_xgboost_grid[i, 'max_depth'])
-          )
-        )
-    }
-    names(xgboost_models) <- paste('xgboost_RS_', 1:max_xgboost_evals, sep = '')
-    search_models         <- c(search_models, xgboost_models)
-    search_engine         <- c(search_engine, rep('xgboost', max_xgboost_evals))
-    verbose_cat(crayon::green('\u2714'), 'xgboost: Tuning with random search was successful!\n', verbose = verbose)
-  }
-  if ('decision_tree' %in% engine) {
-    tree_models        <- list()
-    expanded_tree_grid <- expand.grid(tree_grid)
-    max_tree_evals     <- min(max_evals, dim(expanded_tree_grid)[1])
-    sample_tree_grid   <- expanded_tree_grid[sample(1:dim(expanded_tree_grid)[1], max_tree_evals), ]
-    form               <- as.formula(paste0(y, ' ~.'))
-
-    for (i in 1:max_tree_evals) {
-      tree_contr <-
-        partykit::ctree_control(
-          minsplit  = unlist(sample_tree_grid[i, 'minsplit']),
-          minprob   = unlist(sample_tree_grid[i, 'minprob']),
-          maxdepth  = unlist(sample_tree_grid[i, 'maxdepth']),
-          nresample = unlist(sample_tree_grid[i, 'nresample'])
-        )
-      tree_models[i] <- list(partykit::ctree(
-        formula = form,
-        data    = train_data$decision_tree_data
-      ))
-    }
-    names(tree_models) <- paste('decision_tree_RS_', 1:max_tree_evals, sep = '')
-    search_models      <- c(search_models, tree_models)
-    search_engine      <- c(search_engine, rep('decision_tree', max_tree_evals))
-    verbose_cat(crayon::green('\u2714'), 'decision_tree: Tuning with random search was successful!\n', verbose = verbose)
-  }
-  if ('lightgbm' %in% engine) {
-    lightgbm_models        <- list()
-    expanded_lightgbm_grid <- expand.grid(lightgbm_grid)
-    max_lightgbm_evals     <- min(max_evals, dim(expanded_lightgbm_grid)[1])
-    sample_lightgbm_grid   <- expanded_lightgbm_grid[sample(1:dim(expanded_lightgbm_grid)[1], max_lightgbm_evals), ]
-
-    if (type == 'binary_clf') {
-      obj = 'binary'
-      params <- list(objective = obj)
-    } else if (type == 'multi_clf') {
-      obj = 'multiclass'
-      params <- list(objective = obj)
-    } else if (type == 'regression') {
-      obj = 'regression'
-      params <- list(objective = obj)
-    }
-
-    for (i in 1:max_lightgbm_evals) {
-      parameters <- c(
-        params,
-        list(
-          learning_rate  = unlist(sample_lightgbm_grid[i, 'learning_rate']),
-          num_leaves     = unlist(sample_lightgbm_grid[i, 'num_leaves']),
-          num_iterations = unlist(sample_lightgbm_grid[i, 'num_iterations'])
-        )
-      )
-      lightgbm_models[i] <-
-        list(
-          lightgbm::lgb.train(
-            params  = parameters,
-            data    = train_data$lightgbm_data,
-            verbose = -1
-          )
-        )
-
-    }
-    names(lightgbm_models) <- paste('lightgbm_RS_', 1:max_lightgbm_evals, sep = '')
-    search_models          <- c(search_models, lightgbm_models)
-    search_engine          <- c(search_engine, rep('lightgbm', max_lightgbm_evals))
-    verbose_cat(crayon::green('\u2714'), 'lightgbm: Tuning with random search was successful!\n', verbose = verbose)
-  }
-  if ('catboost' %in% engine) {
-    catboost_models        <- list()
-    expanded_catboost_grid <- expand.grid(catboost_grid)
-    max_catboost_evals     <- min(max_evals, dim(expanded_catboost_grid)[1])
-    sample_catboost_grid   <- expanded_catboost_grid[sample(1:dim(expanded_catboost_grid)[1], max_catboost_evals), ]
-
-    if (type == 'binary_clf') {
-      obj    <- 'Logloss'
-      params <- list(loss_function = obj, logging_level = 'Silent')
-    } else if (type == 'multi_clf') {
-      obj    <- 'MultiClass'
-      params <- list(loss_function = obj, logging_level = 'Silent')
-    } else if (type == 'regression') {
-      obj    <- 'MAE'
-      params <- list(loss_function = obj, logging_level = 'Silent')
-    }
-
-    for (i in 1:max_catboost_evals) {
-      parameters <- c(
-        params,
-        list(
-          iterations    = unlist(sample_catboost_grid[i, 'iterations']),
-          border_count  = unlist(sample_catboost_grid[i, 'border_count']),
-          depth         = unlist(sample_catboost_grid[i, 'depth']),
-          learning_rate = unlist(sample_catboost_grid[i, 'learning_rate'])
-        )
-      )
-      capture.output(catboost_models[i] <- list(catboost::catboost.train(train_data$catboost_data, params = parameters)))
-    }
-    names(catboost_models) <- paste('catboost_RS_', 1:max_catboost_evals, sep = '')
-    search_models          <- c(search_models, catboost_models)
-    search_engine          <- c(search_engine, rep('catboost', max_catboost_evals))
-    verbose_cat(crayon::green('\u2714'), 'catboost: Tuning with random search was successful!\n', verbose = verbose)
-  }
-
-  return(list(
+    return(list(
       models = search_models,
       engine = search_engine
-  ))
+    ))
+  # Regression and classification.
+  } else {
+    if ('ranger' %in% engine) {
+      if (type == 'regression') {
+        classification <- NULL
+        probability    <- FALSE
+      } else if (type == 'binary_clf') {
+        classification <- TRUE
+        probability    <- TRUE
+      }
+      ranger_models        <- list()
+      expanded_ranger_grid <- expand.grid(ranger_grid)
+      max_ranger_evals     <- min(max_evals, dim(expanded_ranger_grid)[1])
+      sample_ranger_grid   <- expanded_ranger_grid[sample(1:dim(expanded_ranger_grid)[1], max_ranger_evals), ]
+
+      for (i in 1:max_ranger_evals) {
+        ranger_models[i] <-
+          list(
+            ranger::ranger(
+              data            = train_data$ranger_data,
+              dependent.variable.name = y,
+              num.trees       = unlist(sample_ranger_grid[i, 'num.trees']),
+              sample.fraction = unlist(sample_ranger_grid[i, 'sample.fraction']),
+              min.node.size   = unlist(sample_ranger_grid[i, 'min.node.size']),
+              max.depth       = unlist(sample_ranger_grid[i, 'max.depth']),
+              classification  = classification,
+              probability     = probability
+            )
+          )
+      }
+      names(ranger_models) <- paste('ranger_RS_', 1:max_ranger_evals, sep = '')
+      search_models        <- c(search_models, ranger_models)
+      search_engine        <- c(search_engine, rep('ranger', max_ranger_evals))
+      verbose_cat(crayon::green('\u2714'), 'ranger: Tuning with random search was successful!\n', verbose = verbose)
+    }
+    if ('xgboost' %in% engine) {
+      if (type == 'regression') {
+        objective <- 'reg:squarederror'
+        label     <- as.vector(train_data$ranger_data[[y]])
+      } else if (type == 'binary_clf') {
+        objective <- 'binary:logistic'
+        if (any(train_data$ranger_data[[y]] == 2)) {
+          label <- as.numeric(train_data$ranger_data[[y]]) - 1
+        } else {
+          label <- as.numeric(train_data$ranger_data[[y]])
+        }
+        label <- as.vector(label)
+      }
+      xgboost_models        <- list()
+      expanded_xgboost_grid <- expand.grid(xgboost_grid)
+      max_xgboost_evals     <- min(max_evals, dim(expanded_xgboost_grid)[1])
+      sample_xgboost_grid   <- expanded_xgboost_grid[sample(1:dim(expanded_xgboost_grid)[1], max_xgboost_evals), ]
+
+      for (i in 1:max_xgboost_evals) {
+        xgboost_models[i] <-
+          list(
+            xgboost::xgboost(
+              data      = train_data$xgboost_data,
+              label     = label,
+              objective = objective,
+              verbose   = 0,
+              nrounds   = unlist(sample_xgboost_grid[i, 'nrounds']),
+              subsample = unlist(sample_xgboost_grid[i, 'subsample']),
+              gamma     = unlist(sample_xgboost_grid[i, 'gamma']),
+              eta       = unlist(sample_xgboost_grid[i, 'eta']),
+              max_depth = unlist(sample_xgboost_grid[i, 'max_depth'])
+            )
+          )
+      }
+      names(xgboost_models) <- paste('xgboost_RS_', 1:max_xgboost_evals, sep = '')
+      search_models         <- c(search_models, xgboost_models)
+      search_engine         <- c(search_engine, rep('xgboost', max_xgboost_evals))
+      verbose_cat(crayon::green('\u2714'), 'xgboost: Tuning with random search was successful!\n', verbose = verbose)
+    }
+    if ('decision_tree' %in% engine) {
+      tree_models        <- list()
+      expanded_tree_grid <- expand.grid(tree_grid)
+      max_tree_evals     <- min(max_evals, dim(expanded_tree_grid)[1])
+      sample_tree_grid   <- expanded_tree_grid[sample(1:dim(expanded_tree_grid)[1], max_tree_evals), ]
+      form               <- as.formula(paste0(y, ' ~.'))
+
+      for (i in 1:max_tree_evals) {
+        tree_contr <-
+          partykit::ctree_control(
+            minsplit  = unlist(sample_tree_grid[i, 'minsplit']),
+            minprob   = unlist(sample_tree_grid[i, 'minprob']),
+            maxdepth  = unlist(sample_tree_grid[i, 'maxdepth']),
+            nresample = unlist(sample_tree_grid[i, 'nresample'])
+          )
+        tree_models[i] <- list(partykit::ctree(
+          formula = form,
+          data    = train_data$decision_tree_data
+        ))
+      }
+      names(tree_models) <- paste('decision_tree_RS_', 1:max_tree_evals, sep = '')
+      search_models      <- c(search_models, tree_models)
+      search_engine      <- c(search_engine, rep('decision_tree', max_tree_evals))
+      verbose_cat(crayon::green('\u2714'), 'decision_tree: Tuning with random search was successful!\n', verbose = verbose)
+    }
+    if ('lightgbm' %in% engine) {
+      lightgbm_models        <- list()
+      expanded_lightgbm_grid <- expand.grid(lightgbm_grid)
+      max_lightgbm_evals     <- min(max_evals, dim(expanded_lightgbm_grid)[1])
+      sample_lightgbm_grid   <- expanded_lightgbm_grid[sample(1:dim(expanded_lightgbm_grid)[1], max_lightgbm_evals), ]
+
+      if (type == 'binary_clf') {
+        obj = 'binary'
+        params <- list(objective = obj)
+      } else if (type == 'multi_clf') {
+        obj = 'multiclass'
+        params <- list(objective = obj)
+      } else if (type == 'regression') {
+        obj = 'regression'
+        params <- list(objective = obj)
+      }
+
+      for (i in 1:max_lightgbm_evals) {
+        parameters <- c(
+          params,
+          list(
+            learning_rate  = unlist(sample_lightgbm_grid[i, 'learning_rate']),
+            num_leaves     = unlist(sample_lightgbm_grid[i, 'num_leaves']),
+            num_iterations = unlist(sample_lightgbm_grid[i, 'num_iterations'])
+          )
+        )
+        lightgbm_models[i] <-
+          list(
+            lightgbm::lgb.train(
+              params  = parameters,
+              data    = train_data$lightgbm_data,
+              verbose = -1
+            )
+          )
+
+      }
+      names(lightgbm_models) <- paste('lightgbm_RS_', 1:max_lightgbm_evals, sep = '')
+      search_models          <- c(search_models, lightgbm_models)
+      search_engine          <- c(search_engine, rep('lightgbm', max_lightgbm_evals))
+      verbose_cat(crayon::green('\u2714'), 'lightgbm: Tuning with random search was successful!\n', verbose = verbose)
+    }
+    if ('catboost' %in% engine) {
+      catboost_models        <- list()
+      expanded_catboost_grid <- expand.grid(catboost_grid)
+      max_catboost_evals     <- min(max_evals, dim(expanded_catboost_grid)[1])
+      sample_catboost_grid   <- expanded_catboost_grid[sample(1:dim(expanded_catboost_grid)[1], max_catboost_evals), ]
+
+      if (type == 'binary_clf') {
+        obj    <- 'Logloss'
+        params <- list(loss_function = obj, logging_level = 'Silent')
+      } else if (type == 'multi_clf') {
+        obj    <- 'MultiClass'
+        params <- list(loss_function = obj, logging_level = 'Silent')
+      } else if (type == 'regression') {
+        obj    <- 'MAE'
+        params <- list(loss_function = obj, logging_level = 'Silent')
+      }
+
+      for (i in 1:max_catboost_evals) {
+        parameters <- c(
+          params,
+          list(
+            iterations    = unlist(sample_catboost_grid[i, 'iterations']),
+            border_count  = unlist(sample_catboost_grid[i, 'border_count']),
+            depth         = unlist(sample_catboost_grid[i, 'depth']),
+            learning_rate = unlist(sample_catboost_grid[i, 'learning_rate'])
+          )
+        )
+        capture.output(catboost_models[i] <- list(catboost::catboost.train(train_data$catboost_data, params = parameters)))
+      }
+      names(catboost_models) <- paste('catboost_RS_', 1:max_catboost_evals, sep = '')
+      search_models          <- c(search_models, catboost_models)
+      search_engine          <- c(search_engine, rep('catboost', max_catboost_evals))
+      verbose_cat(crayon::green('\u2714'), 'catboost: Tuning with random search was successful!\n', verbose = verbose)
+    }
+
+    return(list(
+      models = search_models,
+      engine = search_engine
+    ))
+  }
+
 }

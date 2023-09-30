@@ -3,7 +3,7 @@ test_that('test-predict_new', {
   data        <- lisbon
   y           <- 'Price'
   suppressWarnings(
-    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 0)
+    train_out <- train(data, y = y, engine = c('ranger', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 1, bayes_iter = 0)
   )
 
   new_obs              <- lisbon[1, ]
@@ -35,7 +35,7 @@ test_that('test-predict_new', {
   data        <- adult[1:100, ]
   y           <- 'salary'
   suppressWarnings(
-    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 0)
+    train_out <- train(data, y, engine = c('ranger', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 1, bayes_iter = 0)
   )
 
   new_obs              <- adult[30, ]
@@ -67,7 +67,7 @@ test_that('test-predict_new', {
   data        <- testing_data[1:100, ]
   y           <- 'y'
   suppressWarnings(
-    train_out <- train(data, y, verbose = FALSE, random_evals = 1, bayes_iter = 0)
+    train_out <- train(data, y, engine = c('ranger', 'decision_tree', 'lightgbm', 'catboost'), verbose = FALSE, random_evals = 1, bayes_iter = 0)
   )
 
   new_obs        <- testing_data[1, ]

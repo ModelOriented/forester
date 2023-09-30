@@ -1,3 +1,23 @@
+# forester 1.4.0
+
+-   In the DESCRIPTION: Added in Suggests `SurvMetrics`, `randomForestSRC`, and `survival` packages.
+-   In `train()` function:
+    -   Added parameters `time`, and `status` describing the survival analysis task,
+    -   Added parameters `time`, and `status` to the functions output,
+    -   Modified inner methods, to work with survival analysis task.
+-   In `check data()` function:
+    -   Added parameters `time`, and `status` describing the survival analysis task,
+    -   Modified the methods: `basic_info()`, `check_missing()`, `check_cor()`, and `check_y_balance()`, so they also work for the survival analysis.
+-   In `preprocessing()` function, added the binarization of survival task target (status).
+-   In `prepare_data()` function, added a method for the survival analysis task.
+-   In `train_models()` function, added a method for training a survival analysis model from `randomForestSRC` package.
+-   In `random_search()` function, added a method for tuning a survival analysis model.
+-   In `train_models_bayesopt()` function, added a method for tuning a survival analysis model.
+-   In `predict_models_all()`, `predict_models()` , and `predict_new` functions, added a method for predicting a survival analysis model.
+-   In `score_models()`, added a method for evaluation of survival analysis models with `Brier Score`, and `Concordance Index (CIN)`.
+-   In `guess_type()`, added method of detecting the survival analysis task.
+-   Modified `tests` of the package, to cover the changes made in the package.
+
 # forester 1.3.0
 
 -   In the DESCRIPTION: Added in Imports the `VIM` package, and in the Suggests `sivs`, `parallel`, `rmcfs`, and `varrank` packages.
