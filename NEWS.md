@@ -1,3 +1,20 @@
+# forester 1.4.1
+
+-   In the DESCRIPTION:
+    -   Added in Imports the `patchwork` package, and moved `arules` from Imports to Suggests,
+    -   Updated the authors of the package.
+-   In `report()` function:
+    -   Added separate generation of binary classification and regression reports,
+    -   Enhanced the quality of plots in the report,
+    -   Fixed the bugs leading to lower quality of the report,
+    -   Added detailed description of how to interpret the visualizations for the beginners.
+-   Created `plot_classifcation` file, which overrides `plot()` function for the binary classification object returned by `train()`. The function lets us create plots for binary classification tasks, such as metrics comparison line plot, ROC curve, confusion matrix, and train vs test plot.
+-   Created `plot_regression` file, which overrides `plot()` function for the regression object returned by `train()`. The function lets us create plots for regression tasks, such as residuals box plot, observed vs prediction plot, and train vs test plot.
+-   Removed `report.Rmd` file, and created two separate files for different tasks called `report_binary.Rmd`, and `report_regression.Rmd`.
+-   In `train()` function: added different classes for the outcomes, depending on the task type.
+-   In `plot_metrics()`, changed color palette to `colors_discrete_forester`.
+-   In `check_data()`, added a small fix for the report.
+
 # forester 1.4.0
 
 -   In the DESCRIPTION: Added in Suggests `SurvMetrics`, `randomForestSRC`, and `survival` packages.

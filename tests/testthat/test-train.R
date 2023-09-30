@@ -69,6 +69,7 @@ test_that('test-train', {
   expect_true(colnames(output_metrics$score_test)[5] == 'custom')
 
   # Survival analysis.
+  library(randomForestSRC)
   data('peakVO2')
   output_peak <- train(peakVO2, time = 'ttodead', status = 'died', random_evals = 3, bayes_iter = 1)
 

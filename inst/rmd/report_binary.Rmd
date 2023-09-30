@@ -1,0 +1,143 @@
+---
+title: '**forester report**'
+subtitle: 'version `r packageVersion("forester")`'
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_depth: 2
+date: '`r Sys.time()`'
+version: 'forester `r packageVersion("forester")`'
+params:
+  train_output: NULL
+---
+
+```{r setup, include = FALSE}
+library(DALEX)
+library(forester)
+knitr::opts_chunk$set(echo = FALSE, comment = NA, warning = FALSE, message = FALSE)
+```
+
+# The best models
+
+This is the **`r train_output$type`** task.
+
+The best model evaluated on testing set is: **`r paste(train_output$score_test$name[[1]], sep="' '", collapse=", ")`**, whereas for the validation set it is: **`r paste(train_output$score_valid$name[[1]], sep="' '", collapse=", ")`**.
+
+The models inside the forester package are trained on the training set, the Bayesian Optimization is tuned according to the testing set, and the validation set is never seen during the training. The training set should not be used for evaluation as the models always perform the best for the data they have seen (overfitting). The least biased dataset is the validation set, however we can also use the testing set, ex. to check if the models overfit.
+
+The names of the models were created by a pattern *Engine_TuningMethod_Id*, where:
+
+-   `Engine` - describes the engine used for the training (random_forest, xgboost, decision_tree, lightgbm, catboost),
+
+-   `TuningMethod` - describes how the model was tuned (`basic` for basic parameters, `RS` for random search, `bayes` for Bayesian optimization),
+
+-   `Id` - is used for separating the random search parameters sets.
+
+*More details about the dataset are present at the end of the report.*
+
+## Best models for validation dataset
+
+```{r table}
+score_frame          <- params$train_output$score_valid
+score_rounded        <- score_frame
+
+for(i in 5:ncol(score_rounded)) {
+  score_rounded[, i] <- round(as.numeric(score_rounded[, i]), 4)
+}
+
+if(!is.null(metric)){
+  score_rounded <- score_rounded[order(score_rounded[metric]), ]
+} else {
+  score_rounded <- score_rounded[order(score_rounded['accuracy'], decreasing = TRUE), ]
+}
+
+score_rounded <- score_rounded[1:10, -c(3, 4)]
+knitr::kable(score_rounded)
+```
+
+\newpage
+
+# Model comparison
+
+## Metrics comparison
+
+The comparison plot takes a closer look on top 10 performing models, and evaluates their performance in terms of three well-known metrics: accuracy, area under the curve (AUC), and F1 score. For each metric, the larger the value, the better the model is. As the ranked list compares the models only in terms of accuracy, we want to additionally evaluate the performance in terms of other metrics. In some cases it might happen that other model is better in terms of AUC, or F1, but slightly worse in accuracy, and we would like to choose the other model. The results are presented for both testing and validation dataset.
+
+```{r comparison plot, out.width = '100%', fig.height = 7}
+plot(train_output, models = NULL, type = 'comparison', metric = 'accuracy') 
+```
+
+\newpage
+
+## Train vs test plot
+
+This scatter plot tackles the issue of the overfitting, and compares large amounts of models at once. On the x axis we provide the metrics value evaluated on the training dataset, whereas on the y axis we have the same for the testing dataset. Models performance is assessed in two ways. Firstly, we want the model to have as small value as possible on the testing dataset (so we want it to be lower than other models). Secondly, we want to choose the model which is close to the x = y line, because it means that the model is not overfitted, so it generalizes better. In most cases we want to chose the model that is less overfitted, even though it has worse performance.
+
+```{r train vs test plot, out.width = '100%'}
+plot(train_output, models = 5, type = 'train-test', metric = 'accuracy') 
+```
+
+\newpage
+
+# Plots for the best models
+
+## ROC
+
+A ROC curve (receiver operating characteristic curve) is a graph showing the performance of a classification model at all classification thresholds. This curve plots two parameters: True Positive Rate (TPR/Sensitivity = $\frac{TP}{TP + FN}$), and True Negative Rate (TNR/Specificity = $\frac{TN}{TN + FP}$). A ROC curve plots TPR vs. TNR at different classification thresholds. Lowering the classification threshold classifies (probability that the prediction is classified as positive) more items as positive, thus increasing both False Positives (FP) and True Positives (TP). AUC stands for "Area under the ROC Curve." That is, AUC measures the entire two-dimensional area underneath the entire ROC curve (think integral calculus) from (1, 0) to (0, 1). The greater the value, the better the model distinguishes between the two classes.
+
+```{r auc roc, fig.width = 10, fig.height = 6}
+plot(train_output, models = NULL, type = 'roc', metric = 'accuracy')
+```
+
+\newpage
+
+## Confusion matrix
+
+The confusion matrix is a simple way to to visualize which types of errors are made by the model. The plot below presents us the raw values of TP (x = 1, y = 1; True Positive), FP (x = 0, y = 1; False Positive), TN (x = 0, y = 0; True Negative), and FN (x = 1, y = 0; False Negative). Thanks to this visualization we can ex. see if our model has a tendency to predict mostly one class.
+
+```{r confusion matrix, out.width = "100%"}
+plot(train_output, models = NULL, type = 'confusion-matrix', metric = 'accuracy')
+```
+
+\newpage
+
+## Feature Importance
+
+The final visualization presents us with the feature importance plot which lets us understand what's happening inside the best model evaluated on validation set. Feature Importance (FI) shows us the most important variables for the model, and the bigger the absolute value, the more important a variable is. Large FI values for a feature indicate that if we permute the values for the column randomly, it changes the final outcomes drastically.
+
+```{r feature_importance}
+engine <- NULL
+if (grepl('ranger', params$train_output$score_valid$name[1])) {
+  engine <- c('ranger')
+} else if (grepl('xgboost', params$train_output$score_valid$name[1])) {
+  engine <- c('xgboost')
+} else if (grepl('decision_tree', params$train_output$score_valid$name[1])) {
+  engine <- c('decision_tree')
+} else if (grepl('lightgbm', params$train_output$score_valid$name[1])) {
+  engine <- c('lightgbm')
+} else if (grepl('catboost', params$train_output$score_valid$name[1])) {
+  engine <- c('catboost')
+}
+
+if (engine != c('catboost') && !is.null(engine)) { # For catboost there is an error with DALEX::model_parts().
+  draw_feature_importance(params$train_output$models_list[[out_clf$score_valid$name[1]]], 
+                          params$train_output$valid_data, 
+                          params$train_output$y)
+} else {
+  print('Feature importance unavailable for catboost model.')
+}
+
+```
+
+\newpage
+
+# Details about data
+
+```{r check_data, results = 'asis'}
+checked_data <- check_data(train_output$data, train_output$y, verbose = FALSE)
+for (i in 1:length(checked_data$str)) {
+  cat(checked_data$str[i])
+  cat('\n')
+}
+```

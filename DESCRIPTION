@@ -1,13 +1,13 @@
 Package: forester
 Type: Package
 Title: Quick and Simple Tools for Training and Testing of Tree-based Models
-Version: 1.4.0
+Version: 1.4.1
 Authors@R:
-    c(person("Anna", "Kozak", role = c("aut", "cre"), email = "anna1993kozak@gmail.com"),
-    person("Hubert", "Ruczyński", role = c("aut"), email = "hruczynski21@interia.pl"),
+    c(person("Hubert", "Ruczyński", role = c("aut", "cre"), email = "hruczynski21@interia.pl"),
+    person("Anna", "Kozak", role = c("aut", "ths"), email = "anna1993kozak@gmail.com"),
     person("Patryk", "Słowakiewicz", role = c("aut"), email = "slowakiewiczpatryk@outlook.com"),
     person("Adrianna", "Grudzień", role = c("aut"), email = "grudziena@outlook.com"),
-    person("Przemysław", "Biecek", role = c("aut"), email = "przemyslaw.biecek@gmail.com"))
+    person("Przemysław", "Biecek", role = c("aut", "ths"), email = "przemyslaw.biecek@gmail.com"))
 Description: Extendable set of tools to facilitate training, tuning and testing 
     of tree-based models.
     Designed to quickly produce a good baseline model, that can be further tuned manually.
@@ -40,7 +40,7 @@ Imports:
     tibble,
     crayon,
     VIM,
-    arules
+    patchwork
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
@@ -56,9 +56,11 @@ Suggests:
     parallel,
     rmcfs,
     varrank,
+    arules,
     SurvMetrics,
     survival,
-    randomForestSRC
+    randomForestSRC,
+    sivs
 Config/testthat/edition: 3
 VignetteBuilder:
     knitr

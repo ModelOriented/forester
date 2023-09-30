@@ -1,5 +1,4 @@
 test_that('test-check_data', {
-  data('peakVO2')
   df_iris   <- iris[1:100, ]
   df_lisbon <- lisbon
   df_compas <- compas
@@ -119,6 +118,9 @@ test_that('test-check_data', {
 
 
   # Survival analysis.
+  library(randomForestSRC)
+  data('peakVO2')
+
   df_peak     <- peakVO2
   time_peak   <- 'ttodead'
   status_peak <- 'died'

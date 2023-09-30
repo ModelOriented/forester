@@ -264,6 +264,7 @@ train <- function(data,
                              predict = TRUE, split_data$train)
   valid_data <- prepare_data(split_data$valid, y, time, status,engine,
                              predict = TRUE, split_data$train)
+
   # For creating VS plot and predicting on train (catboost, lgbm).
   raw_train  <- prepare_data(split_data$train, y, time, status,engine,
                              predict = TRUE, split_data$train)
@@ -272,9 +273,6 @@ train <- function(data,
 
   model_basic    <- train_models(train_data, y, time, status, engine, type)
   verbose_cat(crayon::green('\u2714'), 'Models with default parameters successfully trained. \n', verbose = verbose)
-
-  # preds_basic    <- predict_models_all(model_basic, test_data, y, type)
-  # verbose_cat(crayon::green('\u2714'), 'Predicted successfully. \n', verbose = verbose)
 
   model_random   <- random_search(train_data,
                                   test_data,
@@ -288,15 +286,6 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Models optimized with random search successfully trained. \n', verbose = verbose)
 
-  # preds_random <- NULL
-  #
-  # if (!is.null(model_random)) {
-  #   preds_random <- predict_models_all(model_random$models,
-  #                                      test_data,
-  #                                      y,
-  #                                      type = type)
-  # }
-
   model_bayes <- train_models_bayesopt(train_data,
                                        y         = y,
                                        time      = time,
@@ -309,14 +298,9 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Models optimized with Bayesian Optimization successfully trained. \n', verbose = verbose)
 
-  # preds_bayes <- NULL
-  # if (!is.null(model_bayes)) {
-  #   preds_bayes <- predict_models_all(model_bayes, test_data, y, type)
-  # }
 
   models_all <- c(model_basic, model_random$models, model_bayes)
   engine_all <- c(engine, model_random$engine, engine)
-  # preds_all  <- c(preds_basic, preds_random, preds_bayes)
 
   if (type != 'survival') {
     tuning <- c(rep('basic', length(engine)),
@@ -327,10 +311,6 @@ train <- function(data,
                 rep('random_search', length(model_random$engine)),
                 'bayes_opt')
   }
-
-
-  # predictions_all  <- predict_models_all(models_all, test_data, y, type)
-  # verbose_cat(crayon::green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
 
 
   predict_train    <- predict_models_all(models_all, raw_train,  y, type = type)
@@ -489,8 +469,7 @@ train <- function(data,
   verbose_cat(crayon::green('\u2714'), 'Created human-readable labels for observables and predictions. \n', verbose = verbose)
 
   if (type == 'binary_clf') {
-    return(
-      list(
+    binary_clf_models <- list(
         data                    = data,
         y                       = y,
         time                    = time,
@@ -546,10 +525,10 @@ train <- function(data,
         train_observed_labels   = train_observed_labels,
         valid_observed_labels   = valid_observed_labels
       )
-    )
+    class(binary_clf_models) <- c('binary_clf', 'list')
+    return(binary_clf_models)
   } else {
-    return(
-      list(
+    other_models <- list(
         type                    = type,
         deleted_columns         = preprocessed_data$rm_colnames,
         preprocessed_data       = preprocessed_data$data,
@@ -593,6 +572,11 @@ train <- function(data,
         train_observed          = train_observed,
         valid_observed          = valid_observed
       )
-    )
+    if (type == 'regression') {
+      class(other_models) <- c('regression', 'list')
+    } else if (type == 'survival') {
+      class(other_models) <- c('survival', 'list')
+    }
+    return(other_models)
   }
 }

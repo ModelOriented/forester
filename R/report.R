@@ -5,7 +5,9 @@
 #' @param output_dir The path where the report will be saved, by default - the working
 #' directory.
 #' @param train_output The output of `train()` function.
-#' @param output_file The otput file name.
+#' @param output_file The output file name.
+#' @param metric A character string describing the main metric for sorting the
+#' ranked list of models.
 #'
 #' @return Report generated to the local file. It contains table with
 #' metrics for every model, scatter plot for chosen metric
@@ -13,15 +15,20 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(forester)
 #' data('lisbon')
-#' train_output <- train(lisbon, 'Price')
-#' report(train_output, 'regression.pdf')
-report <- function(train_output,
-                   output_file   = NULL,
-                   output_format = 'pdf_document',
-                   output_dir    = getwd(),
-                   check_data    = TRUE) {
+#' train_output <- train(lisbon, 'Price', random_evals = 10, bayes_iter = 1)
+#' report(train_output)
+#' }
+
+report <-
+  function(train_output,
+           output_file   = NULL,
+           output_format = 'pdf_document',
+           output_dir    = getwd(),
+           check_data    = TRUE,
+           metric        = NULL) {
 
     tryCatch({
       find.package('tinytex')
@@ -34,7 +41,17 @@ report <- function(train_output,
       return(NULL)
     })
 
-    input_file_path <- system.file('rmd', 'report.Rmd', package = 'forester')
+    if (train_output$type == 'regression') {
+      input_file_path <- system.file('rmd', 'report_regression.Rmd', package = 'forester')
+    } else if (train_output$type == 'binary_clf') {
+      input_file_path <- system.file('rmd', 'report_binary.Rmd', package = 'forester')
+    } else if (train_output$type == 'survival') {
+      verbose_cat(crayon::red('\u2716'), ' The report for survival analysis task is currently unavailable. \n\n')
+      stop()
+    } else {
+      verbose_cat(crayon::red('\u2716'), ' The report for this task is currently unavailable. \n\n')
+      stop()
+    }
 
     rmarkdown::render(
       input         = input_file_path,

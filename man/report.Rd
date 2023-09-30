@@ -9,13 +9,14 @@ report(
   output_file = NULL,
   output_format = "pdf_document",
   output_dir = getwd(),
-  check_data = TRUE
+  check_data = TRUE,
+  metric = NULL
 )
 }
 \arguments{
 \item{train_output}{The output of `train()` function.}
 
-\item{output_file}{The otput file name.}
+\item{output_file}{The output file name.}
 
 \item{output_format}{Format of the output file ('pdf_document', 'html_document' or both).}
 
@@ -23,6 +24,9 @@ report(
 directory.}
 
 \item{check_data}{If TRUE, prints results of `check_data()` function.}
+
+\item{metric}{A character string describing the main metric for sorting the
+ranked list of models.}
 }
 \value{
 Report generated to the local file. It contains table with
@@ -33,8 +37,10 @@ and result of `check_data()` function - about used data.
 Generate report after training
 }
 \examples{
+\dontrun{
 library(forester)
 data('lisbon')
-train_output <- train(lisbon, 'Price')
-report(train_output, 'regression.pdf')
+train_output <- train(lisbon, 'Price', random_evals = 10, bayes_iter = 1)
+report(train_output)
+}
 }
