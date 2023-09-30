@@ -9,9 +9,7 @@ report(
   output_file = NULL,
   output_format = "pdf_document",
   output_dir = getwd(),
-  check_data = TRUE,
-  n_models = 10,
-  metric = NULL
+  check_data = TRUE
 )
 }
 \arguments{

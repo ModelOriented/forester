@@ -13,16 +13,14 @@
 #' @return a ggplot2 object
 #'
 #' @examples
-#'
 #' library('forester')
 #' data('lisbon')
 #'
-#' train_output <- train(lisbon, 'Price', baye_iter = 0, random_evals = 0)
-#'
+#' train_output <- train(lisbon, 'Price', bayes_iter = 0, random_evals = 0)
 #' plot(train_output)
 #'
-#'
 #' @import ggplot2
+#' @import patchwork
 #' @export
 
 
@@ -93,10 +91,10 @@ plot.regression <- function(train_output,
       theme_forester() +
       coord_flip() +
       labs(
-        title = 'Distribution of residuals',
+        title    = 'Distribution of residuals',
         subtitle = paste('for ', paste(models_names, collapse = ', ')),
-        y = 'Residuals',
-        x = ''
+        y        = 'Residuals',
+        x        = ''
       )
   }
 
@@ -131,7 +129,7 @@ plot.regression <- function(train_output,
     value_table      <- rbind(value_table_train, value_table_test)
     value_table$data <- factor(value_table$data, levels = c('train', 'test'))
 
-    p <- ggplot(value_table, aes(x = observed, y = prediction)) +
+    p <- ggplot(value_table, aes(x = value_table$observed, y = value_table$prediction)) +
       geom_point(color = colors_discrete_forester(1)) +
       geom_abline(intercept = 0, slope = 1) +
       facet_grid(model ~ data, scales = "free_y") +
@@ -147,7 +145,7 @@ plot.regression <- function(train_output,
 
   if(type == 'train-test') {
 
-    train_score <- train_output$score_train[train_output$score_train$name %in% models_names, ] #na razie valid, bo nie ma train w tabeli
+    train_score <- train_output$score_train[train_output$score_train$name %in% models_names, ]
     names(train_score)[which(names(train_score) %in% c('rmse', 'mse', 'r2', 'mae'))] <-
       paste0(names(train_score)[which(names(train_score) %in% c('rmse', 'mse', 'r2', 'mae'))], '_train')
 
@@ -168,7 +166,7 @@ plot.regression <- function(train_output,
         y     = 'Test',
         color = 'Engine'
       ) +
-      ggrepel::geom_text_repel(aes(label = name), show.legend = FALSE) +
+      ggrepel::geom_text_repel(aes(label = score$name), show.legend = FALSE) +
       scale_x_continuous(limits = c(min(score[paste0(metric, '_train')], score[paste0(metric, '_test')]),
                                     max(score[paste0(metric, '_train')], score[paste0(metric, '_test')]))) +
       scale_y_continuous(limits = c(min(score[paste0(metric, '_train')], score[paste0(metric, '_test')]),

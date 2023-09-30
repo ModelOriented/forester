@@ -25,13 +25,10 @@ a ggplot2 object
 Function plot.regression plots measure of quality of regression models.
 }
 \examples{
-
 library('forester')
 data('lisbon')
 
-train_output <- train(lisbon, 'Price', baye_iter = 0, random_evals = 0)
-
+train_output <- train(lisbon, 'Price', bayes_iter = 0, random_evals = 0)
 plot(train_output)
-
 
 }

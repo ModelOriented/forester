@@ -39,14 +39,14 @@ draw_confusion_matrix <- function(best_models, test_data, observed) {
 
   ggplot2::ggplot(data =  df, mapping = ggplot2::aes(x = Target, y = Prediction)) +
     ggplot2::geom_tile(ggplot2::aes(fill = Y), colour = "white") +
-    ggplot2::geom_text(ggplot2::aes(label = sprintf("%1.0f", Y)), vjust = 1, colour = forester_palette()[[5]], size = 5) +
-    ggplot2::scale_fill_gradient(low = forester_palette()[[2]], high = forester_palette()[[3]]) +
+    ggplot2::geom_text(ggplot2::aes(label = sprintf("%1.0f", Y)), vjust = 1, colour = colors_discrete_forester()[[5]], size = 5) +
+    ggplot2::scale_fill_gradient(low = colors_discrete_forester()[[2]], high = colors_discrete_forester()[[3]]) +
     ggplot2::theme_minimal() +
     ggplot2::ggtitle('Confusion Matrix') +
     ggplot2::theme(legend.position = 'none',
-                   plot.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[5]], size = 20),
-                   axis.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[5]], size = 16),
-                   axis.text  = ggplot2::element_text(colour = forester_palette()[[5]], size = 10))
+                   plot.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[5]], size = 20),
+                   axis.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[5]], size = 16),
+                   axis.text  = ggplot2::element_text(colour = colors_discrete_forester()[[5]], size = 10))
 }
 
 
@@ -70,13 +70,13 @@ draw_roc_plot <- function(best_models, test_data, observed) {
   rocobj <- pROC::roc(observed, preds)
   auc    <- round(pROC::auc(observed, preds), 4)
 
-  return(pROC::ggroc(rocobj, colour = forester_palette()[[3]], size = 2) +
+  return(pROC::ggroc(rocobj, colour = colors_discrete_forester()[[3]], size = 2) +
            ggplot2::ggtitle(paste0('ROC Curve ', '(AUC = ', auc, ')')) +
            ggplot2::theme_minimal() +
            ggplot2::theme(legend.position = 'none',
-                          plot.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[5]], size = 20),
-                          axis.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[5]], size = 16),
-                          axis.text  = ggplot2::element_text(colour = forester_palette()[[5]], size = 10)))
+                          plot.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[5]], size = 20),
+                          axis.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[5]], size = 16),
+                          axis.text  = ggplot2::element_text(colour = colors_discrete_forester()[[5]], size = 10)))
 }
 
 
@@ -179,25 +179,25 @@ draw_radar_plot <- function(score_frame, type) {
                    gridline.min.linetype    = 2,
                    gridline.mid.linetype    = 2,
                    gridline.max.linetype    = 2,
-                   gridline.min.colour      = forester_palette()[[5]],
-                   gridline.mid.colour      = forester_palette()[[5]],
-                   gridline.max.colour      = forester_palette()[[5]],
+                   gridline.min.colour      = colors_discrete_forester()[[5]],
+                   gridline.mid.colour      = colors_discrete_forester()[[5]],
+                   gridline.max.colour      = colors_discrete_forester()[[5]],
                    grid.label.size          = 5,
-                   axis.line.colour         = forester_palette()[[5]],
+                   axis.line.colour         = colors_discrete_forester()[[5]],
                    axis.label.size          = 2.5,
                    axis.label.offset        = 1.15,
                    group.line.width         = 1.5,
                    group.point.size         = 4,
-                   group.colours            = unname(forester_palette()),
+                   group.colours            = unname(colors_discrete_forester()),
                    legend.title             = 'Metric',
                    plot.title               = title,
                    legend.text.size         = 10,
                    legend.position          = 'right',
                    background.circle.colour = 'white') +
-    ggplot2::theme(plot.title   = ggplot2::element_text(face = 'bold', colour = forester_palette()[[5]], size = 20),
-                   legend.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[5]], size = 16),
-                   legend.text  = ggplot2::element_text(colour = forester_palette()[[5]], size = 16),
-                   axis.title   = ggplot2::element_text(colour = forester_palette()[[5]], size = 10)) +
+    ggplot2::theme(plot.title   = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[5]], size = 20),
+                   legend.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[5]], size = 16),
+                   legend.text  = ggplot2::element_text(colour = colors_discrete_forester()[[5]], size = 16),
+                   axis.title   = ggplot2::element_text(colour = colors_discrete_forester()[[5]], size = 10)) +
     ggplot2::coord_fixed()
 }
 
@@ -224,15 +224,15 @@ draw_boxplot <- function(observed, predictions, models) {
   df <- data.frame(Residuals = unlist(residuals_table), Model = names(models), Nr = length(models):1)
 
   ggplot2::ggplot(df, ggplot2::aes(y = stats::reorder(Model, Nr), x = Residuals)) +
-    ggplot2::geom_boxplot(fill = forester_palette()[[3]]) +
+    ggplot2::geom_boxplot(fill = colors_discrete_forester()[[3]]) +
     ggplot2::theme_minimal() +
     ggplot2::ylab('Models') +
-    ggplot2::scale_fill_manual(values = unname(forester_palette())) +
+    ggplot2::scale_fill_manual(values = unname(colors_discrete_forester())) +
     ggplot2::ggtitle('Combined Models Residuals Plot') +
     ggplot2::theme(legend.position = 'none',
-                   plot.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 20),
-                   axis.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 16),
-                   axis.text  = ggplot2::element_text(colour = forester_palette()[[5]], size = 10))
+                   plot.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 20),
+                   axis.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 16),
+                   axis.text  = ggplot2::element_text(colour = colors_discrete_forester()[[5]], size = 10))
 }
 
 
@@ -251,30 +251,30 @@ draw_scatterplot <- function(train_observed, train_predictions, test_observed, t
   df_test    <- data.frame(Observed = test_observed, Prediction = test_predictions)
 
   plt1 <- ggplot2::ggplot(df_train, ggplot2::aes(x = Observed, y = Prediction)) +
-    ggplot2::geom_point(colour = forester_palette()[[1]]) +
+    ggplot2::geom_point(colour = colors_discrete_forester()[[1]]) +
     ggplot2::ggtitle('Observed vs Predicted values for \nbest model train subset') +
     ggplot2::xlim(0,max(unlist(train_predictions), unlist(train_observed))) +
     ggplot2::ylim(0,max(unlist(train_predictions), unlist(train_observed))) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, colour = forester_palette()[[5]], size = 0.5, linetype = 'dashed') +
+    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], size = 0.5, linetype = 'dashed') +
     ggplot2::theme_minimal() +
     ggplot2::coord_fixed() +
     ggplot2::theme(legend.position = 'none',
-                   plot.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 16, hjust = 0.5),
-                   axis.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 14),
-                   axis.text  = ggplot2::element_text(colour = forester_palette()[[5]], size = 10))
+                   plot.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 16, hjust = 0.5),
+                   axis.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 14),
+                   axis.text  = ggplot2::element_text(colour = colors_discrete_forester()[[5]], size = 10))
 
   plt2 <- ggplot2::ggplot(df_test, ggplot2::aes(x = Observed, y = Prediction)) +
-    ggplot2::geom_point(colour = forester_palette()[[1]]) +
+    ggplot2::geom_point(colour = colors_discrete_forester()[[1]]) +
     ggplot2::ggtitle('Observed vs Predicted values for \nbest model test subset') +
     ggplot2::xlim(0,max(unlist(test_predictions), unlist(test_observed))) +
     ggplot2::ylim(0,max(unlist(test_predictions), unlist(test_observed))) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, colour = forester_palette()[[5]], size = 0.5, linetype = 'dashed') +
+    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], size = 0.5, linetype = 'dashed') +
     ggplot2::theme_minimal() +
     ggplot2::coord_fixed() +
     ggplot2::theme(legend.position = 'none',
-                   plot.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 16, hjust = 0.5),
-                   axis.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 14),
-                   axis.text  = ggplot2::element_text(colour = forester_palette()[[5]], size = 10))
+                   plot.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 16, hjust = 0.5),
+                   axis.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 14),
+                   axis.text  = ggplot2::element_text(colour = colors_discrete_forester()[[5]], size = 10))
 
   return(list(
     plt1 = plt1,
@@ -335,17 +335,17 @@ draw_rmse_plot <- function(train_observed, train_predictions, test_observed, tes
                              box.padding = 0.7,
                              seed = 42,
                              verbose = FALSE) +
-    ggplot2::scale_color_manual(values = unname(forester_palette())) +
+    ggplot2::scale_color_manual(values = unname(colors_discrete_forester())) +
     ggplot2::ggtitle('RMSE Train vs Test plot') +
     ggplot2::xlim(min(unlist(train_rmse), unlist(test_rmse)),max(unlist(train_rmse), unlist(test_rmse))) +
     ggplot2::ylim(min(unlist(train_rmse), unlist(test_rmse)),max(unlist(train_rmse), unlist(test_rmse))) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, colour = forester_palette()[[5]], size = 0.5, linetype = 'dashed') +
+    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], size = 0.5, linetype = 'dashed') +
     ggplot2::theme_minimal() +
-    ggplot2::theme(plot.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 20),
-                   axis.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 14),
-                   axis.text  = ggplot2::element_text(colour = forester_palette()[[5]], size = 10),
-                   legend.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[5]], size = 16),
-                   legend.text = ggplot2::element_text(colour = forester_palette()[[1]], size = 10))
+    ggplot2::theme(plot.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 20),
+                   axis.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 14),
+                   axis.text  = ggplot2::element_text(colour = colors_discrete_forester()[[5]], size = 10),
+                   legend.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[5]], size = 16),
+                   legend.text = ggplot2::element_text(colour = colors_discrete_forester()[[1]], size = 10))
 
 }
 #' Draw Feature Importance plot
@@ -362,19 +362,12 @@ draw_rmse_plot <- function(train_observed, train_predictions, test_observed, tes
 draw_feature_importance <- function(best_models, test_data, y) {
   explainer <- explain(best_models[[1]][1], test_data, y)
 
-  plt <- graphics::plot(DALEX::model_parts(explainer = explainer[[1]]), max_vars = 8, show_boxplots = TRUE)
+  plt <- graphics::plot(DALEX::model_parts(explainer = explainer), max_vars = 8, show_boxplots = TRUE)
   plt <- plt +
-    ggplot2::scale_color_manual(values = forester_palette()[[3]]) +
-    ggplot2::theme(plot.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 20),
-                   line = ggplot2::element_line(color = forester_palette()[[2]]),
-                   plot.subtitle = ggplot2::element_text(colour = forester_palette()[[1]], size = 12),
-                   strip.text = ggplot2::element_text(colour = forester_palette()[[1]], size = 12, hjust = 0),
-                   axis.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[1]], size = 14),
-                   axis.text  = ggplot2::element_text(colour = forester_palette()[[5]], size = 10),
-                   legend.title = ggplot2::element_text(face = 'bold', colour = forester_palette()[[5]], size = 16),
-                   legend.text = ggplot2::element_text(colour = forester_palette()[[1]], size = 10))
+    scale_color_manual(values = colors_discrete_forester(5)[1]) +
+    theme_forester()
 
-  plt$layers[[3]]$aes_params$fill <- forester_palette()[[1]]
-  plt$layers[[3]]$aes_params$colour <- forester_palette()[[1]]
+  plt$layers[[3]]$aes_params$fill   <- colors_discrete_forester(5)[3]
+  plt$layers[[3]]$aes_params$colour <- colors_discrete_forester(5)[3]
   return(plt)
 }
