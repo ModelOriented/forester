@@ -2,9 +2,14 @@
 #'
 #' @param data A data source, that is one the of major R formats: data.table, data.frame,
 #' matrix, and so on.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param time A string that indicates a time column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or pair: time, status can be used. By default NULL.
 #' @param type A string that determines if Machine Learning task is the
-#' `binary_clf` or `regression`.
+#' `binary_clf`, `regression`, or `survival`.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
@@ -15,9 +20,9 @@
 #' \item \code{`bin_labels`} The text labels before target binarization.
 #' }
 #' @export
-preprocessing <- function(data, y, type, verbose = FALSE) {
+preprocessing <- function(data, y = NULL, time = NULL, status = NULL, type, verbose = FALSE) {
   pre_data   <- pre_rm_static_cols(data, y)
-  binary     <- binarize_target(pre_data, y)
+  binary     <- binarize_target(pre_data, y, status)
   pre_data   <- binary$bin_data
   bin_labels <- binary$labels
   pre_data   <- manage_missing(pre_data, y)
@@ -32,6 +37,8 @@ preprocessing <- function(data, y, type, verbose = FALSE) {
 
   if (type == 'binary_clf') {
     pre_data[, y] <- as.factor(pre_data[, y])
+  } else if (type == 'survival') {
+    pre_data[, status] <- as.factor(pre_data[, status])
   }
 
   return(
@@ -51,9 +58,6 @@ preprocessing <- function(data, y, type, verbose = FALSE) {
 #'
 #' @return A dataset with deleted unwanted columns.
 #' @export
-#'
-#' @examples
-#' prep_data <- pre_rm_static_cols(compas,'Two_yr_Recidivism')
 pre_rm_static_cols <- function(data, y) {
   del <- c()
   for (i in 1:ncol(data)) {
@@ -73,15 +77,18 @@ pre_rm_static_cols <- function(data, y) {
 #'
 #' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix, and so on.
-#' @param y A string that indicates a target column name.
+#' @param y A string that indicates a target column name for regression or classification.
+#' Either y, or status can be used. By default NULL.
+#' @param status A string that indicates a status column name for survival analysis task.
+#' Either y, or status can be used. By default NULL.
 #'
 #' @return A dataset with binarized target column.
 #' @export
-#'
-#' @examples
-#' binarize_target(iris[1:100, ], 'Species')
-binarize_target <- function(data, y) {
-  if (guess_type(data, y) == 'binary_clf') {
+binarize_target <- function(data, y = NULL, status = NULL) {
+  if (guess_type(data, y) %in% c('binary_clf', 'survival')) {
+    if (is.null(y)) {
+      y <- status
+    }
     bin_data      <- data
     data[[y]]     <- as.factor(data[[y]])
     bin_data[[y]] <- as.integer(data[[y]])

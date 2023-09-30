@@ -19,12 +19,14 @@
 #' data(lisbon)
 #' lisbon_train <- lisbon[1:200, ]
 #' lisbon_new   <- lisbon[201:246, ]
-#' out          <- train(lisbon_train, 'Price', verbose = FALSE)
+#' out          <- train(lisbon_train, 'Price', verbose = FALSE, bayes_iter = 0, random_evals = 1)
 #' preds        <- predict_new(out, lisbon_new)
 #' preds
 predict_new <- function(train_out, data, verbose = TRUE) {
   del_cols   <- train_out$deleted_columns
   y          <- train_out$y
+  time       <- train_out$time
+  status     <- train_out$status
   bin_labels <- train_out$bin_label
   engine     <- train_out$engine
   train_data <- train_out$raw_train$ranger_data
@@ -46,7 +48,11 @@ predict_new <- function(train_out, data, verbose = TRUE) {
   } else if (nrow(data) > 0) {
     verbose_cat('No imputation performed due to only one observation. If any values are missing, user has to handle them by himself. \n', verbose = verbose)
   }
-  data         <- prepare_data(data, y, engine, TRUE, train_data)
+  data         <- prepare_data(data,
+                               y       = y,
+                               engine  = engine,
+                               predict = TRUE,
+                               train   = train_data)
   preds        <- predict_models_all(model, data, y, type)
   names(preds) <- names(train_out$models_list)
 

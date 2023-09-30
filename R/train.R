@@ -8,17 +8,26 @@
 #' @param data A `data.frame` or `matrix` - data which will be
 #' used to build models. By default model will be trained
 #' on all columns in the `data`.
-#' @param y A target variable. It can be either
-#' (1) a vector of the same number of observations as `data` or
-#' (2) a character name of variable in the `data` that contains
-#' the target variable.
-#' @param type A character, one of `binary_clf`/`regression`/`guess` that
-#' sets the type of the task. If `guess` (the default option) then
+#' @param y A target variable, being a character name of variable in the `data`
+#' that contains the target variable for classification and regression tasks.
+#' By default set to NULL. If you use y, don't use time, and status, which are
+#' reserved for survival analysis.
+#' @param time A target variable, being a character name of variable in the `data`
+#' that describes the time column for survival analysis task. By default set to NULL.
+#' You have to use both time, and status together. If you use it, you cannot use y
+#' as it is reserved for classification and regression tasks.
+#' @param status A target variable, being a character name of variable in the `data`
+#' that describes the status for survival analysis task. By default set to NULL.
+#' You have to use both time, and status together. If you use it, you cannot use y
+#' as it is reserved for classification and regression tasks.
+#' @param type A character, one of `binary_clf`/`regression`/`survival`/`auto` that
+#' sets the type of the task. If `auto` (the default option) then
 #' forester will figure out `type` based on the number of unique values
-#' in the `y` variable.
+#' in the `y` variable, or the presence of time/status columns.
 #' @param engine A vector of tree-based models that shall be tested.
 #' Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
 #' All models from this vector will be trained and the best one will be returned.
+#' It doesn't matter for survival analysis.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' training process, if FALSE gives none.
 #' @param train_test_split A 3-value vector, describing the proportions of train,
@@ -53,9 +62,11 @@
 #' \itemize{
 #' \item \code{`data`} The original data.
 #' \item \code{`y`} The original target column name.
+#' \item \code{`time`} The original column name describing time for survival analysis task.
+#' \item \code{`status`} The original column name describing status for survival analysis task.
 #' \item \code{`type`} The type of the ML task. If the user did not specify a type in the
 #' input parameters, the algorithm recognizes, uses and returns the same type.
-#' It could be 'regression' or 'classification'.
+#' It could be `binary_clf`, `regression`, or `survival`.
 #'
 #' \item \code{`deleted_columns`} Column names from the original data frame that have been
 #' removed in the data preprocessing process, e.g. due to too high correlation
@@ -145,27 +156,52 @@
 #'
 #' @examples
 #' \dontrun{
+#' # Regression task example.
 #' library(forester)
 #' data('lisbon')
 #' train_output <- train(lisbon, 'Price')
 #' train_output$score_valid
+#'
+#' # Survival analysis example
+#' data('peakVO2')
+#' train_output <- train(peakVO2, time = 'ttodead', status = 'died')
+#' train_output$score_valid
 #' }
 train <- function(data,
-                  y,
-                  type = 'auto',
-                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
-                  verbose = TRUE,
+                  y                = NULL,
+                  time             = NULL,
+                  status           = NULL,
+                  type             = 'auto',
+                  engine           = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
+                  verbose          = TRUE,
                   train_test_split = c(0.6, 0.2, 0.2),
-                  split_seed = NULL,
-                  bayes_iter = 10,
-                  random_evals = 10,
-                  metrics = 'auto',
-                  sort_by = 'auto',
-                  metric_function = NULL,
-                  metric_function_name = NULL,
+                  split_seed       = NULL,
+                  bayes_iter       = 10,
+                  random_evals     = 10,
+                  metrics          = 'auto',
+                  sort_by          = 'auto',
+                  metric_function  = NULL,
+                  metric_function_name       = NULL,
                   metric_function_decreasing = TRUE,
-                  best_model_number = 5,
-                  custom_preprocessing = NULL) {
+                  best_model_number          = 5,
+                  custom_preprocessing       = NULL) {
+
+  if (is.null(y)) {
+    if (is.null(time) | is.null(status)) {
+      verbose_cat(crayon::red('\u2716'), 'Lack of target variables. Please specify',
+                  'either y (for classification or regression tasks), or time and',
+                  'status (for survival analysis). \n\n', verbose = verbose)
+      return(NULL)
+    }
+  } else {
+    if (!is.null(time) | !is.null(status)) {
+      verbose_cat(crayon::red('\u2716'), 'Provided too many targets. Please specify',
+                  'either y (for classification or regression tasks), or time and',
+                  'status (for survival analysis). \n\n', verbose = verbose)
+      return(NULL)
+    }
+  }
+
   tryCatch({
     if ('catboost' %in% engine) {
       find.package('catboost')
@@ -188,8 +224,8 @@ train <- function(data,
   if (type == 'auto') {
     type <- guess_type(data, y)
     verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
-  } else if (!type %in% c('regression', 'binary_clf')) {
-    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, and `auto` for automatic task identification \n\n', verbose = verbose)
+  } else if (!type %in% c('regression', 'binary_clf', 'survival')) {
+    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival` and `auto` for automatic task identification \n\n', verbose = verbose)
   } else {
     verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
   }
@@ -197,39 +233,44 @@ train <- function(data,
 
 
   if (is.null(custom_preprocessing)) {
-    check_report              <- check_data(data, y, verbose)
-    preprocessed_data         <- preprocessing(data, y, type)
+    check_report              <- check_data(data, y, time, status, verbose)
+    preprocessed_data         <- preprocessing(data, y, time, status, type)
     preprocessed_data$rm_rows <- NULL
     verbose_cat(crayon::green('\u2714'), 'Data preprocessed with basic preprocessing. \n', verbose = verbose)
   } else {
-    check_report      <- check_data(custom_preprocessing$data, y, verbose)
+    check_report      <- check_data(custom_preprocessing$data, y, time, status, verbose)
     preprocessed_data <- custom_preprocessing
     verbose_cat(crayon::green('\u2714'), 'Imported preprocessed data from custom_preprocessing(). \n', verbose = verbose)
   }
 
-  # Data splitting and recording observed variables in each dataset.
-  split_data <- train_test_balance(preprocessed_data$data, y, balance = TRUE,
+  # Data splitting and recording observed variables in each dataset with distinction
+  # between survival analysis and other tasks.
+  if (!is.null(y)) {
+    target <- y
+  } else {
+    target <- status
+  }
+  split_data <- train_test_balance(preprocessed_data$data, target, balance = TRUE,
                                    fractions = train_test_split, seed = split_seed)
 
-  train_observed <- split_data$train[[y]]
-  test_observed  <- split_data$test[[y]]
-  valid_observed <- split_data$valid[[y]]
+  train_observed <- split_data$train[[target]]
+  test_observed  <- split_data$test[[target]]
+  valid_observed <- split_data$valid[[target]]
 
   verbose_cat(crayon::green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
 
-  train_data <- prepare_data(split_data$train, y, engine)
-
-  test_data  <- prepare_data(split_data$test, y, engine, predict = TRUE,
-                             split_data$train)
-  valid_data <- prepare_data(split_data$valid, y, engine, predict = TRUE,
-                             split_data$train)
+  train_data <- prepare_data(split_data$train, y, time, status, engine)
+  test_data  <- prepare_data(split_data$test,  y, time, status,engine,
+                             predict = TRUE, split_data$train)
+  valid_data <- prepare_data(split_data$valid, y, time, status,engine,
+                             predict = TRUE, split_data$train)
   # For creating VS plot and predicting on train (catboost, lgbm).
-  raw_train  <- prepare_data(split_data$train, y, engine, predict = TRUE,
-                             split_data$train)
+  raw_train  <- prepare_data(split_data$train, y, time, status,engine,
+                             predict = TRUE, split_data$train)
 
   verbose_cat(crayon::green('\u2714'), 'Correct formats prepared. \n', verbose = verbose)
 
-  model_basic    <- train_models(train_data, y, engine, type)
+  model_basic    <- train_models(train_data, y, time, status, engine, type)
   verbose_cat(crayon::green('\u2714'), 'Models with default parameters successfully trained. \n', verbose = verbose)
 
   # preds_basic    <- predict_models_all(model_basic, test_data, y, type)
@@ -238,6 +279,8 @@ train <- function(data,
   model_random   <- random_search(train_data,
                                   test_data,
                                   y         = y,
+                                  time      = time,
+                                  status    = status,
                                   engine    = engine,
                                   type      = type,
                                   max_evals = random_evals,
@@ -255,12 +298,14 @@ train <- function(data,
   # }
 
   model_bayes <- train_models_bayesopt(train_data,
-                                       y,
-                                       test_data,
-                                       engine = engine,
-                                       type = type,
-                                       iters.n = bayes_iter,
-                                       verbose = verbose)
+                                       y         = y,
+                                       time      = time,
+                                       status    = status,
+                                       test_data = test_data,
+                                       engine    = engine,
+                                       type      = type,
+                                       iters.n   = bayes_iter,
+                                       verbose   = verbose)
 
   verbose_cat(crayon::green('\u2714'), 'Models optimized with Bayesian Optimization successfully trained. \n', verbose = verbose)
 
@@ -273,16 +318,23 @@ train <- function(data,
   engine_all <- c(engine, model_random$engine, engine)
   # preds_all  <- c(preds_basic, preds_random, preds_bayes)
 
-  tuning <- c(rep('basic', length(engine)),
-              rep('random_search', length(model_random$engine)),
-              rep('bayes_opt', length(engine)))
+  if (type != 'survival') {
+    tuning <- c(rep('basic', length(engine)),
+                rep('random_search', length(model_random$engine)),
+                rep('bayes_opt', length(engine)))
+  } else {
+    tuning <- c('basic',
+                rep('random_search', length(model_random$engine)),
+                'bayes_opt')
+  }
+
 
   # predictions_all  <- predict_models_all(models_all, test_data, y, type)
   # verbose_cat(crayon::green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
 
 
-  predict_train    <- predict_models_all(models_all, raw_train, y, type = type)
-  predict_test     <- predict_models_all(models_all, test_data, y, type = type)
+  predict_train    <- predict_models_all(models_all, raw_train,  y, type = type)
+  predict_test     <- predict_models_all(models_all, test_data,  y, type = type)
   predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
 
   verbose_cat(crayon::green('\u2714'), 'Created the predictions for all models. \n', verbose = verbose)
@@ -290,7 +342,10 @@ train <- function(data,
   score_train <- score_models(models_all,
                               predict_train,
                               train_data$ranger_data[[y]],
+                              train_data,
                               type,
+                              time,
+                              status,
                               metrics = metrics,
                               sort_by = sort_by,
                               metric_function = metric_function,
@@ -302,7 +357,10 @@ train <- function(data,
   score_test  <- score_models(models_all,
                               predict_test,
                               test_data$ranger_data[[y]],
+                              test_data,
                               type,
+                              time,
+                              status,
                               metrics = metrics,
                               sort_by = sort_by,
                               metric_function = metric_function,
@@ -314,7 +372,10 @@ train <- function(data,
   score_valid <- score_models(models_all,
                               predict_valid,
                               valid_data$ranger_data[[y]],
+                              valid_data,
                               type,
+                              time,
+                              status,
                               metrics = metrics,
                               sort_by = sort_by,
                               metric_function = metric_function,
@@ -326,15 +387,15 @@ train <- function(data,
   verbose_cat(crayon::green('\u2714'), 'Created the score boards for all models. \n', verbose = verbose)
 
   best_models_on_valid   <- choose_best_models(models_all, engine_all, score_valid, best_model_number)
-  predictions_best_train <- predict_models_all(best_models_on_valid$models, raw_train, y, type = type)
-  predictions_best_test  <- predict_models_all(best_models_on_valid$models, test_data, y, type = type)
+  predictions_best_train <- predict_models_all(best_models_on_valid$models, raw_train,  y, type = type)
+  predictions_best_test  <- predict_models_all(best_models_on_valid$models, test_data,  y, type = type)
   predictions_best_valid <- predict_models_all(best_models_on_valid$models, valid_data, y, type = type)
 
   verbose_cat(crayon::green('\u2714'), 'Created the predctions for best models. \n', verbose = verbose)
 
   # Providing the original labels to the target.
   if (type == 'binary_clf') {
-    test_observed  <- as.numeric(test_observed) - 1 # [0, 1]
+    test_observed  <- as.numeric(test_observed)  - 1
     train_observed <- as.numeric(train_observed) - 1
     valid_observed <- as.numeric(valid_observed) - 1
 
@@ -432,6 +493,8 @@ train <- function(data,
       list(
         data                    = data,
         y                       = y,
+        time                    = time,
+        status                  = status,
         type                    = type,
 
         deleted_columns         = preprocessed_data$rm_colnames,
@@ -496,6 +559,8 @@ train <- function(data,
         models_list             = models_all,
         data                    = data,
         y                       = y,
+        time                    = time,
+        status                  = status,
 
         raw_train               = raw_train,
         check_report            = check_report$str,

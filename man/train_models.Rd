@@ -4,18 +4,26 @@
 \alias{train_models}
 \title{Train models from given engines}
 \usage{
-train_models(data, y, engine, type)
+train_models(data, y = NULL, time = NULL, status = NULL, engine, type)
 }
 \arguments{
 \item{data}{A training data for models created by `prepare_data()` function.}
 
-\item{y}{A string that indicates a target column name.}
+\item{y}{A string that indicates a target column name for regression or classification.
+Either y, or pair: time, status can be used. By default NULL.}
+
+\item{time}{A string that indicates a time column name for survival analysis task.
+Either y, or pair: time, status can be used. By default NULL.}
+
+\item{status}{A string that indicates a status column name for survival analysis task.
+Either y, or pair: time, status can be used. By default NULL.}
 
 \item{engine}{A vector of tree-based models that shall be created. Possible
-values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`.}
+values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
+matter for survival analysis.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`binary_clf` or `regression`.}
+`binary_clf`, `regression`, or `survival`.}
 }
 \value{
 A list of models for every engine.

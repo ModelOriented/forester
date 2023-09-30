@@ -8,38 +8,38 @@ test_that('test-explain', {
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = target,
+                       y       = target,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   y = target,
+                   y      = target,
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   set.seed(123)
   test_data <-
     prepare_data(split_data$test,
-                 y = target,
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = target,
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 split_data$train)
+                 train   = split_data$train)
   set.seed(123)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   y = target,
+                   y      = target,
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   set.seed(123)
   suppressWarnings(
     predictions <-
       predict_models(model,
                      test_data,
-                     y = target,
+                     y      = target,
                      engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
-                     type = type)
+                     type   = type)
   )
   set.seed(123)
   suppressWarnings(
@@ -102,38 +102,38 @@ test_that('test-explain', {
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = target,
+                       y       = target,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   y = target,
+                   y      = target,
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   set.seed(123)
   test_data <-
     prepare_data(split_data$test,
-                 y = target,
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = target,
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 split_data$train)
+                 train   = split_data$train)
   set.seed(123)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   y = target,
+                   y      = target,
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   set.seed(123)
   suppressWarnings(
     predictions <-
       predict_models(model,
                      test_data,
-                     y = target,
+                     y      = target,
                      engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
-                     type = type)
+                     type   = type)
   )
   set.seed(123)
   suppressWarnings(
@@ -199,37 +199,37 @@ test_that('test-explain', {
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = target,
+                       y       = target,
                        balance = FALSE)
   set.seed(123)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   y = target,
+                   y      = target,
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   set.seed(123)
   test_data <-
     prepare_data(split_data$test,
-                 y = target,c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
+                 y       = target,c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
                  predict = TRUE,
-                 train = split_data$train)
+                 train   = split_data$train)
   set.seed(123)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   y = target,
+                   y      = target,
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   set.seed(123)
   suppressWarnings(
     predictions <-
       predict_models(model,
                      test_data,
-                     y = target,
+                     y      = target,
                      engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
-                     type = type)
+                     type   = type)
   )
   set.seed(123)
   suppressWarnings(

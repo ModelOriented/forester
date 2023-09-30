@@ -6,36 +6,36 @@ test_that('test-score_models', {
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       'Species',
+                       y       = 'Species',
                        balance = FALSE)
   train_data <-
     prepare_data(split_data$train,
-                 'Species',
+                 y      = 'Species',
                  engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   test_data <-
     prepare_data(split_data$test,
-                 'Species',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Species',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 train = split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   'Species',
+                   y      = 'Species',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   predictions <-
     predict_models(model,
                    test_data,
-                   'Species',
+                   y      = 'Species',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   score <-
     score_models(model,
                  predictions,
                  observed = split_data$test$Species,
-                 type = type)
+                 type     = type)
   expect_true(all(dim(score) == c(5, 5)))
 })
 
@@ -46,43 +46,43 @@ test_that('regresion scoring works', {
   preprocessed_data <- preprocessed_data$data
   split_data <-
     train_test_balance(preprocessed_data,
-                       'Petal.Width',
+                       y       = 'Petal.Width',
                        balance = FALSE)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   'Petal.Width',
+                   y      = 'Petal.Width',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   test_data <-
     prepare_data(split_data$test,
-                 'Petal.Width',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Petal.Width',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 train = split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   'Petal.Width',
+                   y      = 'Petal.Width',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   suppressWarnings(
     predictions <-
       predict_models(model,
                      test_data,
-                     'Petal.Width',
+                     y      = 'Petal.Width',
                      engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                     type = type)
+                     type   = type)
   )
   score <-
     score_models(model,
                  predictions,
                  observed = split_data$test$Petal.Width,
-                 type = type,
-                 metrics = 'all',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                 tuning = rep('test', 5))
+                 type     = type,
+                 metrics  = 'all',
+                 engine   = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 tuning   = rep('test', 5))
 
   expect_true(all(dim(score) == c(5, 9)))
 })
@@ -95,56 +95,56 @@ test_that('regresion scoring compas', {
   set.seed(123)
   split_data <-
     train_test_balance(preprocessed_data,
-                       y = 'Two_yr_Recidivism',
+                       y       = 'Two_yr_Recidivism',
                        balance = FALSE)
   suppressWarnings(
     train_data <-
       prepare_data(split_data$train,
-                   y = 'Two_yr_Recidivism',
+                   y      = 'Two_yr_Recidivism',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'))
   )
   test_data <-
     prepare_data(split_data$test,
-                 y = 'Two_yr_Recidivism',
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 y       = 'Two_yr_Recidivism',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
-                 split_data$train)
+                 train   = split_data$train)
   suppressWarnings(
     model <-
       train_models(train_data,
-                   y = 'Two_yr_Recidivism',
+                   y      = 'Two_yr_Recidivism',
                    engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                   type = type)
+                   type   = type)
   )
   suppressWarnings(
     predictions <-
       predict_models_all(model,
                          test_data,
-                         y = 'Two_yr_Recidivism',
+                         y    = 'Two_yr_Recidivism',
                          type = type)
   )
 
-  score_all      <- score_models(models = model,
+  score_all      <- score_models(models      = model,
                                  predictions = predictions,
-                                 observed = test_data$ranger_data$Two_yr_Recidivism,
-                                 type = type,
-                                 metrics = 'all',
-                                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                                 tuning = rep('test', 5))
-  score_auto     <- score_models(models = model,
+                                 observed    = test_data$ranger_data$Two_yr_Recidivism,
+                                 type        = type,
+                                 metrics     = 'all',
+                                 engine      = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                 tuning      = rep('test', 5))
+  score_auto     <- score_models(models      = model,
                                  predictions = predictions,
-                                 observed = test_data$ranger_data$Two_yr_Recidivism,
-                                 type = type,
-                                 sort_by = 'f1',
-                                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                                 tuning = rep('test', 5))
+                                 observed    = test_data$ranger_data$Two_yr_Recidivism,
+                                 type        = type,
+                                 sort_by     = 'f1',
+                                 engine      = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                 tuning      = rep('test', 5))
   score_warnings <- suppressWarnings(
-   score_models(models = model,
+   score_models(models      = model,
                 predictions = predictions,
-                observed = test_data$ranger_data$Two_yr_Recidivism,
-                type = type,
-                metrics = c('auc', 'f1', 'wrong'),
-                sort_by = 'wrong')
+                observed    = test_data$ranger_data$Two_yr_Recidivism,
+                type        = type,
+                metrics     = c('auc', 'f1', 'wrong'),
+                sort_by     = 'wrong')
   )
 
   expect_true(all(dim(score_all) == c(5, 12)))
@@ -173,44 +173,44 @@ test_that('regresion scoring compas', {
   warning_fun   <- function(predicted, observed) {warning('warning_fun')}
   error_fun     <- function(prdicted, observed) {stop('error_fun') }
 
-  score_good    <- score_models(models = model,
+  score_good    <- score_models(models      = model,
                                 predictions = predictions,
-                                observed = test_data$ranger_data$Two_yr_Recidivism,
-                                type = type,
-                                metrics = 'all',
+                                observed    = test_data$ranger_data$Two_yr_Recidivism,
+                                type        = type,
+                                metrics     = 'all',
                                 metric_function = good_fun,
-                                engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                                tuning = rep('test', 5))
+                                engine      = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                                tuning      = rep('test', 5))
   score_warinig <- suppressWarnings(
-    score_models(models = model,
-                 predictions = predictions,
-                 observed = test_data$ranger_data$Two_yr_Recidivism,
-                 type = type,
-                 metrics = 'auto',
+    score_models(models          = model,
+                 predictions     = predictions,
+                 observed        = test_data$ranger_data$Two_yr_Recidivism,
+                 type            = type,
+                 metrics         = 'auto',
                  metric_function = warning_fun,
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                 tuning = rep('test', 5))
+                 engine          = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 tuning          = rep('test', 5))
     )
   score_error   <- suppressWarnings(
-    score_models(models = model,
-                 predictions = predictions,
-                 observed = test_data$ranger_data$Two_yr_Recidivism,
-                 type = type,
-                 metrics = 'all',
+    score_models(models          = model,
+                 predictions     = predictions,
+                 observed        = test_data$ranger_data$Two_yr_Recidivism,
+                 type            = type,
+                 metrics         = 'all',
                  metric_function = error_fun,
-                 engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                 tuning = rep('test', 5))
+                 engine          = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                 tuning          = rep('test', 5))
     )
-  score_name    <- score_models(models = model,
-                               predictions = predictions,
-                               observed = test_data$ranger_data$Two_yr_Recidivism,
-                               type = type,
-                               metrics = c('f1', 'metric_function'),
-                               metric_function = good_fun,
-                               metric_function_name = 'works',
+  score_name    <- score_models(models                    = model,
+                               predictions                = predictions,
+                               observed                   = test_data$ranger_data$Two_yr_Recidivism,
+                               type                       = type,
+                               metrics                    = c('f1', 'metric_function'),
+                               metric_function            = good_fun,
+                               metric_function_name       = 'works',
                                metric_function_decreasing = FALSE,
-                               engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
-                               tuning = rep('test', 5))
+                               engine                     = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                               tuning                     = rep('test', 5))
 
   expect_true(all(dim(score_good) == c(5, 13)))
   expect_true(all(colnames(score_good) == c('no.', 'name', 'engine', 'tuning', 'metric_function', 'accuracy', 'auc', 'f1', 'recall', 'precision',

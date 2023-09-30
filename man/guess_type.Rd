@@ -19,8 +19,8 @@ values in `y` if `y` is numeric.}
 values in `y` if `y` is NOT numeric.}
 }
 \value{
-A string describing the type of ml task: `binary_clf`, `multi_clf` or
-`regression`.
+A string describing the type of ml task: `binary_clf`, `multi_clf`,
+`regression`, or `survival`.
 }
 \description{
 For now, supported types are binary classification and regression.
