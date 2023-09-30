@@ -48,8 +48,9 @@ for(i in 5:ncol(score_rounded)) {
 
 if(!is.null(metric)){
   score_rounded <- score_rounded[order(score_rounded[metric]), ]
-  
-} 
+} else {
+  score_rounded <- score_rounded[order(score_rounded['rmse']), ]
+}
 
 score_rounded <- score_rounded[1:10, -c(3, 4)]
 knitr::kable(score_rounded)
@@ -93,7 +94,7 @@ This scatter plot tackles the issue of the overfitting, and compares large amoun
 
 ```{r overfitting plot, out.width = '100%'}
 if (params$train_output$type == 'regression') {
-  plot(params$train_output, models = 10, type = 'train-test', metric = 'rmse')
+  plot(params$train_output, models = 5, type = 'train-test', metric = 'rmse')
 }
 ```
 

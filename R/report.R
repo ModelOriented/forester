@@ -5,7 +5,9 @@
 #' @param output_dir The path where the report will be saved, by default - the working
 #' directory.
 #' @param train_output The output of `train()` function.
-#' @param output_file The otput file name.
+#' @param output_file The output file name.
+#' @param metric A character string describing the main metric for sorting the
+#' ranked list of models.
 #'
 #' @return Report generated to the local file. It contains table with
 #' metrics for every model, scatter plot for chosen metric
@@ -25,7 +27,8 @@ report <-
            output_file   = NULL,
            output_format = 'pdf_document',
            output_dir    = getwd(),
-           check_data    = TRUE) {
+           check_data    = TRUE,
+           metric        = NULL) {
 
     tryCatch({
       find.package('tinytex')

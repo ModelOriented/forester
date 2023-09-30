@@ -360,7 +360,7 @@ draw_rmse_plot <- function(train_observed, train_predictions, test_observed, tes
 #' @return A ggplot object.
 #' @export
 draw_feature_importance <- function(best_models, test_data, y) {
-  explainer <- explain(best_models[[1]][1], test_data, y)
+  explainer <- explain(best_models, test_data, y)
 
   plt <- graphics::plot(DALEX::model_parts(explainer = explainer), max_vars = 8, show_boxplots = TRUE)
   plt <- plt +

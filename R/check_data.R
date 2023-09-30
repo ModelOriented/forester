@@ -97,7 +97,7 @@ basic_info <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE)
       '\n\nWith the target described by ', target, '\n\n', sep = '', verbose = verbose)
   str <- capture.output(cat('**The dataset has ', nrow(df), ' observations and ', ncol(df),
                             ' columns which names are: **\n\n', paste0(colnames(df), sep='; '),
-                            '\n\n**With the target described by ', target, '\n \n', sep = ''))
+                            '\n\n **With the target described by** ', target, '\n \n', sep = ''))
   return(str)
 }
 

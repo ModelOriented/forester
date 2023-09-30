@@ -66,7 +66,6 @@ plot.binary_clf <- function(train_output,
       }
     }
   }
-
   if (type == 'comparison') {
     test_scores    <- data.frame(t(train_output$score_test[, (NCOL(train_output$score_test) - 2):NCOL(train_output$score_test)]))
     test_scores    <- test_scores[, 1:10]
@@ -223,6 +222,7 @@ plot.binary_clf <- function(train_output,
   }
 
   if(type == 'train-test') {
+    models_names <- train_output$score_test$name[1:10]
 
     train_score <- train_output$score_train[train_output$score_train$name %in% models_names, ]
     names(train_score)[which(names(train_score) %in% c('accuracy', 'auc', 'f1'))] <-
@@ -245,7 +245,7 @@ plot.binary_clf <- function(train_output,
         y     = 'Test',
         color = 'Engine'
       ) +
-      ggrepel::geom_text_repel(aes(label = score$name), show.legend = FALSE) +
+      ggrepel::geom_text_repel(aes(label = score$name), show.legend = FALSE, max.time = 3) +
       scale_x_continuous(limits = c(min(score[paste0(metric, '_train')], score[paste0(metric, '_test')]),
                                     max(score[paste0(metric, '_train')], score[paste0(metric, '_test')]))) +
       scale_y_continuous(limits = c(min(score[paste0(metric, '_train')], score[paste0(metric, '_test')]),

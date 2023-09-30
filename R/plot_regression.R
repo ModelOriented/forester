@@ -144,6 +144,7 @@ plot.regression <- function(train_output,
 
 
   if(type == 'train-test') {
+    models_names <- train_output$score_test$name[1:10]
 
     train_score <- train_output$score_train[train_output$score_train$name %in% models_names, ]
     names(train_score)[which(names(train_score) %in% c('rmse', 'mse', 'r2', 'mae'))] <-

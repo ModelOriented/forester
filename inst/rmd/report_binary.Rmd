@@ -36,6 +36,8 @@ The names of the models were created by a pattern *Engine_TuningMethod_Id*, wher
 
 *More details about the dataset are present at the end of the report.*
 
+## Best models for validation dataset
+
 ```{r table}
 score_frame          <- params$train_output$score_valid
 score_rounded        <- score_frame
@@ -46,8 +48,9 @@ for(i in 5:ncol(score_rounded)) {
 
 if(!is.null(metric)){
   score_rounded <- score_rounded[order(score_rounded[metric]), ]
-  
-} 
+} else {
+  score_rounded <- score_rounded[order(score_rounded['accuracy'], decreasing = TRUE), ]
+}
 
 score_rounded <- score_rounded[1:10, -c(3, 4)]
 knitr::kable(score_rounded)
@@ -72,7 +75,7 @@ plot(train_output, models = NULL, type = 'comparison', metric = 'accuracy')
 This scatter plot tackles the issue of the overfitting, and compares large amounts of models at once. On the x axis we provide the metrics value evaluated on the training dataset, whereas on the y axis we have the same for the testing dataset. Models performance is assessed in two ways. Firstly, we want the model to have as small value as possible on the testing dataset (so we want it to be lower than other models). Secondly, we want to choose the model which is close to the x = y line, because it means that the model is not overfitted, so it generalizes better. In most cases we want to chose the model that is less overfitted, even though it has worse performance.
 
 ```{r train vs test plot, out.width = '100%'}
-plot(train_output, models = 10, type = 'train-test', metric = 'accuracy') 
+plot(train_output, models = 5, type = 'train-test', metric = 'accuracy') 
 ```
 
 \newpage
