@@ -18,7 +18,7 @@
 #'                                fractions = c(train = 0.6, valid = 0.2, test = 0.2))
 train_test_balance <-
   function(data, y, balance = TRUE, fractions = c(0.6, 0.2, 0.2), seed = NULL) {
-    #Balancing / stratifying classes.
+    # Balancing / stratifying classes.
     target <- data[[y]]
 
     if (sum(fractions) != 1) {

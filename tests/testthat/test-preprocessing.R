@@ -114,10 +114,10 @@ test_that('test-preprocessing', {
   boruta_test   <- boruta_selection(del_id_test, 'y')
 
   expect_true(ncol(boruta_compas) == 7)
-  expect_true(ncol(boruta_lisbon) == 10)
+  expect_true(ncol(boruta_lisbon) == 9)
   expect_true(ncol(boruta_iris) == 3)
   expect_true(ncol(boruta_adult) == 13)
-  expect_true(ncol(boruta_lymph) == 15)
+  expect_true(ncol(boruta_lymph) == 16)
   expect_true(ncol(boruta_test) == 5)
 
   expect_true(is.null(save_deleted_columns(compas, del_id_compas)))

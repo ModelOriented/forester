@@ -164,9 +164,9 @@ plot.binary_clf <- function(train_output,
 
 
   if(type == 'confusion-matrix') {
-    test_preds     <- as.integer(train_output$predictions_test_labels[[train_output$score_test$name[[1]]]])
+    test_preds     <- sapply(train_output$predictions_test[[train_output$score_test$name[[1]]]], FUN = round)
     test_observed  <- train_output$test_observed
-    valid_preds    <- as.integer(train_output$predictions_valid_labels[[train_output$score_valid$name[[1]]]])
+    valid_preds    <- sapply(train_output$predictions_valid[[train_output$score_valid$name[[1]]]], FUN = round)
     valid_observed <- train_output$valid_observed
 
     confusion_matrix <- function(test) {

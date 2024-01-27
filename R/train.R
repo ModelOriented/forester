@@ -260,9 +260,9 @@ train <- function(data,
   verbose_cat(crayon::green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
 
   train_data <- prepare_data(split_data$train, y, time, status, engine)
-  test_data  <- prepare_data(split_data$test,  y, time, status,engine,
+  test_data  <- prepare_data(split_data$test,  y, time, status, engine,
                              predict = TRUE, split_data$train)
-  valid_data <- prepare_data(split_data$valid, y, time, status,engine,
+  valid_data <- prepare_data(split_data$valid, y, time, status, engine,
                              predict = TRUE, split_data$train)
 
   # For creating VS plot and predicting on train (catboost, lgbm).
@@ -366,7 +366,12 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Created the score boards for all models. \n', verbose = verbose)
 
-  best_models_on_valid   <- choose_best_models(models_all, engine_all, score_valid, best_model_number)
+  # Choosing the best models on validation dataset.
+  best_model_number    <- min(best_model_number, length(models_all))
+  best_models_on_valid <- list(
+    models = models_all[score_valid[1:best_model_number, 'name']],
+    engine = score_valid[1:best_model_number, 'engine'])
+
   predictions_best_train <- predict_models_all(best_models_on_valid$models, raw_train,  y, type = type)
   predictions_best_test  <- predict_models_all(best_models_on_valid$models, test_data,  y, type = type)
   predictions_best_valid <- predict_models_all(best_models_on_valid$models, valid_data, y, type = type)

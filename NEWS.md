@@ -1,3 +1,16 @@
+# forester 1.4.2
+
+-   In the DESCRIPTION updated the description, and RoxygenNote version.
+-   In README updated guide for catboost installation.
+-   Moved `verbose_cat()`, and `guess_type()`, from their own files to `check_data()`.
+-   Removed `choose_best_models()` function, and implemented its logic directly in `train()`.
+-   Removed the unused `create_ranked_list()`, and `format_models_details()` functions.
+-   Fixed `plot_classification()` function, associated with the error *cannot xtfrm data frames* occurred.
+-   Suppressed meaningless warnings from `prepare_data()`, and `preprocessing_removal()` functions.
+-   Fixed error *cannot xtfrm data frames* in both reports.
+-   Added folder `misc/manual_tests` with supplementary, manual tests of the package, focusing on report generation.
+-   Removed `test-choose_best_model` test, and fixed two other tests.
+
 # forester 1.4.1
 
 -   In the DESCRIPTION:

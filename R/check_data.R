@@ -66,6 +66,60 @@ check_data <- function(data, y = NULL, time = NULL, status = NULL, verbose = TRU
   return(ret)
 }
 
+#' Print the provided cat-like input if verbose is TRUE
+#'
+#' @param ... R objects - strings, (see `cat` documentation).
+#' @param sep A character vector of strings to append after each element.
+#' @param verbose A logical value indicating whether we want to print the string
+#' or not.
+#'
+#' @export
+verbose_cat <- function(..., sep = ' ', verbose = TRUE) {
+  if (verbose) {
+    cat(..., sep = sep)
+  }
+}
+
+#' Guess task type by the target value from the dataset
+#'
+#' For now, supported types are binary classification and regression.
+#' Multilabel classification is planned to be added later on.
+#'
+#' @param data A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param y A string that indicates a target column name.
+#' @param max_unique_numeric An integer describing the maximal number of unique
+#' values in `y` if `y` is numeric.
+#' @param max_unique_not_numeric An integer describing the maximal number of unique
+#' values in `y` if `y` is NOT numeric.
+#'
+#' @return A string describing the type of ml task: `binary_clf`, `multi_clf`,
+#' `regression`, or `survival`.
+#' @export
+guess_type <- function(data, y, max_unique_numeric = 5, max_unique_not_numeric = 15) {
+
+  if (is.null(y)) {
+    type <- 'survival'
+  } else {
+    target <- data[[y]]
+    if (is.numeric(target)) {
+      if (length(unique(target)) == 2) {
+        type <- 'binary_clf'
+      } else if (length(unique(target)) <= max_unique_numeric) {
+        type <- 'multi_clf'
+      } else {
+        type <- 'regression'
+      }
+    } else if (length(unique(target)) == 2) {
+      type <- 'binary_clf'
+    } else if (length(unique(target)) <= max_unique_not_numeric) {
+      type <- 'multi_clf'
+    } else {
+      type <- 'regression'
+    }
+  }
+  return(type)
+}
 
 #' Provide basic dataset information
 #'
@@ -86,10 +140,10 @@ check_data <- function(data, y = NULL, time = NULL, status = NULL, verbose = TRU
 basic_info <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
   # Distinction between survival analysis and other tasks.
   if (!is.null(y)) {
-    target <- paste0('a column ', y, '.')
+    target  <- paste0('a column ', y, '.')
     target2 <- paste0('a column** ', y, '.')
   } else {
-    target <- paste0('columns ', time, ' for time and ', status, ' for status.')
+    target  <- paste0('columns ', time, ' for time and ', status, ' for status.')
     target2 <- paste0('columns** ', time, ' for time and ', status, ' for status.')
   }
   verbose_cat('The dataset has ', nrow(df), ' observations and ', ncol(df),

@@ -49,7 +49,7 @@ for(i in 5:ncol(score_rounded)) {
 if(!is.null(metric)){
   score_rounded <- score_rounded[order(score_rounded[metric]), ]
 } else {
-  score_rounded <- score_rounded[order(score_rounded['accuracy'], decreasing = TRUE), ]
+  score_rounded <- score_rounded[order(score_rounded[, 'accuracy'], decreasing = TRUE), ]
 }
 
 score_rounded <- score_rounded[1:10, -c(3, 4)]

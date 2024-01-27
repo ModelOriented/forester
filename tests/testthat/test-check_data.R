@@ -27,8 +27,8 @@ test_that('test-check_data', {
   expect_equal(length(basic_info(df_adult, y_adult, verbose = FALSE)), 6)
   expect_equal(length(basic_info(df_test, y_test, verbose = FALSE)), 6)
 
-  no_static     <- '<U\\+2714> No static columns.'
-  static_lisbon <- '<U\\+2716> Static columns are: Country; District; Municipality; \nWith dominating values: Portugal; Lisboa; Lisboa;'
+  no_static     <- '✔ No static columns.'
+  static_lisbon <- '✖ Static columns are: Country; District; Municipality; \nWith dominating values: Portugal; Lisboa; Lisboa;'
 
   expect_output(check_static(df_iris), no_static)
   expect_equal(length(check_static(df_lisbon, verbose = FALSE)), 5)
@@ -37,8 +37,8 @@ test_that('test-check_data', {
   expect_output(check_static(df_adult), no_static)
   expect_output(check_static(df_test), no_static)
 
-  no_duplicate     <- '<U\\+2714> No duplicate columns.'
-  duplicate_lisbon <- '<U\\+2716> These column pairs are duplicate:\n District - Municipality; \n'
+  no_duplicate     <- '✔ No duplicate columns.'
+  duplicate_lisbon <- '✖ These column pairs are duplicate:\n District - Municipality; \n'
 
   expect_output(check_duplicate_col(df_iris), no_duplicate)
   expect_output(check_duplicate_col(df_lisbon), duplicate_lisbon)
@@ -47,8 +47,8 @@ test_that('test-check_data', {
   expect_output(check_duplicate_col(df_adult), no_duplicate)
   expect_output(check_duplicate_col(df_test), no_duplicate)
 
-  no_missing   <- '<U\\+2714> No target values are missing. \n\n<U\\+2714> No predictor values are missing. \n'
-  missing_test <- '<U\\+2714> No target values are missing. \n\n<U\\+2716> 943 observations have missing fields.\n'
+  no_missing   <- '✔ No target values are missing. \n\n✔ No predictor values are missing. \n'
+  missing_test <- '✔ No target values are missing. \n\n✖ 943 observations have missing fields.\n'
 
   expect_output(check_missing(df_iris, y_iris), no_missing)
   expect_output(check_missing(df_lisbon, y_lisbon), no_missing)
@@ -59,7 +59,7 @@ test_that('test-check_data', {
 
   df_test       <- manage_missing(df_test, y_test)
 
-  no_dim_issues <- '<U\\+2714>  No issues with dimensionality.'
+  no_dim_issues <- '✔  No issues with dimensionality.'
 
   expect_output(check_dim(df_iris), no_dim_issues)
   expect_output(check_dim(df_lisbon), no_dim_issues)
@@ -68,11 +68,11 @@ test_that('test-check_data', {
   expect_output(check_dim(df_adult), no_dim_issues)
   expect_output(check_dim(df_test), no_dim_issues)
 
-  no_cor     <- '<U\\+2714> No strongly correlated, by Spearman rank, pairs of numerical values. \n\n<U\\+2714> No strongly correlated, by Crammer\'s V rank, pairs of categorical values. \n'
-  cor_iris   <- '<U\\+2716> Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Sepal.Length - Petal.Length: 0.81;\n Sepal.Length - Petal.Width: 0.79;\n Petal.Length - Petal.Width: 0.98;\n'
-  cor_lisbon <- '<U\\+2716> Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Bedrooms - AreaNet: 0.77;\n Bedrooms - AreaGross: 0.77;\n Bathrooms - AreaNet: 0.78;\n Bathrooms - AreaGross: 0.78;\n AreaNet - AreaGross: 1;\n\n<U\\+2716> Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: \n PropertyType - PropertySubType: 1;\n'
-  cor_iris2  <- '<U\\+2716> Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Sepal.Length - Petal.Length: 0.87;\n Sepal.Length - Petal.Width: 0.82;\n Petal.Length - Petal.Width: 0.96;\n'
-  cor_test   <- '<U\\+2714> No strongly correlated, by Spearman rank, pairs of numerical values.'
+  no_cor     <- '✔ No strongly correlated, by Spearman rank, pairs of numerical values. \n\n✔ No strongly correlated, by Crammer\'s V rank, pairs of categorical values. \n'
+  cor_iris   <- '✖ Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Sepal.Length - Petal.Length: 0.81;\n Sepal.Length - Petal.Width: 0.79;\n Petal.Length - Petal.Width: 0.98;\n'
+  cor_lisbon <- '✖ Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Bedrooms - AreaNet: 0.77;\n Bedrooms - AreaGross: 0.77;\n Bathrooms - AreaNet: 0.78;\n Bathrooms - AreaGross: 0.78;\n AreaNet - AreaGross: 1;\n\n✖ Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: \n PropertyType - PropertySubType: 1;\n'
+  cor_iris2  <- '✖ Strongly correlated, by Spearman rank, pairs of numerical values are: \n \n Sepal.Length - Petal.Length: 0.87;\n Sepal.Length - Petal.Width: 0.82;\n Petal.Length - Petal.Width: 0.96;\n'
+  cor_test   <- '✔ No strongly correlated, by Spearman rank, pairs of numerical values.'
 
   expect_output(check_cor(df_iris, y_iris), cor_iris)
   expect_output(check_cor(df_lisbon, y_lisbon), cor_lisbon)
@@ -80,11 +80,11 @@ test_that('test-check_data', {
   expect_output(check_cor(df_iris2, y_iris2), cor_iris2)
   expect_output(check_cor(df_test, y_test), cor_test)
 
-  no_outliers  <- '<U\\+2714> No outliers in the dataset.'
-  out_lisbon   <- '<U\\+2716> These observations migth be outliers due to their numerical columns values: \n 145 146 196 44 5 51 57 58 59 60 61 62 63 64 69 75 76 77 78 ;'
-  out_over_50  <- '<U\\+2716> There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector.'
-  out_iris2    <- '<U\\+2716> These observations migth be outliers due to their numerical columns values: \n 16 ;'
-  out_test     <- '<U\\+2716> These observations migth be outliers due to their numerical columns values: \n 160 209 365 369 395 434 481 491 559 6 791 795 796 804 82 ;'
+  no_outliers  <- '✔ No outliers in the dataset.'
+  out_lisbon   <- '✖ These observations migth be outliers due to their numerical columns values: \n 145 146 196 44 5 51 57 58 59 60 61 62 63 64 69 75 76 77 78 ;'
+  out_over_50  <- '✖ There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector.'
+  out_iris2    <- '✖ These observations migth be outliers due to their numerical columns values: \n 16 ;'
+  out_test     <- '✖ These observations migth be outliers due to their numerical columns values: \n 160 209 365 369 395 434 481 491 559 6 791 795 796 804 82 ;'
 
   expect_output(check_outliers(df_iris), no_outliers)
   expect_output(check_outliers(df_lisbon), out_lisbon)
@@ -93,11 +93,11 @@ test_that('test-check_data', {
   expect_output(check_outliers(df_adult), out_over_50)
   expect_output(check_outliers(df_test), out_test)
 
-  balanced       <- '<U\\+2714> Dataset is balanced.'
-  balance_lisbon <- '<U\\+2716> Target data is not evenly distributed with quantile bins: 0.25 0.35 0.14 0.26'
-  multi_balance  <- '<U\\+2716> Multilabel classification is not supported yet.'
-  balance_adult  <- '<U\\+2716> Dataset is unbalanced with: 3.310345 proportion with <=50K being a dominating class.\n'
-  balance_test   <- '<U\\+2714> Target data is evenly distributed.'
+  balanced       <- '✔ Dataset is balanced.'
+  balance_lisbon <- '✖ Target data is not evenly distributed with quantile bins: 0.25 0.35 0.14 0.26'
+  multi_balance  <- '✖ Multilabel classification is not supported yet.'
+  balance_adult  <- '✖ Dataset is unbalanced with: 3.310345 proportion with <=50K being a dominating class.\n'
+  balance_test   <- '✔ Target data is evenly distributed.'
 
   expect_output(check_y_balance(df_iris, y_iris), balanced)
   expect_output(check_y_balance(df_lisbon, y_lisbon), balance_lisbon)
@@ -106,8 +106,8 @@ test_that('test-check_data', {
   expect_output(check_y_balance(df_adult, y_adult), balance_adult)
   expect_output(check_y_balance(df_test, y_test), balance_test)
 
-  no_id     <- '<U\\+2714> Columns names suggest that none of them are IDs. \n\n<U\\+2714> Columns data suggest that none of them are IDs. \n'
-  id_lisbon <- '<U\\+2716> Columns names suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n\n<U\\+2716> Columns data suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n'
+  no_id     <- '✔ Columns names suggest that none of them are IDs. \n\n✔ Columns data suggest that none of them are IDs. \n'
+  id_lisbon <- '✖ Columns names suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n\n✖ Columns data suggest that some of them are IDs, removing them can improve the model.\n Suspicious columns are: Id .\n'
 
   expect_output(detect_id_columns(df_iris), no_id)
   suppressWarnings(expect_output(detect_id_columns(df_lisbon), id_lisbon))
@@ -126,17 +126,17 @@ test_that('test-check_data', {
   status_peak <- 'died'
   expect_output(check_data(df_test, time_peak, status_peak))
   expect_equal(length(basic_info(df_peak, time_peak, status_peak, verbose = FALSE)), 6)
-  static_peak <- '<U\\+2716> Static columns are: dilver; \nWith dominating values: 0;'
+  static_peak <- '✖ Static columns are: dilver; \nWith dominating values: 0;'
   expect_equal(length(check_static(df_peak, verbose = FALSE)), 5)
   expect_output(check_duplicate_col(df_peak), no_duplicate)
   expect_output(check_missing(df_peak, time_peak, status_peak), no_missing)
-  dim_peak <- '<U\\+2716> Too big dimensionality with 41 colums. Forest models wont use so many of them. \\n'
+  dim_peak <- '✖ Too big dimensionality with 41 colums. Forest models wont use so many of them. \\n'
   expect_output(check_dim(df_peak), dim_peak)
-  cor_peak <- '<U\\+2716> Strongly correlated, by Spearman rank, pairs of numerical values are: \\n \\n peak.vo2 - interval: 0.87;\\n'
+  cor_peak <- '✖ Strongly correlated, by Spearman rank, pairs of numerical values are: \\n \\n peak.vo2 - interval: 0.87;\\n'
   expect_output(check_cor(df_peak, time_peak, status_peak), cor_peak)
-  out_peak <- '<U\\+2716> There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \\n'
+  out_peak <- '✖ There are more than 50 possible outliers in the data set, so we are not printing them. They are returned in the output as a vector. \\n'
   expect_output(check_outliers(df_peak), out_peak)
-  balance_peak <- '<U\\+2714> Target data is evenly distributed. \\n'
+  balance_peak <- '✔ Target data is evenly distributed. \\n'
   expect_output(check_y_balance(df_peak, time_peak, status_peak), balance_peak)
   expect_output(detect_id_columns(df_peak), no_id)
 
