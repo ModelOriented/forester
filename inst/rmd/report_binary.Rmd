@@ -121,7 +121,7 @@ if (grepl('ranger', params$train_output$score_valid$name[1])) {
 }
 
 if (engine != c('catboost') && !is.null(engine)) { # For catboost there is an error with DALEX::model_parts().
-  draw_feature_importance(params$train_output$models_list[[out_clf$score_valid$name[1]]], 
+  draw_feature_importance(params$train_output$models_list[[params$train_output$score_valid$name[1]]], 
                           params$train_output$valid_data, 
                           params$train_output$y)
 } else {
