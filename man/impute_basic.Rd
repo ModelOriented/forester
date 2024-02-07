@@ -5,7 +5,12 @@
 \title{Imputes the dataset with median of column for numeric data and the class
 'other' or most frequent observation for categorical features}
 \usage{
-impute_basic(data, na_indicators = c(""), categorical_imputation = "other")
+impute_basic(
+  data,
+  na_indicators = c(""),
+  categorical_imputation = "other",
+  verbose = FALSE
+)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -19,6 +24,9 @@ as these are already checked in other criterion.}
 for categorical features. The user can choose from setting missing values as
 'other' or the most frequent value from feature. The respective options are:
 'other' or 'frequency'. By default set to 'other'.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 Imputed dataset.

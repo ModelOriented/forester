@@ -1,0 +1,12 @@
+test_that('test-train_test_balance', {
+  expect_true(guess_type(compas, 'Two_yr_Recidivism') == 'binary_clf')
+  expect_true(guess_type(lisbon, 'Price') == 'regression')
+  expect_true(guess_type(adult, 'salary') == 'binary_clf')
+  expect_true(guess_type(iris, 'Species') == 'multiclass')
+  expect_true(guess_type(lymph, 'class') == 'multiclass')
+  expect_true(guess_type(iris[1:100, ], 'Species') == 'binary_clf')
+  expect_true(guess_type(testing_data, 'y') == 'regression')
+  expect_true(guess_type(testing_data, 'X11') == 'multiclass')
+  data('peakVO2')
+  expect_true(guess_type(peakVO2, NULL) == 'survival')
+})

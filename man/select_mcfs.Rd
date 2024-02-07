@@ -9,7 +9,8 @@ select_mcfs(
   y,
   cutoffPermutations = 20,
   threadsNumber = NULL,
-  max_features = NULL
+  max_features = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -32,6 +33,9 @@ minus 1.}
 \item{max_features}{A positive integer value describing the desired number of
 selected features. By default set to NULL, then the MCFS algorithm uses all
 features that seems important to it.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 A list containing two objects:

@@ -8,6 +8,10 @@
 #' Either y, or pair: time, status can be used. By default NULL.
 #' @param status A string that indicates a status column name for survival analysis task.
 #' Either y, or pair: time, status can be used. By default NULL.
+#' @param type A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+#' sets the type of the task. If `auto` (the default option) then
+#' the function will figure out `type` based on the number of unique values
+#' in the `y` variable, or the presence of time/status columns.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
@@ -15,14 +19,10 @@
 #' @export
 #'
 #' @examples
-#' check_data(iris[1:100, ], 'Species')
 #' check_data(lisbon, 'Price')
-#' check_data(compas, 'Two_yr_Recidivism')
-#' check_data(iris, 'Species')
-#' check_data(lymph, 'class')
 #' @importFrom stats IQR cor median sd
 #' @importFrom utils capture.output
-check_data <- function(data, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
+check_data <- function(data, y = NULL, time = NULL, status = NULL, type = 'auto', verbose = TRUE) {
   options(warn = -1)
 
   if (is.null(y)) {
@@ -30,15 +30,42 @@ check_data <- function(data, y = NULL, time = NULL, status = NULL, verbose = TRU
       verbose_cat(crayon::red('\u2716'), 'Lack of target variables. Please specify',
                   'either y (for classification or regression tasks), or time and',
                   'status (for survival analysis). \n\n', verbose = verbose)
-      return(NULL)
+      stop('Lack of target variables. Please specify either y (for classification
+           or regression tasks), or time and status (for survival analysis)')
     }
   } else {
     if (!is.null(time) | !is.null(status)) {
       verbose_cat(crayon::red('\u2716'), 'Provided too many targets. Please specify',
                   'either y (for classification or regression tasks), or time and',
                   'status (for survival analysis). \n\n', verbose = verbose)
-      return(NULL)
+      stop('Provided too many targets. Please specify either y (for classification
+           or regression tasks), or time and status (for survival analysis).')
     }
+  }
+
+  if (type == 'auto') {
+    type <- guess_type(data, y)
+    if (type == 'regression') {
+      data[[y]] <- as.numeric(data[[y]])
+    }
+    verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
+  } else if (!type %in% c('regression', 'binary_clf', 'survival', 'multiclass')) {
+    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification \n\n', verbose = verbose)
+    stop('Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification')
+  } else {
+    verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
+  }
+
+  if (type == 'survial') {
+    if (!status %in% colnames(data) || !time %in% colnames(data)) {
+      verbose_cat(crayon::red('\u2716'), 'Provided target column name for time or status parameters',
+                  status, time, 'is not present in the datataset. \n\n', verbose = verbose)
+      stop('Provided target column name for time or status parameter is not present in the datataset.')
+    }
+  } else if (!y %in% colnames(data)) {
+    verbose_cat(crayon::red('\u2716'), 'Provided target column name for y parameter', y,
+                'is not present in the datataset. \n\n', verbose = verbose)
+    stop('Provided target column name for y parameter is not present in the datataset.')
   }
 
   df  <- as.data.frame(data)
@@ -53,7 +80,7 @@ check_data <- function(data, y = NULL, time = NULL, status = NULL, verbose = TRU
   str <- c(str, check_cor(df, y, time, status, verbose)$str)
   rtr <- check_outliers(df, verbose)
   str <- c(str, rtr$str)
-  str <- c(str, check_y_balance(df, y, time, status, verbose))
+  str <- c(str, check_y_balance(df, y, time, status, type, verbose))
   str <- c(str, detect_id_columns(df, verbose))
   verbose_cat(' -------------------- CHECK DATA REPORT END -------------------- \n \n', verbose = verbose)
   str <- c(str,
@@ -66,6 +93,59 @@ check_data <- function(data, y = NULL, time = NULL, status = NULL, verbose = TRU
   return(ret)
 }
 
+#' Print the provided cat-like input if verbose is TRUE
+#'
+#' @param ... R objects - strings, (see `cat` documentation).
+#' @param sep A character vector of strings to append after each element.
+#' @param verbose A logical value indicating whether we want to print the string
+#' or not.
+#'
+#' @export
+verbose_cat <- function(..., sep = ' ', verbose = TRUE) {
+  if (verbose) {
+    cat(..., sep = sep)
+  }
+}
+
+#' Guess task type by the target value from the dataset
+#'
+#' For now, supported types are binary classification and regression.
+#' Multilabel classification is planned to be added later on.
+#'
+#' @param data A data source, that is one of the major R formats: data.table, data.frame,
+#' matrix, and so on.
+#' @param y A string that indicates a target column name.
+#' @param max_unique An integer describing the maximal number of unique
+#' values in `y`.
+#'
+#' @return A string describing the type of ml task: `binary_clf`, `multiclass`,
+#' `regression`, or `survival`.
+#' @export
+guess_type <- function(data, y, max_unique = 15) {
+
+  if (is.null(y)) {
+    type <- 'survival'
+  } else {
+    target <- data[[y]]
+    if (is.numeric(target)) {
+      if (length(unique(target)) == 2) {
+        type <- 'binary_clf'
+      } else if (length(unique(target)) <= max_unique) {
+        type <- 'multiclass'
+      } else {
+        type <- 'regression'
+      }
+    } else if (length(unique(target)) == 2) {
+      type <- 'binary_clf'
+    } else if (length(unique(target)) <= max_unique) {
+      type <- 'multiclass'
+    } else {
+      data[[y]] <- as.numeric(data[[y]])
+      type <- 'regression'
+    }
+  }
+  return(type)
+}
 
 #' Provide basic dataset information
 #'
@@ -255,11 +335,11 @@ check_dim <- function(df, verbose = TRUE) {
     str <- capture.output(cat('**Too big dimensionality with ', cols, ' colums. Forest models wont use so many of them. **\n', sep = ''))
   }
   if (cols >= rows) {
-    verbose_cat(crayon::red('\u2716'), ' More features than observations, try reducing dimensionality or add new observations. \n', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), 'More features than observations, try reducing dimensionality or add new observations. \n', verbose = verbose)
     str <- capture.output(cat('**More features than observations, try reducing dimensionality or add new observations. **\n'))
   }
   if (cols < rows && cols <= 30) {
-    verbose_cat(crayon::green('\u2714'), ' No issues with dimensionality. \n', verbose = verbose)
+    verbose_cat(crayon::green('\u2714'), 'No issues with dimensionality. \n', verbose = verbose)
     str <- capture.output(cat('**No issues with dimensionality. **\n'))
   }
   verbose_cat('\n', verbose = verbose)
@@ -509,14 +589,28 @@ check_outliers <- function(df, verbose = TRUE) {
 #' Either y, or pair: time, status can be used. By default NULL.
 #' @param status A string that indicates a status column name for survival analysis task.
 #' Either y, or pair: time, status can be used. By default NULL.
+#' @param type A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+#' sets the type of the task. If `auto` (the default option) then
+#' the function will figure out `type` based on the number of unique values
+#' in the `y` variable, or the presence of time/status columns.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
 #' @return A list with every line of the sub-report.
 #'
 #' @export
-check_y_balance <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
-  type     <- guess_type(df, y)
+check_y_balance <- function(df, y = NULL, time = NULL, status = NULL, type = 'auto', verbose = TRUE) {
+  # This part should not be provided in string for the report, as it only enhances
+  # the quality of standalone check_data function.
+  if (type == 'auto') {
+    type <- guess_type(df, y)
+    verbose_cat(crayon::green('\u2714'), 'Type guessed as:', type, '\n\n', verbose = verbose)
+  } else if (!type %in% c('regression', 'binary_clf', 'survival', 'multiclass')) {
+    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification \n\n', verbose = verbose)
+  } else {
+    verbose_cat(crayon::green('\u2714'), 'Type provided as:', type, '\n\n', verbose = verbose)
+  }
+
   # Distinction between survival analysis and other tasks.
   if (!is.null(y)) {
     target <- df[[y]]
@@ -581,9 +675,45 @@ check_y_balance <- function(df, y = NULL, time = NULL, status = NULL, verbose = 
       str <- capture.output(cat('**Target data is not evenly distributed with quantile bins:**', perc_bins, '\n'))
     }
 
-  } else if (type == 'multi_clf') {
-    verbose_cat(crayon::green('\u2716'), 'Multilabel classification is not supported yet. \n', verbose = verbose)
-    str <- capture.output(cat('**Multilabel classification is not supported yet. **\n'))
+  } else if (type == 'multiclass') {
+
+    distribution    <- table(target) / length(target)
+    num_class       <- length(unique(target))
+    equal           <- 1 / num_class
+    dominating      <- c()
+    dominating_name <- c()
+    underrep        <- c()
+    underrep_name   <- c()
+
+    for (i in 1:length(distribution)) {
+      if (distribution[i] > 1.5 * equal) {
+        dominating_name <- c(dominating_name, names(distribution)[i])
+        dominating      <- c(dominating, distribution[i])
+      } else if (distribution[i] < 0.75 * equal) {
+        underrep_name   <- c(underrep_name, names(distribution)[i])
+        underrep        <- c(underrep, distribution[i])
+      }
+    }
+
+    if (length(dominating) > 0 || length(underrep) > 0) {
+      verbose_cat(crayon::red('\u2716'), 'Target data is not evenly distributed. \n', verbose = verbose)
+      str <- capture.output(cat('**Target data is not evenly distributed. **\n\n'))
+      if (length(dominating) > 0) {
+        verbose_cat(crayon::red('\u2716'), 'The dominating classes are:', dominating_name, 'with shares equal to:', dominating,
+                    'where the targeted ratio is', equal, '\n', verbose = verbose)
+        str <- c(str, capture.output(cat('**The dominating classes are:**', dominating_name, '\n\n**With shares equal to:**', dominating,
+                                         '\n\n**Where the targeted ratio is**', equal, '\n\n')))
+      }
+      if (length(underrep) > 0) {
+        verbose_cat(crayon::red('\u2716'), 'The underrepresented classes are:', underrep_name, 'with shares equal to:', underrep,
+                    'where the targeted ratio is', equal, '\n', verbose = verbose)
+        str <- c(str, capture.output(cat('**The underrepresented classes are:**', underrep_name, '\n\n**With shares equal to:**', underrep,
+                                         '\n\n**Where the targeted ratio is**', equal, '\n')))
+      }
+    } else {
+      verbose_cat(crayon::green('\u2714'), 'Target data is evenly distributed. \n', verbose = verbose)
+      str <- capture.output(cat('**Target data is evenly distributed. **\n'))
+    }
   }
   verbose_cat('\n', verbose = verbose)
   str <- c(str, capture.output(cat('\n')))

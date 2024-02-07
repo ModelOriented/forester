@@ -33,8 +33,19 @@ report <- function(train_output,
                   verbose = TRUE)
       return(NULL)
     })
-
-    input_file_path <- system.file('rmd', 'report.Rmd', package = 'forester')
+    if (train_output$type == 'regression') {
+      input_file_path <- system.file('rmd', 'report_regression.Rmd', package = 'forester')
+    } else if (train_output$type == 'binary_clf') {
+      input_file_path <- system.file('rmd', 'report_binary.Rmd', package = 'forester')
+    } else if (train_output$type == 'survival') {
+      verbose_cat(crayon::red('\u2716'), 'The report for survival analysis task is currently unavailable. \n\n')
+      stop()
+    } else if (train_output$type == 'multiclass') {
+      input_file_path <- system.file('rmd', 'report_multiclass.Rmd', package = 'forester')
+    } else {
+      verbose_cat(crayon::red('\u2716'), 'The report for this task is currently unavailable. \n\n')
+      stop()
+    }
 
     rmarkdown::render(
       input         = input_file_path,

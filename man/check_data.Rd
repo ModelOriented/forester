@@ -4,7 +4,14 @@
 \alias{check_data}
 \title{Run data check pipeline to seek for potential problems with the data}
 \usage{
-check_data(data, y = NULL, time = NULL, status = NULL, verbose = TRUE)
+check_data(
+  data,
+  y = NULL,
+  time = NULL,
+  status = NULL,
+  type = "auto",
+  verbose = TRUE
+)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -19,6 +26,11 @@ Either y, or pair: time, status can be used. By default NULL.}
 \item{status}{A string that indicates a status column name for survival analysis task.
 Either y, or pair: time, status can be used. By default NULL.}
 
+\item{type}{A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+sets the type of the task. If `auto` (the default option) then
+the function will figure out `type` based on the number of unique values
+in the `y` variable, or the presence of time/status columns.}
+
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}
 }
@@ -29,9 +41,5 @@ A list with two vectors: lines of the report (str) and the outliers (outliers).
 Run data check pipeline to seek for potential problems with the data
 }
 \examples{
-check_data(iris[1:100, ], 'Species')
 check_data(lisbon, 'Price')
-check_data(compas, 'Two_yr_Recidivism')
-check_data(iris, 'Species')
-check_data(lymph, 'class')
 }

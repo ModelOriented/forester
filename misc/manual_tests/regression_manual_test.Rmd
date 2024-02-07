@@ -1,0 +1,134 @@
+---
+title: "Regression manual test" 
+author: "Hubert Ruczyński" 
+date: "`r Sys.Date()`" 
+output: html_document 
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(forester)
+```
+
+# Data preparation
+
+```{r}
+data(lisbon)
+```
+
+```{r}
+lisbon_prep  <- custom_preprocessing(data = lisbon,
+                                     y = 'Price',
+                                     na_indicators = c(''),
+                                     removal_parameters = list(
+                                       active_modules = c(duplicate_cols = TRUE, id_like_cols    = TRUE,
+                                                          static_cols    = TRUE, sparse_cols     = TRUE,
+                                                          corrupt_rows   = TRUE, correlated_cols = TRUE),
+                                       id_names = c('id', 'nr', 'number', 'idx', 'identification', 'index'),
+                                       static_threshold           = 0.99,
+                                       sparse_columns_threshold   = 0.3,
+                                       sparse_rows_threshold      = 0.3,
+                                       high_correlation_threshold = 0.7
+                                     ),
+                                     imputation_parameters = list(
+                                       imputation_method = 'median-other',
+                                       k = 10,
+                                       m = 5
+                                     ),
+                                     feature_selection_parameters = list(
+                                       feature_selection_method = 'none',
+                                       max_features = 'default',
+                                       nperm = 1,
+                                       cutoffPermutations = 20,
+                                       threadsNumber = NULL,
+                                       method = 'estevez'
+                                     ),
+                                     verbose = TRUE)
+```
+
+# Training
+
+```{r}
+train_out <- train(data        = lisbon,
+      y                          = 'Price', 
+      time                       = NULL,
+      status                     = NULL,
+      type                       = "auto",
+      engine                     = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
+      verbose                    = TRUE,
+      train_test_split           = c(0.6, 0.2, 0.2),
+      split_seed                 = NULL,
+      bayes_iter                 = 0,
+      random_evals               = 2,
+      metrics                    = "auto",
+      sort_by                    = "auto",
+      metric_function            = NULL,
+      metric_function_name       = NULL,
+      metric_function_decreasing = TRUE,
+      best_model_number          = 5,
+      custom_preprocessing       = NULL
+)
+```
+
+```{r}
+train_out_1 <- train(data        = lisbon_prep$data,
+      y                          = 'Price', 
+      time                       = NULL,
+      status                     = NULL,
+      type                       = "auto",
+      engine                     = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
+      verbose                    = TRUE,
+      train_test_split           = c(0.6, 0.2, 0.2),
+      split_seed                 = NULL,
+      bayes_iter                 = 0,
+      random_evals               = 2,
+      metrics                    = "auto",
+      sort_by                    = "auto",
+      metric_function            = NULL,
+      metric_function_name       = NULL,
+      metric_function_decreasing = TRUE,
+      best_model_number          = 5,
+      custom_preprocessing       = lisbon_prep
+)
+```
+
+```{r}
+train_out_2 <- train(data        = lisbon_prep$data,
+      y                          = 'Price', 
+      time                       = NULL,
+      status                     = NULL,
+      type                       = "auto",
+      engine                     = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
+      verbose                    = TRUE,
+      train_test_split           = c(0.6, 0.2, 0.2),
+      split_seed                 = NULL,
+      bayes_iter                 = 4,
+      random_evals               = 0,
+      metrics                    = "auto",
+      sort_by                    = "auto",
+      metric_function            = NULL,
+      metric_function_name       = NULL,
+      metric_function_decreasing = TRUE,
+      best_model_number          = 5,
+      custom_preprocessing       = lisbon_prep
+)
+
+```
+
+# Report
+
+```{r}
+report(train_output = train_out_1, 
+       output_file  = 'regression_test_1',
+       output_dir   = getwd(),
+       check_data   = TRUE)
+```
+
+```{r}
+report(train_output = train_out_2, 
+       output_file  = 'regression_test_2',
+       output_dir   = getwd(),
+       check_data   = TRUE)
+```

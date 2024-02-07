@@ -4,7 +4,13 @@
 \alias{rm_corrupted_observations}
 \title{Remove observations with too much empty values or empty target}
 \usage{
-rm_corrupted_observations(data, y, threshold = 0.3, na_indicators = c(""))
+rm_corrupted_observations(
+  data,
+  y,
+  threshold = 0.3,
+  na_indicators = c(""),
+  verbose = FALSE
+)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -19,6 +25,9 @@ it is going to be removed. By default set to 0.3.}
 \item{na_indicators}{A list containing the values that will be treated as NA
 indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 as these are already checked in other criterion.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 A list containing two objects

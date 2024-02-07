@@ -9,7 +9,8 @@ train_test_balance(
   y,
   balance = TRUE,
   fractions = c(0.6, 0.2, 0.2),
-  seed = NULL
+  seed = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -25,15 +26,13 @@ determine sizes of train, test and validation datasets. DEFAULT: c(0.6, 0.2, 0.2
 
 \item{seed}{An integer random seed. It allows for comparable results. If it
 is NULL, the split is random.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none.}
 }
 \value{
 A list of train, test and validation datasets.
 }
 \description{
 Balance and split the dataset
-}
-\examples{
-data(lisbon)
-b_lisbon <- train_test_balance(lisbon, 'Price', balance = FALSE,
-                               fractions = c(train = 0.6, valid = 0.2, test = 0.2))
 }

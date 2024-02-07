@@ -34,6 +34,8 @@
 #' @param high_correlation_threshold A numeric value from [0,1] range, which indicates when we consider
 #' the correlation to be high. If feature surpasses this threshold it is going to
 #' be removed. By default set to 0.7.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing three objects:
 #' \itemize{
@@ -52,10 +54,11 @@ preprocessing_removal <- function(data,
                                   sparse_columns_threshold   = 0.3,
                                   sparse_rows_threshold      = 0.3,
                                   na_indicators              = c(''),
-                                  high_correlation_threshold = 0.7) {
+                                  high_correlation_threshold = 0.7,
+                                  verbose = FALSE) {
 
   if (!is.logical(active_modules) || !is.vector(active_modules) || length(active_modules) != 6) {
-    verbose_cat(crayon::red('\u2716'), 'Preprocessing removal: The active_modules parameter is not a logical vector of length equal to 6.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'Preprocessing removal: The active_modules parameter is not a logical vector of length equal to 6.', '\n', verbose = verbose)
     stop('Preprocessing removal: The active_modules parameter is not a logical vector of length equal to 6.')
   }
   to_rm_col <- c()
@@ -143,6 +146,8 @@ preprocessing_removal <- function(data,
 #' @param na_indicators A list containing the values that will be treated as NA
 #' indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 #' as these are already checked in other criterion.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing two objects
 #' \itemize{
@@ -150,13 +155,13 @@ preprocessing_removal <- function(data,
 #' \item \code{`idx`} The indexes of removed observations.
 #' }
 #' @export
-rm_corrupted_observations <- function(data, y, threshold = 0.3, na_indicators = c('')) {
-  if (!threshold >= 0 && !threshold <= 1) {
-    verbose_cat(crayon::red('\u2716'), 'Removal of corrupted observations: The value of threshold is not in [0,1] range.', '\n', verbose = TRUE)
+rm_corrupted_observations <- function(data, y, threshold = 0.3, na_indicators = c(''), verbose = FALSE) {
+  if (!(threshold >= 0 && threshold <= 1)) {
+    verbose_cat(crayon::red('\u2716'), 'Removal of corrupted observations: The value of threshold is not in [0,1] range.', '\n', verbose = verbose)
     stop('Removal of corrupted observations: The value of threshold is not in [0,1] range.')
   }
   if (!is.vector(na_indicators)) {
-    verbose_cat(crayon::red('\u2716'), 'Removal of corrupted observations: Provided na_indicators is not a list.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'Removal of corrupted observations: Provided na_indicators is not a list.', '\n', verbose = verbose)
     stop('Removal of corrupted observations: Provided na_indicators is not a list.')
   }
   to_rm <- c()
@@ -177,7 +182,7 @@ rm_corrupted_observations <- function(data, y, threshold = 0.3, na_indicators = 
     if (is.na(Y[i]) || is.null(Y[i]) || Y[i] %in% na_indicators) {
       to_rm <- c(to_rm, i)
     # If observation doesn't have too much missing values.
-    } else if (nas > threshold) {
+    } else if (nas > threshold * ncol(data)) {
       to_rm <- c(to_rm, i)
     }
   }
@@ -201,6 +206,8 @@ rm_corrupted_observations <- function(data, y, threshold = 0.3, na_indicators = 
 #' matrix, and so on.
 #' @param id_names A vector of strings indicating which column names are perceived
 #' as ID-like. By default the list is: ['id', 'nr', 'number', 'idx', 'identification', 'index'].
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing two objects
 #' \itemize{
@@ -208,10 +215,9 @@ rm_corrupted_observations <- function(data, y, threshold = 0.3, na_indicators = 
 #' \item \code{`idx`} The indexes of removed columns.
 #' }
 #' @export
-rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx',
-                                                  'identification', 'index')) {
+rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx', 'identification', 'index'), verbose = FALSE) {
   if (!is.vector(id_names)) {
-    verbose_cat(crayon::red('\u2716'), 'Removal of ID-like columns: Provided id_names is not a vector.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'Removal of ID-like columns: Provided id_names is not a vector.', '\n', verbose = verbose)
     stop('Removal of ID-like columns: Provided id_names is not a vector.')
   }
   names     <- colnames(data)
@@ -220,10 +226,11 @@ rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx',
     if (tolower(names[i]) %in% id_names) {
       to_rm <- c(to_rm, i)
     }
-    if (isTRUE(all.equal(data[, i], as.integer(data[, i]))) &&
+    suppressWarnings(
+      if (isTRUE(all.equal(data[, i], as.integer(data[, i]))) &&
         length(unique(data[, i])) == nrow(data)) {
       to_rm <- c(to_rm, i)
-    }
+    })
   }
   to_rm <- unique(to_rm)
   if (!is.null(to_rm)) {
@@ -247,6 +254,8 @@ rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx',
 #' @param na_indicators A list containing the values that will be treated as NA
 #' indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 #' as these are already checked in other criterion.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing two objects
 #' \itemize{
@@ -254,14 +263,14 @@ rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx',
 #' \item \code{`idx`} The indexes of removed columns.
 #' }
 #' @export
-rm_sparse_columns <- function(data, y, threshold = 0.3, na_indicators = c('')) {
-  if (!threshold >= 0 && !threshold <= 1) {
-    verbose_cat(crayon::red('\u2716'), 'Removal of sparse columns: The value of threshold is not in [0,1] range.', '\n', verbose = TRUE)
+rm_sparse_columns <- function(data, y, threshold = 0.3, na_indicators = c(''), verbose = FALSE) {
+  if (!(threshold >= 0 && threshold <= 1)) {
+    verbose_cat(crayon::red('\u2716'), 'Removal of sparse columns: The value of threshold is not in [0,1] range.', '\n', verbose = verbose)
     stop('Removal of sparse columns: The value of threshold is not in [0,1] range.')
   }
 
   if (!is.vector(na_indicators)) {
-    verbose_cat(crayon::red('\u2716'), 'Removal of sparse columns:  Provided na_indicators is not a list.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'Removal of sparse columns:  Provided na_indicators is not a list.', '\n', verbose = verbose)
     stop('Removal of sparse columns: Provided na_indicators is not a list.')
   }
   to_rm <- c()
@@ -276,7 +285,7 @@ rm_sparse_columns <- function(data, y, threshold = 0.3, na_indicators = c('')) {
       }
     }
     nas <- nas + k
-    if (nas >= threshold) {
+    if (nas >= threshold * nrow(data)) {
       to_rm <- c(to_rm, i)
     }
   }
@@ -366,6 +375,8 @@ find_duplicate_columns <- function(data) {
 #' @param threshold A numeric value from [0,1] range, which indicates when we consider
 #' the correlation to be high. If feature surpasses this threshold it is going to
 #' be removed. By default set to 0.7.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing four objects
 #' \itemize{
@@ -376,9 +387,9 @@ find_duplicate_columns <- function(data) {
 #' }
 #'
 #' @export
-rm_correlated_columns <- function(data, y, threshold = 0.7) {
-  if (!threshold >= 0 && !threshold <= 1) {
-    verbose_cat(crayon::red('\u2716'), 'Removal of highly correlated columns: The value of threshold is not in [0,1] range.', '\n', verbose = TRUE)
+rm_correlated_columns <- function(data, y, threshold = 0.7, verbose = FALSE) {
+  if (!(threshold >= 0 && threshold <= 1)) {
+    verbose_cat(crayon::red('\u2716'), 'Removal of highly correlated columns: The value of threshold is not in [0,1] range.', '\n', verbose = verbose)
     stop('Removal of highly correlated columns: The value of threshold is not in [0,1] range.')
   }
   y_idx   <- which(names(data) == y)
@@ -450,7 +461,7 @@ rm_correlated_columns <- function(data, y, threshold = 0.7) {
         } else {
           cor_fct[i, j] <- NA
           verbose_cat(crayon::red('\u2716'), 'Cannot calculate Crammer V rank for features', colnames(cor_fct)[i],
-                      'and', colnames(cor_fct)[j], 'due to too many unique values. \n', verbose = TRUE)
+                      'and', colnames(cor_fct)[j], 'due to too many unique values. \n', verbose = verbose)
         }
       }
     }
@@ -521,6 +532,8 @@ rm_correlated_columns <- function(data, y, threshold = 0.7) {
 #' threshold of dominating values for column If feature has more dominating
 #' values it is going to be removed. By default set to 1, which indicates that
 #' all values are equal.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing two objects:
 #' \itemize{
@@ -528,9 +541,9 @@ rm_correlated_columns <- function(data, y, threshold = 0.7) {
 #' \item \code{`idx`} The indexes of removed columns
 #' }
 #' @export
-rm_static_cols <- function(data, y, threshold = 1) {
-  if (!threshold >= 0 && !threshold <= 1) {
-    verbose_cat(crayon::red('\u2716'), 'Removal of static columns: The value of threshold is not in [0,1] range.', '\n', verbose = TRUE)
+rm_static_cols <- function(data, y, threshold = 1, verbose = FALSE) {
+  if (!(threshold >= 0 && threshold <= 1)) {
+    verbose_cat(crayon::red('\u2716'), 'Removal of static columns: The value of threshold is not in [0,1] range.', '\n', verbose = verbose)
     stop('Removal of static columns: The value of threshold is not in [0,1] range.')
   }
   to_rm <- c()

@@ -2,6 +2,8 @@
 #'
 #' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix and so on.
+#' @param type A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+#' sets the type of the task.
 #' @param y A string that indicates a target column name for regression or classification.
 #' Either y, or pair: time, status can be used. By default NULL.
 #' @param time A string that indicates a time column name for survival analysis task.
@@ -20,6 +22,7 @@
 #' @return A dataset in format proper for the selected engines.
 #' @export
 prepare_data <- function(data,
+                         type,
                          y       = NULL,
                          time    = NULL,
                          status  = NULL,
@@ -145,7 +148,7 @@ prepare_data <- function(data,
         decision_tree_data[, i]   <- as.integer(factor(decision_tree_data[, i]))
       }
     }
-    if (guess_type(data, y) == 'binary_clf') {
+    if (type %in% c('binary_clf', 'multiclass')) {
       decision_tree_data[[y]] <- as.factor(decision_tree_data[[y]])
     }
 
@@ -154,8 +157,7 @@ prepare_data <- function(data,
   if ('lightgbm' %in% engine) {
     if (predict == FALSE) {
       y_true <- data[, which(names(data) == y)]
-
-      if (guess_type(data, y) != 'regression') {
+      if (type != 'regression') {
         label <- as.matrix(as.numeric(y_true) - 1)
       } else {
         label <- as.matrix(y_true)

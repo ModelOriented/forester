@@ -9,7 +9,6 @@ random_search(
   y = NULL,
   time = NULL,
   status = NULL,
-  models,
   engine,
   type,
   max_evals = 10,
@@ -28,15 +27,12 @@ Either y, or pair: time, status can be used.}
 \item{status}{A string that indicates a status column name for survival analysis task.
 Either y, or pair: time, status can be used.}
 
-\item{models}{A list of models trained by `train_models()` function.
-They will be compered with models trained with different hyperparameters.}
-
 \item{engine}{A vector of tree-based models that shall be created. Possible
 values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
 matter for survival analysis.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`binary_clf`, `regression`, or `survival`.}
+`binary_clf`, `regression`, `survival`, or `multiclass` task.}
 
 \item{max_evals}{The number of trained models for each model type in `engine`.}
 

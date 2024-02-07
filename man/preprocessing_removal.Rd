@@ -14,7 +14,8 @@ preprocessing_removal(
   sparse_columns_threshold = 0.3,
   sparse_rows_threshold = 0.3,
   na_indicators = c(""),
-  high_correlation_threshold = 0.7
+  high_correlation_threshold = 0.7,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -52,6 +53,9 @@ as these are already checked in other criterion.}
 \item{high_correlation_threshold}{A numeric value from [0,1] range, which indicates when we consider
 the correlation to be high. If feature surpasses this threshold it is going to
 be removed. By default set to 0.7.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 A list containing three objects:

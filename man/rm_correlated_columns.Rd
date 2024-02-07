@@ -5,7 +5,7 @@
 \title{Remove strongly correlated columns (Spearman's rank for numerical, Crammer's V for
 categorical)}
 \usage{
-rm_correlated_columns(data, y, threshold = 0.7)
+rm_correlated_columns(data, y, threshold = 0.7, verbose = FALSE)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -16,6 +16,9 @@ matrix, and so on.}
 \item{threshold}{A numeric value from [0,1] range, which indicates when we consider
 the correlation to be high. If feature surpasses this threshold it is going to
 be removed. By default set to 0.7.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 A list containing four objects

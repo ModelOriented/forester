@@ -16,8 +16,8 @@ explain(models, test_data, y, verbose = FALSE)
 (2) a character name of variable in the `data` that contains
 the target variable.}
 
-\item{verbose}{A logical value determining whether explainer creation messages
-should be printed or not.}
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+the process, if FALSE gives none.}
 }
 \value{
 A list of DALEX explainers for 5 models of different engines.
@@ -27,10 +27,12 @@ The `explain()` function is a wrapper for `DALEX` methods for model explanations
 If possible it will use methods for tree-based models.
 }
 \examples{
+\dontrun{
 data(lisbon)
 train_output   <- train(lisbon, 'Price', verbose = FALSE, random_evals = 2, bayes_iter = 1)
 best_explainer <- explain(train_output$best_models_on_valid[[1]][1],
                           train_output$valid_data, train_output$y)
 best_explainers <- explain(train_output$best_models_on_valid[[1]],
                            train_output$valid_data, train_output$y)
+}
 }

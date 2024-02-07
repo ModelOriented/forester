@@ -8,6 +8,7 @@ imputes the missing fields and selects most important features.}
 custom_preprocessing(
   data,
   y,
+  type = "auto",
   na_indicators = c(""),
   removal_parameters = list(active_modules = c(duplicate_cols = TRUE, id_like_cols =
     TRUE, static_cols = TRUE, sparse_cols = TRUE, corrupt_rows = TRUE, correlated_cols =
@@ -15,7 +16,7 @@ custom_preprocessing(
     static_threshold = 0.99, sparse_columns_threshold = 0.3, sparse_rows_threshold = 0.3,
     high_correlation_threshold = 0.7),
   imputation_parameters = list(imputation_method = "median-other", k = 10, m = 5),
-  feature_selection_parameters = list(feature_selection_method = "VI", max_features =
+  feature_selection_parameters = list(feature_selection_method = "none", max_features =
     "default", nperm = 1, cutoffPermutations = 20, threadsNumber = NULL, method =
     "estevez"),
   verbose = FALSE
@@ -26,6 +27,11 @@ custom_preprocessing(
 matrix and so on.}
 
 \item{y}{A string that indicates a target column name.}
+
+\item{type}{A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+sets the type of the task. If `auto` (the default option) then
+forester will figure out `type` based on the number of unique values
+in the `y` variable, or the presence of time/status columns.}
 
 \item{na_indicators}{A list containing the values that will be treated as NA
 indicators. By default the list is c(''). WARNING Do not include NA or NaN,

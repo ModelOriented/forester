@@ -4,7 +4,7 @@
 \alias{impute_mice}
 \title{Imputes all missing values with the MICE (Multivariate Imputation by Chained Equations) algorithm}
 \usage{
-impute_mice(data, na_indicators = c(""), m = 5)
+impute_mice(data, na_indicators = c(""), m = 5, verbose = FALSE)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -16,6 +16,9 @@ as these are already checked in other criterion.}
 
 \item{m}{An integer describing the number of multiple imputations to use.
 By default set to 5.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 Imputed dataset.

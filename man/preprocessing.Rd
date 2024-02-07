@@ -27,7 +27,7 @@ Either y, or pair: time, status can be used. By default NULL.}
 Either y, or pair: time, status can be used. By default NULL.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`binary_clf`, `regression`, or `survival`.}
+`binary_clf`, `regression`, `survival`, or `multiclass` task.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}

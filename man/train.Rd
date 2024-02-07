@@ -32,23 +32,23 @@ on all columns in the `data`.}
 
 \item{y}{A target variable, being a character name of variable in the `data`
 that contains the target variable for classification and regression tasks.
-By default set to NULL. If you use y, don't use time, and status, which are
+By default set to NULL. If you use y, don't use `time`, and `status`, which are
 reserved for survival analysis.}
 
 \item{time}{A target variable, being a character name of variable in the `data`
-that describes the time column for survival analysis task. By default set to NULL.
-You have to use both time, and status together. If you use it, you cannot use y
+that describes the `time` column for survival analysis task. By default set to NULL.
+You have to use both `time`, and `status` together. If you use it, you cannot use `y`
 as it is reserved for classification and regression tasks.}
 
 \item{status}{A target variable, being a character name of variable in the `data`
-that describes the status for survival analysis task. By default set to NULL.
-You have to use both time, and status together. If you use it, you cannot use y
+that describes the `status` for survival analysis task. By default set to NULL.
+You have to use both `time`, and `status` together. If you use it, you cannot use `y`
 as it is reserved for classification and regression tasks.}
 
-\item{type}{A character, one of `binary_clf`/`regression`/`survival`/`auto` that
+\item{type}{A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
 sets the type of the task. If `auto` (the default option) then
 forester will figure out `type` based on the number of unique values
-in the `y` variable, or the presence of time/status columns.}
+in the `y` variable, or the presence of `time`/`status` columns.}
 
 \item{engine}{A vector of tree-based models that shall be tested.
 Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
@@ -58,7 +58,7 @@ It doesn't matter for survival analysis.}
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 training process, if FALSE gives none.}
 
-\item{train_test_split}{A 3-value vector, describing the proportions of train,
+\item{train_test_split}{A 3-value, numeric vector, describing the proportions of train,
 test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).}
 
 \item{split_seed}{An integer value describing the seed for the split into
@@ -66,10 +66,10 @@ train, test, and validation datasets. By default no seed is set and the split
 is performed randomly. Default value is NULL.}
 
 \item{bayes_iter}{An integer value describing number of optimization rounds
-used by the Bayesian optimization.}
+used by the Bayesian optimization. If set to 0 it turns off this method.}
 
 \item{random_evals}{An integer value describing number of trained models
-with different parameters by random search.}
+with different parameters by random search. If set to 0 it turns off this method.}
 
 \item{metrics}{A vector of metrics names. By default param set for `auto`, most important metrics are returned.
 For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.}
@@ -88,7 +88,7 @@ By default `metric_function_name` is `metric_function`.}
 \item{metric_function_decreasing}{A logical value indicating how metric_function
 should be sorted. `TRUE` by default.}
 
-\item{best_model_number}{Number best models to be chosen as element of the return.
+\item{best_model_number}{Number of best models to be chosen as element of the return.
 All trained models will be returned as different element of the return.}
 
 \item{custom_preprocessing}{An object returned by the `custom_preprocessing()`
@@ -105,7 +105,7 @@ A list of all necessary objects for other functions. It contains:
 \item \code{`status`} The original column name describing status for survival analysis task.
 \item \code{`type`} The type of the ML task. If the user did not specify a type in the
 input parameters, the algorithm recognizes, uses and returns the same type.
-It could be `binary_clf`, `regression`, or `survival`.
+It could be `binary_clf`, `regression`, `survival`, or  `multiclass`.
 
 \item \code{`deleted_columns`} Column names from the original data frame that have been
 removed in the data preprocessing process, e.g. due to too high correlation
@@ -153,39 +153,36 @@ the original data frame that went to the validation set.
 \item \code{`predictions_valid`} Predictions for all trained models on a validation dataset.
 
 \item \code{`predictions_train_labels`} Predictions for all trained models on a
-train dataset with human readable labels.
+train dataset with human readable labels (for classification tasks only).
 \item \code{`predictions_test_labels`} Predictions for all trained models on a
-test dataset with human readable labels.
+test dataset with human readable labels (for classification tasks only).
 \item \code{`predictions_valid_labels`} Predictions for all trained models on a
-validation dataset with human readable labels.
+validation dataset with human readable labels (for classification tasks only).
 
 \item \code{`predictions_best_train`} Predictions for best trained models on a train dataset.
 \item \code{`predictions_best_test`} Predictions for best trained models on a test dataset.
 \item \code{`predictions_best_valid`} Predictions for best trained models on a validation dataset.
 
 \item \code{`predictions_best_train_labels`} Predictions for best trained models on a
-train dataset with human readable labels.
+train dataset with human readable labels (for classification tasks only).
 \item \code{`predictions_best_test_labels`} Predictions for best trained models on a
-test dataset with human readable labels.
+test dataset with human readable labels (for classification tasks only).
 \item \code{`predictions_best_valid_labels`} Predictions for best trained models on a
-validation dataset with human readable labels.
+validation dataset with human readable labels (for classification tasks only).
 
 \item \code{`score_train`} The list of metrics for all trained models calculated on a train
-dataset. For regression task there are: mse, r2 and mad metrics. For the
-classification task there are: f1, auc, recall, precision and accuracy.
+dataset.
 \item \code{`score_test`} The list of metrics for all trained models calculated on a test
-dataset. For regression task there are: mse, r2 and mad metrics. For the
-classification task there are: f1, auc, recall, precision and accuracy.
+dataset.
 \item \code{`score_valid`} The list of metrics for all trained models calculated on a validation
-dataset. For regression task there are: mse, r2 and mad metrics. For the
-classification task there are: f1, auc, recall, precision and accuracy.
+dataset.
 
 \item \code{`test_observed`} Values of y column from the test dataset.
 \item \code{`train_observed`} Values of y column from the training dataset.
 \item \code{`valid_observed`} Values of y column from the validation dataset.
 
 \item \code{`test_observed_labels`} Values of y column from the test dataset as text labels
-(for classification task only).
+(for classification tasks only).
 \item \code{`train_observed_labels`} Values of y column from the training dataset as text
 labels (for classification task only).
 \item \code{`valid_observed_labels`} Values of y column from the validation dataset as text

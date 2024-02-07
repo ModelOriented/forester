@@ -2,7 +2,13 @@
 ^\.Rproj\.user$
 ^\docs$
 ^docs$
+^misc$
 ^_pkgdown\.yml$
 _pkgdown.yaml
 ^pkgdown
 ^catboost_info$
+^\catboost_info$
+^tests/testthat/catboost_info
+^report_binary.pdf
+^report_multiclass.pdf
+^report_regression.pdf

@@ -36,9 +36,15 @@ train_models_bayesopt <- function(train_data,
                                   iters.n = 7,
                                   return_params = FALSE,
                                   verbose = TRUE) {
+  if (!is.numeric(iters.n) | as.integer(iters.n) != iters.n ) {
+    verbose_cat(crayon::green('\u2714'), 'The number of bayesian optimization iterations must be an integer. \n\n', verbose = verbose)
+    stop('The number of bayesian optimization iterations must be an integer.')
+  }
   if (iters.n <= 0) {
+    verbose_cat(crayon::green('\u2714'), 'Bayesian Optimization was turned off. \n\n', verbose = verbose)
     return(NULL)
   }
+
   ranger_model        <- NULL
   xgboost_model       <- NULL
   decision_tree_model <- NULL
@@ -51,10 +57,6 @@ train_models_bayesopt <- function(train_data,
   models_params$decision_tree_params <- NULL
   models_params$lightgbm_params      <- NULL
   models_params$catboost_params      <- NULL
-
-  if (type == 'multi_clf') {
-    stop('Multilabel classification is not supported currently!')
-  }
 
   if (type == 'survival') {
     fitness_fun_rfsrc <- function(ntree, nodesize, nsplit) {
@@ -93,17 +95,19 @@ train_models_bayesopt <- function(train_data,
     tryCatch(
       expr = {
         if (verbose) {
+          capture.output(
           bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_rfsrc,
                                                      bounds     = bounds,
                                                      initPoints = length(bounds) + 5,
                                                      iters.n    = iters.n,
-                                                     verbose    = 1)
+                                                     verbose    = 1))
         } else {
+          capture.output(
           bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_rfsrc,
                                                      bounds     = bounds,
                                                      initPoints = length(bounds) + 5,
                                                      iters.n    = iters.n,
-                                                     verbose    = 0)
+                                                     verbose    = 0))
         }
       },
       error = function(e) {
@@ -157,9 +161,11 @@ train_models_bayesopt <- function(train_data,
       if (type == 'regression') {
         classification <- FALSE
         probability    <- FALSE
-      } else if (type == 'binary_clf') {
+      } else if (type %in% c('binary_clf', 'multiclass')) {
         classification <- TRUE
         probability    <- TRUE
+      } else {
+        verbose_cat('Incorrect task type.', verbose = verbose)
       }
 
       fitness_fun_ranger <- function(num.trees, min.node.size, max.depth, sample.fraction) {
@@ -179,16 +185,24 @@ train_models_bayesopt <- function(train_data,
           preds    <- ranger::predictions(predict(model, test_data$ranger_data))
         } else if (type == 'binary_clf') {
           preds    <- predict(model, test_data$ranger_data)$predictions[, 2]
+        } else if (type == 'multiclass') {
+          predicts <- ranger::predictions(predict(model, test_data$ranger_data))
+          preds <- c()
+          for (j in 1:nrow(predicts)) {
+            preds <- c(preds, which.max(unname(predicts[j, ])))
+          }
         }
         observed   <- test_data$ranger_data[, y]
         max_metric <- NULL
 
-        if (type == 'binary_clf') {
+        if (type == 'regression') {
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'binary_clf') {
           y_levels   <- levels(factor(train_data$ranger_data[, y]))
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
           max_metric <- mean(preds == observed) # accuracy
-        } else {
-          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'multiclass') {
+          max_metric <- mean(preds == observed) # accuracy
         }
 
         return(list(Score = as.numeric(max_metric)))
@@ -203,17 +217,19 @@ train_models_bayesopt <- function(train_data,
       tryCatch(
         expr = {
           if (verbose) {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_ranger,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 1)
+                                                       verbose    = 1))
           } else {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_ranger,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0)
+                                                       verbose    = 0))
           }
         },
         error = function(e) {
@@ -252,9 +268,18 @@ train_models_bayesopt <- function(train_data,
     else if (engine[i] == 'xgboost') {
 
       if (type == 'binary_clf') {
-        obj <- 'binary:logistic'
+        objective   <- 'binary:logistic'
+        eval_metric <- 'auc'
+        params      <- list(objective = objective, eval_metric = eval_metric)
       } else if (type == 'regression') {
-        obj <- 'reg:squarederror'
+        objective   <- 'reg:squarederror'
+        eval_metric <- 'rmse'
+        params      <- list(objective = objective, eval_metric = eval_metric)
+      } else if (type == 'multiclass') {
+        objective   <- 'multi:softprob'
+        eval_metric <- 'merror'
+        num_class   <- length(unique(as.vector(train_data$ranger[[y]])))
+        params      <- list(objective = objective, eval_metric = eval_metric, num_class = num_class)
       } else {
         verbose_cat('Incorrect task type.', verbose = verbose)
       }
@@ -263,25 +288,36 @@ train_models_bayesopt <- function(train_data,
         capture.output(
           model <- xgboost::xgboost(
             train_data$xgboost_data,
-            label     = as.vector(as.numeric(train_data$ranger_data[[y]])) - 1,
-            objective = obj,
             nrounds   = nrounds,
             verbose   = 1,
+            label     = as.vector(as.numeric(train_data$ranger_data[[y]])) - 1,
+            params    = params,
             eta       = eta,
             subsample = subsample,
             gamma     = gamma,
             max_depth = max_depth))
 
-        preds      <- predict(model, test_data$xgboost_data, type = 'prob')
+        if (type %in% c('binary_clf', 'regression')) {
+          preds    <- predict(model, test_data$xgboost_data, type = 'prob')
+        } else if (type == 'multiclass') {
+          predicts <- predict(model, test_data$xgboost_data)
+          predicts <- matrix(predicts, ncol = length(unique(test_data$ranger_data[[y]])), byrow = TRUE)
+          preds    <- c()
+          for (j in 1:nrow(predicts)) {
+            preds  <- c(preds, which.max(unname(predicts[j, ])))
+          }
+        }
         observed   <- test_data$ranger_data[, y]
         max_metric <- NULL
 
-        if (type == 'binary_clf') {
+        if (type == 'regression') {
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'binary_clf') {
           y_levels   <- levels(factor(train_data$ranger_data[, y]))
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
           max_metric <- mean(preds == observed) # accuracy
-        } else {
-          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'multiclass') {
+          max_metric <- mean(preds == observed) # accuracy
         }
 
         return(list(Score = as.numeric(max_metric)))
@@ -296,17 +332,19 @@ train_models_bayesopt <- function(train_data,
       tryCatch(
         expr = {
           if (verbose) {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_xgboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 1)
+                                                       verbose    = 1))
           } else {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_xgboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0)
+                                                       verbose    = 0))
           }
         },
         error = function(e) {
@@ -317,7 +355,7 @@ train_models_bayesopt <- function(train_data,
       if (is.null(bayes)) {
         capture.output(xgboost_model <- xgboost::xgboost(train_data$xgboost_data,
                                                         label     = as.vector(as.numeric(train_data$ranger_data[[y]])) - 1,
-                                                        objective = obj,
+                                                        params    = params,
                                                         nrounds   = 5000,
                                                         verbose   = 1))
         verbose_cat(crayon::red('\u2716'), 'xgboost: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
@@ -333,7 +371,7 @@ train_models_bayesopt <- function(train_data,
           xgboost_model <- xgboost::xgboost(train_data$xgboost_data,
                                             label     = as.vector(as.numeric(train_data$ranger_data[[y]])) - 1,
                                             verbose   = 1,
-                                            objective = obj,
+                                            params    = params,
                                             nrounds   = as.integer(ParBayesianOptimization::getBestPars(bayes)$nrounds),
                                             eta       = ParBayesianOptimization::getBestPars(bayes)$eta,
                                             subsample = ParBayesianOptimization::getBestPars(bayes)$subsample,
@@ -343,24 +381,38 @@ train_models_bayesopt <- function(train_data,
       }
     }
     else if (engine[i] == 'decision_tree') {
-      form        <- as.formula(paste0(y, ' ~.'))
+      form    <- as.formula(paste0(y, ' ~.'))
       fitness_fun_decision_tree <- function(minsplit, minprob, maxdepth, nresample) {
-        model    <- partykit::ctree(form, data = train_data$decision_tree_data,
-                                    minsplit   = minsplit,
-                                    minprob    = minprob,
-                                    maxdepth   = maxdepth,
-                                    nresample  = nresample
+        model <- partykit::ctree(form, data = train_data$decision_tree_data,
+                                 minsplit   = minsplit,
+                                 minprob    = minprob,
+                                 maxdepth   = maxdepth,
+                                 nresample  = nresample
         )
-        preds      <- predict(model, test_data$decision_tree_data)
+
+        if (type %in% c('binary_clf', 'regression')) {
+          preds    <- predict(model, test_data$decision_tree_data)
+        } else if (type == 'multiclass') {
+          predicts <- unname(predict(model, test_data$decision_tree_data, type = 'prob'))
+          predicts <- matrix(predicts, ncol = length(unique(test_data$ranger_data[[y]])), byrow = TRUE)
+          preds    <- c()
+          for (j in 1:nrow(predicts)) {
+            preds  <- c(preds, which.max(unname(predicts[j, ])))
+          }
+        }
+
         observed   <- test_data$ranger_data[, y]
         max_metric <- NULL
 
-        if (type == 'binary_clf') {
+        if (type == 'regression') {
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'binary_clf') {
           preds      <- unname(preds)
           max_metric <- mean(preds == observed) # accuracy
-        } else {
-          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'multiclass') {
+          max_metric <- mean(preds == observed) # accuracy
         }
+
         return(list(Score = as.numeric(max_metric)))
       }
 
@@ -373,17 +425,19 @@ train_models_bayesopt <- function(train_data,
       tryCatch(
         expr = {
           if (verbose) {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_decision_tree,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 1)
+                                                       verbose    = 1))
           } else {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_decision_tree,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0)
+                                                       verbose    = 0))
           }
         },
         error = function(e) {
@@ -418,15 +472,15 @@ train_models_bayesopt <- function(train_data,
           obj    <- 'binary'
           metric <- 'accuracy'
           params <- list(objective = obj, metric = metric, boosting = 'gbdt')
-        } else if (type == 'multi_clf') {
+        } else if (type == 'multiclass') {
           obj    <- 'multiclass'
-          params <- list(objective = obj)
+          params <- list(objective = obj, num_class = length(unique(as.vector(train_data$ranger_data[[y]]))))
         } else if (type == 'regression') {
           obj    <- 'regression'
           params <- list(objective = obj)
         }
 
-        params = append(params, c(
+        params <- append(params, c(
           learning_rate  = learning_rate,
           num_leaves     = as.integer(num_leaves),
           num_iterations = as.integer(num_iterations)
@@ -435,16 +489,27 @@ train_models_bayesopt <- function(train_data,
         model      <- lightgbm::lgb.train(params  = params,
                                           data    = train_data$lightgbm_data,
                                           verbose = 0)
-        preds      <- predict(model, test_data$lightgbm_data)
+
+        if (type %in% c('binary_clf', 'regression')) {
+          preds    <- predict(model, test_data$lightgbm_data)
+        } else if (type == 'multiclass') {
+          predicts <- predict(model, test_data$lightgbm_data)
+          preds    <- c()
+          for (j in 1:nrow(predicts)) {
+            preds  <- c(preds, which.max(unname(predicts[j, ])))
+          }
+        }
         observed   <- test_data$ranger_data[, y]
         max_metric <- NULL
 
-        if (type == 'binary_clf') {
+        if (type == 'regression') {
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'binary_clf') {
           y_levels   <- levels(factor(train_data$ranger_data[, y]))
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
-          max_metric <- mean(preds == observed) # Accuracy.
-        } else {
-          max_metric <- - model_performance_rmse(preds, observed) # RMSE.
+          max_metric <- mean(preds == observed) # accuracy
+        } else if (type == 'multiclass') {
+          max_metric <- mean(preds == observed) # accuracy
         }
         return(list(Score = as.numeric(max_metric)))
       }
@@ -457,17 +522,19 @@ train_models_bayesopt <- function(train_data,
       tryCatch(
         expr = {
           if (verbose) {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_lightgbm,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 1)
+                                                       verbose    = 1))
           } else {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_lightgbm,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0)
+                                                       verbose    = 0))
           }
         },
         error = function(e) {
@@ -477,10 +544,11 @@ train_models_bayesopt <- function(train_data,
 
       if (type == 'binary_clf') {
         obj    <- 'binary'
-        params <- list(objective = obj)
-      } else if (type == 'multi_clf') {
+        metric <- 'accuracy'
+        params <- list(objective = obj, metric = metric, boosting = 'gbdt')
+      } else if (type == 'multiclass') {
         obj    <- 'multiclass'
-        params <- list(objective = obj)
+        params <- list(objective = obj, num_class = length(unique(as.vector(train_data$ranger_data[[y]]))))
       } else if (type == 'regression') {
         obj    <- 'regression'
         params <- list(objective = obj)
@@ -512,7 +580,7 @@ train_models_bayesopt <- function(train_data,
         if (type == 'binary_clf') {
           obj    <- 'Logloss'
           params <- list(loss_function = obj, logging_level = 'Silent')
-        } else if (type == 'multi_clf') {
+        } else if (type == 'multiclass') {
           obj    <- 'MultiClass'
           params <- list(loss_function = obj, logging_level = 'Silent')
         } else if (type == 'regression') {
@@ -520,7 +588,7 @@ train_models_bayesopt <- function(train_data,
           params <- list(loss_function = obj, logging_level = 'Silent')
         }
 
-        params = append(params, c(
+        params <- append(params, c(
           iterations       = as.integer(iterations),
           border_count     = as.integer(border_count),
           depth            = as.integer(depth),
@@ -533,20 +601,31 @@ train_models_bayesopt <- function(train_data,
           preds <- (catboost::catboost.predict(model,
                                                test_data$catboost_data,
                                                prediction_type = 'Probability'))
-        } else {
+        } else if (type == 'regression') {
           preds <- (catboost::catboost.predict(model,
                                                test_data$catboost_data,
                                                prediction_type = 'RawFormulaVal'))
+        } else if (type == 'multiclass') {
+          predicts <- catboost::catboost.predict(model,
+                                                 test_data$catboost_data,
+                                                 prediction_type = 'Probability')
+          preds <- c()
+          for (j in 1:nrow(predicts)) {
+            preds <- c(preds, which.max(unname(predicts[j, ])))
+          }
         }
+
 
         observed     <- test_data$ranger_data[, y]
         max_metric   <- NULL
-        if (type == 'binary_clf') {
+        if (type == 'regression') {
+          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'binary_clf') {
           y_levels   <- levels(factor(train_data$ranger_data[, y]))
           preds      <- factor(1 * (preds > 0.5), levels = c(0, 1), labels = y_levels)
           max_metric <- mean(preds == observed) # accuracy
-        } else {
-          max_metric <- - model_performance_rmse(preds, observed) # rmse
+        } else if (type == 'multiclass') {
+          max_metric <- mean(preds == observed) # accuracy
         }
 
         return(list(Score = as.numeric(max_metric)))
@@ -562,17 +641,19 @@ train_models_bayesopt <- function(train_data,
       tryCatch(
         expr = {
           if (verbose) {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_catboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 1)
+                                                       verbose    = 1))
           } else {
+            suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_catboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0)
+                                                       verbose    = 0))
           }
         },
         error = function(e) {
@@ -583,7 +664,7 @@ train_models_bayesopt <- function(train_data,
       if (type == 'binary_clf') {
         obj    <- 'Logloss'
         params <- list(loss_function = obj, logging_level = 'Silent')
-      } else if (type == 'multi_clf') {
+      } else if (type == 'multiclass') {
         obj    <- 'MultiClass'
         params <- list(loss_function = obj, logging_level = 'Silent')
       } else if (type == 'regression') {
@@ -659,21 +740,3 @@ train_models_bayesopt <- function(train_data,
     return(return_list)
   }
 }
-
-#' #' Creates SurvProb for ranger model
-#' #'
-#' #' @param object The ranger object.
-#' #' @param newdata Dataset.
-#' #' @param times Time.
-#' #' @param ... Other variables.
-#' #'
-#' #' @return Survival probability
-#' #' @export
-#' predictSurvProb.ranger <- function (object, newdata, times, ...) {
-#'   ptemp <- ranger:::predict.ranger(object, data = newdata, importance = 'none')$survival
-#'   print('xddd')
-#'   pos   <- prodlim::sindex(jump.times = object$unique.death.times, eval.times = times)
-#'   p     <- cbind(1, ptemp)[, pos + 1, drop = FALSE]
-#'   if (nrow(p) != nrow(newdata) || ncol(p) != length(times)) stop()
-#'   return(p)
-#' }
