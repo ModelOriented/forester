@@ -10,3 +10,10 @@ R/not_to_run.R
 *.tfevents
 *.tsv
 *.tsv
+tests/testthat/checkpoints/*
+tests/testthat/catboost_info/*
+tests/testthat/testing_data_report.pdf
+tests/testthat/lisbon_report.pdf
+tests/testthat/iris_report.pdf
+tests/testthat/compas_report.pdf
+catboost_info
