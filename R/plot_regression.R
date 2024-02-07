@@ -32,7 +32,6 @@ plot.regression <- function(x,
                             type   = 'residuals',
                             metric = 'rmse',
                             ...){
-
   if (!(c('regression') %in% class(x)))
     stop('The plot() function requires an object created with train() function for regression task.')
 

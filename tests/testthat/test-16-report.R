@@ -17,5 +17,4 @@ test_that('test-report', {
           report(train_output = train_outputs[[i]],
                  output_file  = capture.output(cat(folder, reports[[i]], sep =''))))))
   }
-
 })

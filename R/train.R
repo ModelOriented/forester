@@ -288,9 +288,6 @@ train <- function(data,
   model_basic    <- train_models(train_data, y, time, status, engine, type)
   verbose_cat(crayon::green('\u2714'), 'Models with default parameters successfully trained. \n', verbose = verbose)
 
-  # preds_basic    <- predict_models_all(model_basic, test_data, y, type)
-  # verbose_cat(crayon::green('\u2714'), 'Predicted successfully. \n', verbose = verbose)
-
   model_random   <- random_search(train_data,
                                   y         = y,
                                   time      = time,
@@ -302,14 +299,6 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Models optimized with random search successfully trained. \n', verbose = verbose)
 
-  # preds_random <- NULL
-  #
-  # if (!is.null(model_random)) {
-  #   preds_random <- predict_models_all(model_random$models,
-  #                                      test_data,
-  #                                      y,
-  #                                      type = type)
-  # }
 
   model_bayes <- train_models_bayesopt(train_data,
                                        y         = y,
@@ -323,14 +312,9 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Models optimized with Bayesian Optimization successfully trained. \n', verbose = verbose)
 
-  # preds_bayes <- NULL
-  # if (!is.null(model_bayes)) {
-  #   preds_bayes <- predict_models_all(model_bayes, test_data, y, type)
-  # }
 
   models_all <- c(model_basic, model_random$models, model_bayes)
   engine_all <- c(engine, model_random$engine, engine)
-  # preds_all  <- c(preds_basic, preds_random, preds_bayes)
 
   if (type != 'survival') {
     tuning <- c(rep('basic', length(engine)),
@@ -341,11 +325,6 @@ train <- function(data,
                 rep('random_search', length(model_random$engine)),
                 'bayes_opt')
   }
-
-
-  # predictions_all  <- predict_models_all(models_all, test_data, y, type)
-  # verbose_cat(crayon::green('\u2714'), 'Ranked and models list created. \n', verbose = verbose)
-
 
   predict_train    <- predict_models_all(models_all, raw_train,  y, type = type)
   predict_test     <- predict_models_all(models_all, test_data,  y, type = type)
@@ -399,6 +378,13 @@ train <- function(data,
                               tuning = tuning)
 
   verbose_cat(crayon::green('\u2714'), 'Created the score boards for all models. \n', verbose = verbose)
+
+  choose_best_models <- function(models, engine, score, number) {
+    number <- min(number, length(models))
+    return(list(
+      models = models[score[1:number, 'name']],
+      engine = score[1:number, 'engine']))
+  }
 
   best_models_on_valid   <- choose_best_models(models_all, engine_all, score_valid, best_model_number)
   predictions_best_train <- predict_models_all(best_models_on_valid$models, raw_train,  y, type = type)
@@ -616,51 +602,55 @@ train <- function(data,
     class(clf_models) <- c(type, 'list')
     return(clf_models)
   } else {
-    return(
-      list(
-        type                    = type,
-        deleted_columns         = preprocessed_data$rm_colnames,
-        preprocessed_data       = preprocessed_data$data,
-        bin_labels              = preprocessed_data$bin_labels,
-        deleted_rows            = preprocessed_data$rm_rows,
+    other_models <- list(
+      type                    = type,
+      deleted_columns         = preprocessed_data$rm_colnames,
+      preprocessed_data       = preprocessed_data$data,
+      bin_labels              = preprocessed_data$bin_labels,
+      deleted_rows            = preprocessed_data$rm_rows,
 
-        models_list             = models_all,
-        data                    = data,
-        y                       = y,
-        time                    = time,
-        status                  = status,
+      models_list             = models_all,
+      data                    = data,
+      y                       = y,
+      time                    = time,
+      status                  = status,
 
-        raw_train               = raw_train,
-        check_report            = check_report$str,
-        outliers                = check_report$outliers,
+      raw_train               = raw_train,
+      check_report            = check_report$str,
+      outliers                = check_report$outliers,
 
-        best_models_on_valid    = best_models_on_valid,
-        engine                  = engine,
+      best_models_on_valid    = best_models_on_valid,
+      engine                  = engine,
 
-        train_data              = train_data,
-        test_data               = test_data,
-        valid_data              = valid_data,
+      train_data              = train_data,
+      test_data               = test_data,
+      valid_data              = valid_data,
 
-        train_inds              = split_data$train_inds,
-        test_inds               = split_data$test_inds,
-        valid_inds              = split_data$valid_inds,
+      train_inds              = split_data$train_inds,
+      test_inds               = split_data$test_inds,
+      valid_inds              = split_data$valid_inds,
 
-        predict_train           = predict_train,
-        predict_test            = predict_test,
-        predict_valid           = predict_valid,
+      predict_train           = predict_train,
+      predict_test            = predict_test,
+      predict_valid           = predict_valid,
 
-        predictions_best_train  = predictions_best_train,
-        predictions_best_test   = predictions_best_test,
-        predictions_best_valid  = predictions_best_valid,
+      predictions_best_train  = predictions_best_train,
+      predictions_best_test   = predictions_best_test,
+      predictions_best_valid  = predictions_best_valid,
 
-        score_test              = score_test,
-        score_train             = score_train,
-        score_valid             = score_valid,
+      score_test              = score_test,
+      score_train             = score_train,
+      score_valid             = score_valid,
 
-        test_observed           = test_observed,
-        train_observed          = train_observed,
-        valid_observed          = valid_observed
-      )
+      test_observed           = test_observed,
+      train_observed          = train_observed,
+      valid_observed          = valid_observed
     )
+    if (type == 'regression') {
+      class(other_models) <- c('regression', 'list')
+    } else if (type == 'survival') {
+      class(other_models) <- c('survival', 'list')
+    }
+    return(other_models)
   }
 }
