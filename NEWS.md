@@ -1,5 +1,22 @@
 # forester 1.5.0
 
+-   Updated `.Rbuildignore` and `.gitignore`.
+-   Updated package `DESCRIPTION`, and `NAMESPACE`.
+-   Removed: `choose_best_models.R`, `forester_palette.R`, `format_model_details.R`
+-   Updated `check_data()`:
+    -   Added more checks of input parameters,
+    -   Modified `check_y_balance()` sub-function for multiclass classification.
+-   Updated `custom_preprocessing()`:
+    -   Added parameter type,
+    -   Added more checks of input parameters,
+    -   Added more advanced verbose options.
+-   Added `multiclass classification` task, with all extensional functionalities included (report, explainability, plots, etc), which led to the abundance of changes in majority of functions.
+-   Added more input checks for `train_test_balance()`.
+-   Updated documentation.
+-   Added manual test for multiclass classification task.
+-   Moved old tests into `misc/old_tests_03_02_2023` folder.
+-   Created a new, and more in depth tests for the package from scratch for regression, binary classification, and multiclass classification tasks.
+
 # forester 1.4.2
 
 -   In the DESCRIPTION updated the description, and RoxygenNote version.
