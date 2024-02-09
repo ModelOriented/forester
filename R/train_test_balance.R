@@ -13,17 +13,7 @@
 #'
 #' @return A list of train, test and validation datasets.
 #' @export
-<<<<<<< HEAD
 train_test_balance <- function(data, y, balance = TRUE, fractions = c(0.6, 0.2, 0.2), seed = NULL, verbose = FALSE) {
-=======
-#'
-#' @examples
-#' data(lisbon)
-#' b_lisbon <- train_test_balance(lisbon, 'Price', balance = FALSE,
-#'                                fractions = c(train = 0.6, valid = 0.2, test = 0.2))
-train_test_balance <-
-  function(data, y, balance = TRUE, fractions = c(0.6, 0.2, 0.2), seed = NULL) {
->>>>>>> 71c68e64b3394cf9ab7185e92e318250e1c54d47
     # Balancing / stratifying classes.
     target <- data[[y]]
     if (!(is.null(seed) || (is.numeric(seed) & as.integer(seed) == seed))) {
