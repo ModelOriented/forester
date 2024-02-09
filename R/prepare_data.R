@@ -165,11 +165,9 @@ prepare_data <- function(data,
 
       X   <- data[, -which(names(data) == y)]
       dat <- as.matrix(X)
-
-      lightgbm_data <- lightgbm::lgb.Dataset(data = dat, label = label)
+      suppressWarnings(lightgbm_data <- lightgbm::lgb.Dataset(data = dat, label = label))
       # -1, because lgb enumarates classees from 0.
-    } else {
-      # The lgbm model can't predict on lgb.Dataset.
+    } else { # The lgbm model can't predict on lgb.Dataset.
       X <- data[, -which(names(data) == y)]
       lightgbm_data <- data.matrix(X)
     }

@@ -166,10 +166,10 @@ guess_type <- function(data, y, max_unique = 15) {
 basic_info <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE) {
   # Distinction between survival analysis and other tasks.
   if (!is.null(y)) {
-    target <- paste0('a column ', y, '.')
+    target  <- paste0('a column ', y, '.')
     target2 <- paste0('a column** ', y, '.')
   } else {
-    target <- paste0('columns ', time, ' for time and ', status, ' for status.')
+    target  <- paste0('columns ', time, ' for time and ', status, ' for status.')
     target2 <- paste0('columns** ', time, ' for time and ', status, ' for status.')
   }
   verbose_cat('The dataset has ', nrow(df), ' observations and ', ncol(df),
@@ -177,7 +177,7 @@ basic_info <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE)
       '\n\nWith the target described by ', target, '\n\n', sep = '', verbose = verbose)
   str <- capture.output(cat('**The dataset has ', nrow(df), ' observations and ', ncol(df),
                             ' columns which names are: **\n\n', paste0(colnames(df), sep='; '),
-                            '\n\n**With the target described by ', target, '\n \n', sep = ''))
+                            '\n\n **With the target described by** ', target, '\n \n', sep = ''))
   return(str)
 }
 
@@ -216,7 +216,7 @@ check_static <- function(df, verbose = TRUE) {
   } else {
     verbose_cat(crayon::red('\u2716'), ' Static columns are: \n ', dominator_cols, '\n\n', sep = '', verbose = verbose)
     verbose_cat(crayon::red('\u2716'), ' With dominating values: \n', ' ',  dominator_vals, '\n ', sep = '', verbose = verbose)
-    str <- capture.output(cat('** Static columns are: **', dominator_cols, '\n\n', sep = ''))
+    str <- capture.output(cat('**Static columns are: **', dominator_cols, '\n\n', sep = ''))
     str <- c(str, capture.output(cat('**With dominating values: **', dominator_vals,
                                      '\n\n', sep = '')))
   }
@@ -459,7 +459,7 @@ check_cor <- function(df, y = NULL, time = NULL, status = NULL, verbose = TRUE) 
         if (i != j && strong_V_cor) {
           if (no_cor_fct) {
             verbose_cat(crayon::red('\u2716'), 'Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: \n', verbose = verbose)
-            str <- c(str, capture.output(cat('\n', '** Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: **\n\n')))
+            str <- c(str, capture.output(cat('\n', '**Strongly correlated, by Crammer\'s V rank, pairs of categorical values are: **\n\n')))
             no_cor_fct = FALSE
           }
           verbose_cat(' ', fct_names[i], ' - ', fct_names[j], ': ', cor_fct[i, j], ';\n', sep = '', verbose = verbose)

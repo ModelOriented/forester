@@ -25,7 +25,7 @@ The catboost model is used in the `train()` function as an additional engine.
 devtools::install_url('https://github.com/catboost/catboost/releases/download/v1.2.2/catboost-R-Windows-1.2.2.tgz', INSTALL_opts = c("--no-multiarch", "--no-test-load"))
 ```
 
-If you want to get the latest version of catboost, please take a look at their official website. Alternatively one can do a longer installation, where whole repository will be downloaded.
+If you want to get the latest version of catboost, please take a look at their [official website](https://catboost.ai/en/docs/installation/r-installation-binary-installation). Alternatively one can do a longer installation, where whole repository will be downloaded.
 
 ``` r
 devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')

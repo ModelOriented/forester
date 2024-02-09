@@ -25,8 +25,6 @@
 #' @import ggplot2
 #' @import patchwork
 #' @export
-
-
 plot.regression <- function(x,
                             models = NULL,
                             type   = 'residuals',
@@ -144,8 +142,6 @@ plot.regression <- function(x,
         x        = 'Observed'
       )
   }
-
-
   if (type == 'train-test') {
     models_names <- x$score_test$name[1:10]
 

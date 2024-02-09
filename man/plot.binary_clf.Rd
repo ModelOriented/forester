@@ -4,10 +4,17 @@
 \alias{plot.binary_clf}
 \title{Plot of Metrics for Binary Classification Models}
 \usage{
+<<<<<<< HEAD
 \method{plot}{binary_clf}(x, models = NULL, type = "comparison", metric = "accuracy", ...)
 }
 \arguments{
 \item{x}{An object, returned from \code{train()} function.}
+=======
+\method{plot}{binary_clf}(train_output, models = NULL, type = "comparison", metric = "accuracy")
+}
+\arguments{
+\item{train_output}{An object, returned from \code{train()} function.}
+>>>>>>> 71c68e64b3394cf9ab7185e92e318250e1c54d47
 
 \item{models}{A character or numeric that indicates which models
 will be presented. If `NULL` (the default option) then the three best models
@@ -17,8 +24,11 @@ will be presented.}
 indicates the type of chart.}
 
 \item{metric}{A character one of `accuracy`/`auc`/`f1` indicates the metric on the plots.}
+<<<<<<< HEAD
 
 \item{...}{Other parameters that are necessary for consistency with generic plot function.}
+=======
+>>>>>>> 71c68e64b3394cf9ab7185e92e318250e1c54d47
 }
 \value{
 a ggplot2 object
@@ -26,6 +36,7 @@ a ggplot2 object
 \description{
 Function plot.classification plots measure of quality of regression models.
 }
+<<<<<<< HEAD
 \examples{
 \dontrun{
 library('forester')
@@ -36,3 +47,5 @@ plot(x)
 }
 
 }
+=======
+>>>>>>> 71c68e64b3394cf9ab7185e92e318250e1c54d47

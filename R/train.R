@@ -279,6 +279,7 @@ train <- function(data,
                              predict = TRUE, split_data$train)
   valid_data <- prepare_data(split_data$valid, type, y, time, status, engine,
                              predict = TRUE, split_data$train)
+
   # For creating VS plot and predicting on train (catboost, lgbm).
   raw_train  <- prepare_data(split_data$train, type, y, time, status,engine,
                              predict = TRUE, split_data$train)
@@ -298,7 +299,6 @@ train <- function(data,
                                   verbose   = verbose)
 
   verbose_cat(crayon::green('\u2714'), 'Models optimized with random search successfully trained. \n', verbose = verbose)
-
 
   model_bayes <- train_models_bayesopt(train_data,
                                        y         = y,

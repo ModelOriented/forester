@@ -4,10 +4,17 @@
 \alias{plot.regression}
 \title{Plot of Metrics for Regression Models}
 \usage{
+<<<<<<< HEAD
 \method{plot}{regression}(x, models = NULL, type = "residuals", metric = "rmse", ...)
 }
 \arguments{
 \item{x}{An object, returned from \code{train()} function.}
+=======
+\method{plot}{regression}(train_output, models = NULL, type = "residuals", metric = "rmse")
+}
+\arguments{
+\item{train_output}{An object, returned from \code{train()} function.}
+>>>>>>> 71c68e64b3394cf9ab7185e92e318250e1c54d47
 
 \item{models}{A character or numeric that indicates which models
 will be presented. If `NULL` (the default option) then the three best models
@@ -17,8 +24,11 @@ will be presented.}
 indicates the type of chart.}
 
 \item{metric}{A character one of `rmse`/`mse`/`r2`/`mae` indicates the metric on the plots.}
+<<<<<<< HEAD
 
 \item{...}{Other parameters that are necessary for consistency with generic plot function.}
+=======
+>>>>>>> 71c68e64b3394cf9ab7185e92e318250e1c54d47
 }
 \value{
 a ggplot2 object
@@ -27,6 +37,7 @@ a ggplot2 object
 Function plot.regression plots measure of quality of regression models.
 }
 \examples{
+<<<<<<< HEAD
 \dontrun{
 library('forester')
 data('lisbon')
@@ -34,5 +45,12 @@ data('lisbon')
 x <- train(lisbon, 'Price', bayes_iter = 0, random_evals = 0)
 plot(x)
 }
+=======
+library('forester')
+data('lisbon')
+
+train_output <- train(lisbon, 'Price', bayes_iter = 0, random_evals = 0)
+plot(train_output)
+>>>>>>> 71c68e64b3394cf9ab7185e92e318250e1c54d47
 
 }

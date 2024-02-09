@@ -64,7 +64,6 @@ preprocessing_removal <- function(data,
   to_rm_col <- c()
   to_rm_row <- c()
   to_rm_cor <- c()
-
   if (active_modules[[1]]) {
     to_rm_col <- rm_duplicate_columns(data, y)[[2]]
   }
@@ -222,6 +221,7 @@ rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx', '
   }
   names     <- colnames(data)
   to_rm     <- c()
+
   for (i in 1:ncol(data)) {
     if (tolower(names[i]) %in% id_names) {
       to_rm <- c(to_rm, i)
@@ -236,7 +236,6 @@ rm_id_like_columns <- function(data, id_names = c('id', 'nr', 'number', 'idx', '
   if (!is.null(to_rm)) {
     data <- data[-to_rm, ]
   }
-
   return(list(
     data = data,
     idx  = to_rm
