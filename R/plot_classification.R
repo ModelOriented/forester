@@ -83,7 +83,7 @@ plot.binary_clf <- function(x,
     test_y         <- data.frame(metric = rownames(test_scores), value = unlist(test_scores))
     test_data      <- x$score_test[1:10, ]
     test_data$name <- factor(test_data$name, levels = unique(test_data$name))
-    test_all       <- cbind(test_data[rep(seq_len(nrow(test_data)), each = 3),],
+    test_all       <- cbind(test_data[rep(seq_len(nrow(test_data)), each = 3), ],
                             data.frame(metric = rownames(test_scores), value = unlist(test_scores)))
     test_all       <- test_all[, c('name', 'engine', 'tuning', 'metric', 'value')]
 
@@ -92,7 +92,7 @@ plot.binary_clf <- function(x,
     valid_y         <- data.frame(metric = rownames(valid_scores), value = unlist(valid_scores))
     valid_data      <- x$score_valid[1:10, ]
     valid_data$name <- factor(valid_data$name, levels = unique(valid_data$name))
-    valid_all       <- cbind(valid_data[rep(seq_len(nrow(valid_data)), each = 3),],
+    valid_all       <- cbind(valid_data[rep(seq_len(nrow(valid_data)), each = 3), ],
                             data.frame(metric = rownames(valid_scores), value = unlist(valid_scores)))
     valid_all       <- valid_all[, c('name', 'engine', 'tuning', 'metric', 'value')]
 
@@ -124,7 +124,7 @@ plot.binary_clf <- function(x,
       return(p)
     }
 
-    plot_test  <- comparison_plot(TRUE , test_all)
+    plot_test  <- comparison_plot(TRUE, test_all)
     plot_valid <- comparison_plot(FALSE, valid_all)
     return(patchwork::wrap_plots(list(plot_test, plot_valid), ncol = 1))
   }

@@ -103,14 +103,15 @@ test_that('test-predict_models_all', {
   )
   test_data <-
     prepare_data(split_data$test,
-                 y       = 'Price',c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
+                 y       = 'Price',
+                 engine  = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                  predict = TRUE,
                  train   = split_data$train)
   suppressWarnings(
     model <-
       train_models(train_data,
                    y      = 'Price',
-                   engine = c('ranger', 'xgboost', 'decision_tree','lightgbm', 'catboost'),
+                   engine = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
                    type   = type)
   )
   suppressWarnings(

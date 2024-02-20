@@ -11,7 +11,7 @@ Authors@R:
 Description: The forester package is an open-source AutoML package implemented in R designed for
     training high-quality tree-based models on tabular data. It fully supports regression, binary
     classification, and multiclass classification tasks, and provides a limited support for
-    teh sruvival analysis task. A single line of code allows the use of unprocessed datasets, informs
+    the survival analysis task. A single line of code allows the use of unprocessed datasets, informs
     about potential issues concerning them, and handles feature engineering automatically.
     Moreover, hyperparameter tuning is performed by Bayesian optimization, which provides
     high-quality outcomes. The results are later served as a ranked list of models. Finally, the

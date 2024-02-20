@@ -36,7 +36,7 @@ report <- function(train_output,
                   'guides for installation from GitHub repository README. The',
                   'report() fucntion is unable to work properly wihtout it. \n\n',
                   verbose = TRUE)
-      stop('Package not found: tinytex, to use it please follow guides for installation from GitHub repository README. The report() fucntion is unable to work properly wihtout it. \n\n')
+      stop('Package not found: tinytex, to use it please follow guides for installation from GitHub repository README. The report() function is unable to work properly wihtout it. \n\n')
     })
     if (train_output$type == 'regression') {
       input_file_path <- system.file('rmd', 'report_regression.Rmd', package = 'forester')
