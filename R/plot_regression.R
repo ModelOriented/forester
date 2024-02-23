@@ -2,34 +2,35 @@
 #'
 #' Function plot.regression plots measure of quality of regression models.
 #'
-#' @param train_output An object, returned from \code{train()} function.
+#' @param x An object, returned from \code{train()} function.
 #' @param models A character or numeric that indicates which models
 #' will be presented. If `NULL` (the default option) then the three best models
 #' will be presented.
 #' @param type A character one of `residuals`/`train-test-observed-predicted`/`train-test-rmse`
 #' indicates the type of chart.
 #' @param metric A character one of `rmse`/`mse`/`r2`/`mae` indicates the metric on the plots.
+#' @param ... Other parameters that are necessary for consistency with generic plot function.
 #'
 #' @return a ggplot2 object
 #'
 #' @examples
+#' \dontrun{
 #' library('forester')
 #' data('lisbon')
 #'
-#' train_output <- train(lisbon, 'Price', bayes_iter = 0, random_evals = 0)
-#' plot(train_output)
+#' x <- train(lisbon, 'Price', bayes_iter = 0, random_evals = 0)
+#' plot(x)
+#' }
 #'
 #' @import ggplot2
 #' @import patchwork
 #' @export
-
-
-plot.regression <- function(train_output,
+plot.regression <- function(x,
                             models = NULL,
                             type   = 'residuals',
-                            metric = 'rmse'){
-
-  if (!(c('regression') %in% class(train_output)))
+                            metric = 'rmse',
+                            ...){
+  if (!(c('regression') %in% class(x)))
     stop('The plot() function requires an object created with train() function for regression task.')
 
   if (!any(type %in% c('residuals', 'train-test-observed-predicted', 'train-test')))
@@ -38,18 +39,18 @@ plot.regression <- function(train_output,
   models_names <- models_num <- NULL
 
   if (is.null(models)) {
-    models_names <- train_output$score_test$name[1:3]
+    models_names <- x$score_test$name[1:3]
     models_num   <- 1:3
   } else{
     if (is.character(models)) {
-      if (any(models %in% names(train_output$models_list))) {
-        models_names <- models[models %in% names(train_output$models_list)]
-        models_num   <- which(names(train_output$models_list) %in% models)
+      if (any(models %in% names(x$models_list))) {
+        models_names <- models[models %in% names(x$models_list)]
+        models_num   <- which(names(x$models_list) %in% models)
         if (length(models_num) < length(models)) {
           message(paste0(
             'Check the given models.',
             ' Models do not exist: ',
-            paste(models[!models %in% names(train_output$models_list)], collapse = ', '),
+            paste(models[!models %in% names(x$models_list)], collapse = ', '),
             '.'
           ))
         }
@@ -57,14 +58,14 @@ plot.regression <- function(train_output,
         stop('Models with the given names do not exist.')
       }
     } else{
-    if (any(models %in% 1:length(train_output$models_list))) {
-      models_names <- names(train_output$models_list)[which(1:length(train_output$models_list) %in% models)]
-      models_num   <- which(1:length(train_output$models_list) %in% models)
+    if (any(models %in% 1:length(x$models_list))) {
+      models_names <- names(x$models_list)[which(1:length(x$models_list) %in% models)]
+      models_num   <- which(1:length(x$models_list) %in% models)
       if (length(models_num) < length(models)) {
         message(paste0(
           'Check the given models.',
           ' Models do not exist: ',
-          paste(models[which(!models %in% 1:length(train_output$models_list))], collapse = ', '),
+          paste(models[which(!models %in% 1:length(x$models_list))], collapse = ', '),
           '.'
         ))
       }
@@ -78,12 +79,12 @@ plot.regression <- function(train_output,
     residuals_all <- c()
 
     for (model in models_num) {
-      residuals     <- (train_output$test_observed - train_output$predict_test[[model]])
+      residuals     <- (x$test_observed - x$predict_test[[model]])
       residuals_all <- c(residuals_all, residuals)
     }
 
     residuals_table <-
-      data.frame('model' = rep(models_names, each = length(train_output$test_observed)),
+      data.frame('model' = rep(models_names, each = length(x$test_observed)),
                  'residuals' = residuals_all)
 
     p <- ggplot(residuals_table, aes(x = model, y = residuals)) +
@@ -104,24 +105,24 @@ plot.regression <- function(train_output,
     prediction_test_all  <- c()
 
     for (model in models_num) {
-      prediction_train     <- train_output$predict_train[[model]]
+      prediction_train     <- x$predict_train[[model]]
       prediction_train_all <- c(prediction_train_all, prediction_train)
-      prediction_test      <- train_output$predict_test[[model]]
+      prediction_test      <- x$predict_test[[model]]
       prediction_test_all  <- c(prediction_test_all, prediction_test)
     }
 
     value_table_train <-
       data.frame(
-        'model'      = rep(models_names, each = length(train_output$train_observed)),
-        'observed'   = train_output$train_observed,
+        'model'      = rep(models_names, each = length(x$train_observed)),
+        'observed'   = x$train_observed,
         'prediction' = prediction_train_all,
         'data'       = 'train'
       )
 
     value_table_test <-
       data.frame(
-        'model'      = rep(models_names, each = length(train_output$test_observed)),
-        'observed'   = train_output$test_observed,
+        'model'      = rep(models_names, each = length(x$test_observed)),
+        'observed'   = x$test_observed,
         'prediction' = prediction_test_all,
         'data'       = 'test'
       )
@@ -141,16 +142,14 @@ plot.regression <- function(train_output,
         x        = 'Observed'
       )
   }
+  if (type == 'train-test') {
+    models_names <- x$score_test$name[1:10]
 
-
-  if(type == 'train-test') {
-    models_names <- train_output$score_test$name[1:10]
-
-    train_score <- train_output$score_train[train_output$score_train$name %in% models_names, ]
+    train_score <- x$score_train[x$score_train$name %in% models_names, ]
     names(train_score)[which(names(train_score) %in% c('rmse', 'mse', 'r2', 'mae'))] <-
       paste0(names(train_score)[which(names(train_score) %in% c('rmse', 'mse', 'r2', 'mae'))], '_train')
 
-    test_score <- train_output$score_test[train_output$score_test$name %in% models_names, c('rmse' , 'mse', 'r2', 'mae')]
+    test_score <- x$score_test[x$score_test$name %in% models_names, c('rmse' , 'mse', 'r2', 'mae')]
     names(test_score)[which(names(test_score) %in% c('rmse', 'mse', 'r2', 'mae'))] <-
       paste0(names(test_score)[which(names(test_score) %in% c('rmse', 'mse', 'r2', 'mae'))], '_test')
 

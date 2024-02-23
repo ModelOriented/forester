@@ -11,17 +11,19 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' # Training the model.
-#' train <- train(data        = iris[1:100, ],
-#'                y           = 'Sepal.Width',
+#' train <- train(data        = iris,
+#'                y           = 'Species',
 #'                bayes_iter  = 0,
-#'                random_eval = 10)
+#'                random_eval = 3)
 #'
 #' # Saving the outcomes.
 #' save_forest(train, 'saved_train')
 #'
 #' # Reading saved file.
 #' train2 <- readRDS('saved_train.RData')
+#' }
 save_forest <- function(train,
                         file        = NULL,
                         verbose     = TRUE,

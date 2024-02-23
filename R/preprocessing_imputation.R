@@ -21,6 +21,8 @@
 #' @param m An integer describing the number of multiple imputations to use.
 #' By default set to 5. The parameter applicable only if selected
 #' `imputation_method` is 'mice'.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return Imputed dataset.
 #' @export
@@ -28,10 +30,11 @@ preprocessing_imputation <- function(data,
                                      na_indicators = c(''),
                                      imputation_method = 'median-other',
                                      k = 10,
-                                     m = 5) {
+                                     m = 5,
+                                     verbose = FALSE) {
 
   if (!imputation_method %in% c('median-other', 'median-frequency', 'knn', 'mice')) {
-    verbose_cat(crayon::red('\u2716'), 'Preprocessing imputation: The imputation method must be one of median-other, median-frequency, knn, or mice.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'Preprocessing imputation: The imputation method must be one of median-other, median-frequency, knn, or mice.', '\n', verbose = verbose)
     stop('Preprocessing imputation: The imputation method must be one of median-other, median-frequency, knn, or mice.')
   }
 
@@ -66,12 +69,14 @@ preprocessing_imputation <- function(data,
 #' for categorical features. The user can choose from setting missing values as
 #' 'other' or the most frequent value from feature. The respective options are:
 #' 'other' or 'frequency'. By default set to 'other'.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return Imputed dataset.
 #' @export
-impute_basic <- function(data, na_indicators = c(''), categorical_imputation = 'other') {
+impute_basic <- function(data, na_indicators = c(''), categorical_imputation = 'other', verbose = FALSE) {
   if (!is.vector(na_indicators)) {
-    verbose_cat(crayon::red('\u2716'), 'Basic imputation: Provided na_indicators is not a list.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'Basic imputation: Provided na_indicators is not a list.', '\n', verbose = verbose)
     stop('Basic imputation: Provided na_indicators is not a list.')
   }
   data    <- as.data.frame(unclass(data), stringsAsFactors = TRUE)
@@ -163,16 +168,18 @@ impute_basic <- function(data, na_indicators = c(''), categorical_imputation = '
 #' as these are already checked in other criterion.
 #' @param k An integer describing the number of nearest neighbours to use. By default
 #' set to 10.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return Imputed dataset.
 #' @export
-impute_knn <- function(data, na_indicators = c(''), k = 10) {
+impute_knn <- function(data, na_indicators = c(''), k = 10, verbose = FALSE) {
   if (!is.vector(na_indicators)) {
-    verbose_cat(crayon::red('\u2716'), 'KNN imputation: Provided na_indicators is not a list.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'KNN imputation: Provided na_indicators is not a list.', '\n', verbose = verbose)
     stop('KNN imputation: Provided na_indicators is not a list.')
   }
   if (as.integer(k) != k || k < 1) {
-    verbose_cat(crayon::red('\u2716'), 'KNN imputation: Number of neighbours must be a positive integer.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'KNN imputation: Number of neighbours must be a positive integer.', '\n', verbose = verbose)
     stop('KNN imputation: Number of neighbours must be a positive integer.')
   }
   for (i in 1:ncol(data)) {
@@ -195,16 +202,18 @@ impute_knn <- function(data, na_indicators = c(''), k = 10) {
 #' as these are already checked in other criterion.
 #' @param m An integer describing the number of multiple imputations to use.
 #' By default set to 5.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return Imputed dataset.
 #' @export
-impute_mice <- function(data, na_indicators = c(''), m = 5) {
+impute_mice <- function(data, na_indicators = c(''), m = 5, verbose = FALSE) {
   if (!is.vector(na_indicators)) {
-    verbose_cat(crayon::red('\u2716'), 'MICE imputation: Provided na_indicators is not a list.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'MICE imputation: Provided na_indicators is not a list.', '\n', verbose = verbose)
     stop('MICE imputation: Provided na_indicators is not a list.')
   }
   if (as.integer(m) != m || m < 1) {
-    verbose_cat(crayon::red('\u2716'), 'MICE imputation: Number of multiple imputations must be a positive integer.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'MICE imputation: Number of multiple imputations must be a positive integer.', '\n', verbose = verbose)
     stop('MICE imputation: Number of multiple imputations must be a positive integer.')
   }
   for (i in 1:ncol(data)) {

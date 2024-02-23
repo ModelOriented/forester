@@ -5,7 +5,7 @@
 #' @param observed A vector of true values from the test data.
 #' @param data A data for models created by `prepare_data()` function, used for
 #' Brier score calculations.
-#' @param type A string, determines if the future task is `binary_clf`, `regression`, or `survival`.
+#' @param type A string, determines if the future task is `binary_clf`, `regression`, `survival`, or `multiclass`.
 #' @param time A string that indicates a time column name for survival analysis task.
 #' Either y, or pair: time, status can be used.
 #' @param status A string that indicates a status column name for survival analysis task.
@@ -14,10 +14,14 @@
 #' most important metrics are returned. For `all` all metrics are returned.
 #' For `NULL` no metrics returned but still sorted by `sort_by`. The metrics
 #' available for the binary classification are: `auc`, `f1`, `recall`, `precision`,
-#' `accuracy`, `sensitivity`, `specificity`, `balanced_accuracy`, and for the
-#' regression: `mse`, `rmse`, `r2`, `mad`, and `mae`.
+#' `accuracy`, `sensitivity`, `specificity`, `balanced_accuracy`, for the
+#' regression: `mse`, `rmse`, `r2`, `mad`, `mae`, for the survival analysis:
+#' `Brier Score`, `Concordance Index (CIN)`, and for the multiclass classification: `accuracy`,
+#' `micro_averaged_precision`, `micro_averaged_recall`, `micro_averaged_f1`,
+#' `macro_averaged_precision`, `macro_averaged_recall`, `macro_averaged_f1`,
+#' `weighted_averaged_precision`, `weighted_averaged_recall`, `weighted_averaged_f1`.
 #' @param sort_by String with name of metric to sort by. For `auto` models going
-#' to be sorted by `rmse` for regression and `accuracy` for classification.
+#' to be sorted by `rmse` for regression and `accuracy` for both classification tasks.
 #' @param metric_function The self-created function.
 #' It should look like name(predictions, observed) and return the numeric value.
 #' In case of using `metrics` param with value other than `auto` or `all`,
@@ -102,10 +106,17 @@ score_models <- function(models,
     metrics_reggresion <- c('mse', 'rmse', 'r2', 'mad', 'mae')
     metrics_binary_clf <- c('accuracy', 'auc', 'f1', 'recall', 'precision',
                             'sensitivity', 'specificity', 'balanced_accuracy')
+    metrics_multiclass <- c('accuracy',
+                            'micro_averaged_precision',    'micro_averaged_recall',    'micro_averaged_f1',
+                            'macro_averaged_precision',    'macro_averaged_recall',    'macro_averaged_f1',
+                            'weighted_precision', 'weighted_recall', 'weighted_f1')
     metrics_decreasing <- c('mse' = FALSE, 'rmse' = FALSE, 'r2' = TRUE,
-                            'mad' = FALSE, 'mae' = FALSE, 'recall' = TRUE, 'precision' = TRUE,
-                            'accuracy' = TRUE, 'auc' = TRUE, 'f1' = TRUE, 'sensitivity' = TRUE,
+                            'mad' = FALSE, 'mae'  = FALSE, 'recall'   = TRUE, 'precision'   = TRUE,
+                            'accuracy'    = TRUE, 'auc' = TRUE, 'f1'  = TRUE, 'sensitivity' = TRUE,
                             'specificity' = TRUE, 'balanced_accuracy' = TRUE,
+                            'micro_averaged_precision'    = TRUE, 'micro_averaged_recall'    = TRUE, 'micro_averaged_f1' = TRUE,
+                            'macro_averaged_precision'    = TRUE, 'macro_averaged_recall'    = TRUE, 'macro_averaged_f1' = TRUE,
+                            'weighted_precision' = TRUE, 'weighted_recall' = TRUE, 'weighted_f1' = TRUE,
                             'metric_function' = metric_function_decreasing)
 
     metrics        <- c(metrics)
@@ -124,6 +135,7 @@ score_models <- function(models,
     } else {
       metrics_reggresion <- c('metric_function', metrics_reggresion)
       metrics_binary_clf <- c('metric_function', metrics_binary_clf)
+      metrics_multiclass <- c('metric_function', metrics_multiclass)
 
       if (is.null(metric_function_name)) {
         metric_function_name <- 'metric_function'
@@ -137,20 +149,23 @@ score_models <- function(models,
       if (type == 'regression') {
         metrics <- c(if (!is.null(metric_function)) {'metric_function'},
                      'rmse', 'mse', 'r2', 'mae')
-      }
-      else if (type == 'binary_clf') {
+      } else if (type == 'binary_clf') {
         metrics <- c(if (!is.null(metric_function)) {'metric_function'},
                      'accuracy', 'auc', 'f1')
+      } else if (type == 'multiclass') {
+        metrics <- c(if (!is.null(metric_function)) {'metric_function'},
+                     'accuracy', 'weighted_precision',
+                     'weighted_recall', 'weighted_f1')
       }
     } else if ('all' %in% metrics) {
       if (type == 'regression') {
         metrics <- metrics_reggresion
-      }
-      if (type =='binary_clf') {
+      } else if (type =='binary_clf') {
         metrics <- metrics_binary_clf
+      } else if (type =='multiclass') {
+        metrics <- metrics_multiclass
       }
     }
-
     if (type == 'regression') {
       is_valid_metrics <- metrics %in% metrics_reggresion
       if (any(!is_valid_metrics)) {
@@ -179,6 +194,20 @@ score_models <- function(models,
         }
         sort_by <- 'accuracy'
       }
+    } else if (type == 'multiclass') {
+      is_valid_metrics <- metrics %in% metrics_multiclass
+      if (!all(is_valid_metrics)) {
+        warning(paste('Not valid metrics ommited: ', paste(metrics[!is_valid_metrics], collapse = ', ')))
+        metrics <- metrics[is_valid_metrics]
+      }
+      if (!(sort_by %in% metrics_multiclass)) {
+        if (sort_by != 'auto') {
+          warning(paste('sort_by need to by one of binary classification metrics. Default metric applied : accuracy.',
+                        'You can choose one of the them: auto, metric_function (in case of usage custom function) ',
+                        paste(metrics_multiclass, collapse = ', ')))
+        }
+        sort_by <- 'accuracy'
+      }
     }
     if (type == 'regression') {
       models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_reggresion) + nr_add_col))
@@ -191,11 +220,11 @@ score_models <- function(models,
                                engine[i],
                                tuning[i],
                                if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed)},
-                               model_performance_mse(unlist(predictions[[i]], use.names = FALSE), observed),
+                               model_performance_mse( unlist(predictions[[i]], use.names = FALSE), observed),
                                model_performance_rmse(unlist(predictions[[i]], use.names = FALSE), observed),
-                               model_performance_r2(unlist(predictions[[i]], use.names = FALSE), observed),
-                               model_performance_mad(unlist(predictions[[i]], use.names = FALSE), observed),
-                               model_performance_mae(unlist(predictions[[i]], use.names = FALSE), observed)
+                               model_performance_r2(  unlist(predictions[[i]], use.names = FALSE), observed),
+                               model_performance_mad( unlist(predictions[[i]], use.names = FALSE), observed),
+                               model_performance_mae( unlist(predictions[[i]], use.names = FALSE), observed)
         )
       }
     } else if (type == 'binary_clf') {
@@ -224,10 +253,32 @@ score_models <- function(models,
                                model_performance_balanced_accuracy(tp, fp, tn, fn)
         )
       }
+    } else if (type == 'multiclass') {
+      models_frame           <- data.frame(matrix(nrow = length(models), ncol = length(metrics_multiclass) + nr_add_col))
+      colnames(models_frame) <- c(colnames_basic, metrics_multiclass)
+      set.seed(1)
+      observed <- as.numeric(observed)
+      for (i in 1:length(models)) {
+        models_frame[i, ] <- c(i,
+                               names(models[i]),
+                               engine[i],
+                               tuning[i],
+                               if (!is.null(metric_function)) {metric_function_null(metric_function, predictions[[i]], observed - 1)},
+                               model_performance_accuracy_multi(    predictions[[i]], observed),
+                               model_performance_micro_precision(   predictions[[i]], observed),
+                               model_performance_micro_recall(      predictions[[i]], observed),
+                               model_performance_micro_f1(          predictions[[i]], observed),
+                               model_performance_macro_precision(   predictions[[i]], observed),
+                               model_performance_macro_recall(      predictions[[i]], observed),
+                               model_performance_macro_f1(          predictions[[i]], observed),
+                               model_performance_weighted_precision(predictions[[i]], observed),
+                               model_performance_weighted_recall(   predictions[[i]], observed),
+                               model_performance_weighted_f1(       predictions[[i]], observed)
+        )
+      }
     }
     models_frame[, -c(2:4)] <- sapply(models_frame[, -c(2:4)], as.numeric)
-    models_frame            <- models_frame[order(models_frame[, sort_by],
-                                                  decreasing = unname(metrics_decreasing[sort_by])),
+    models_frame            <- models_frame[order(models_frame[, sort_by], decreasing = unname(metrics_decreasing[sort_by])),
                                             c(colnames_basic, metrics)]
     if (!is.null(metric_function)) {
       colnames(models_frame)[colnames(models_frame) == 'metric_function'] <- metric_function_name
@@ -238,6 +289,7 @@ score_models <- function(models,
   return(models_frame)
 }
 
+
 metric_function_null <- function(metric_function, predicted, observed) {
   if ('function' %in% class(metric_function)) {
     return(try(metric_function(predicted, observed), silent = TRUE))
@@ -245,7 +297,7 @@ metric_function_null <- function(metric_function, predicted, observed) {
     return(NA)
 }
 
-# Functions below are taken from the DALEX package.
+# Regression metrics.
 model_performance_mse <- function(predicted, observed) {
   return(mean((predicted - observed) ^ 2, na.rm = TRUE))
 }
@@ -266,6 +318,8 @@ model_performance_mae <- function(predicted, observed) {
   return(mean(abs(predicted - observed)))
 }
 
+
+# Binary classification metrics.
 model_performance_auc <- function(predicted, observed) {
   tpr_tmp <- tapply(observed, predicted, sum)
   TPR     <- c(0, cumsum(rev(tpr_tmp))) / sum(observed)
@@ -305,59 +359,105 @@ model_performance_balanced_accuracy <- function(tp, fp, tn, fn) {
   return((model_performance_sensitivity(tp, fp, tn, fn) + model_performance_specificity(tp, fp, tn, fn)) / 2)
 }
 
+
+# Multiclass classification metrics.
+
+# Precision.
+model_performance_macro_precision <- function(predicted, observed) {
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted, observed)
+  scores               <- sapply(confusion_matrixes, function(x) {
+    model_performance_precision(x$tp, x$fp, x$tn, x$fn)
+  })
+  return(mean(scores, na.rm = TRUE))
+}
+
+model_performance_micro_precision <- function(predicted, observed) {
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted, observed)
+  summed_matrix        <- confusion_matrixes[[1]]
+  for (i in 2:length(confusion_matrixes)) {
+    summed_matrix$tp <- summed_matrix$tp + confusion_matrixes[[i]]$tp
+    summed_matrix$fp <- summed_matrix$fp + confusion_matrixes[[i]]$fp
+    summed_matrix$tn <- summed_matrix$tn + confusion_matrixes[[i]]$tn
+    summed_matrix$fn <- summed_matrix$fn + confusion_matrixes[[i]]$fn
+  }
+  return(model_performance_precision(summed_matrix$tp, summed_matrix$fp, summed_matrix$tn, summed_matrix$fn))
+}
+
+model_performance_weighted_precision <- function(predicted, observed) {
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted, observed)
+  scores               <- sapply(confusion_matrixes, function(x) {
+    model_performance_precision(x$tp, x$fp, x$tn, x$fn)
+  })
+  return(weighted.mean(scores, prop.table(table(observed))[names(confusion_matrixes)], na.rm = TRUE))
+}
+
+# Recall.
+model_performance_macro_recall <- function(predicted, observed) {
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted, observed)
+  scores               <- sapply(confusion_matrixes, function(x) {
+    model_performance_recall(x$tp, x$fp, x$tn, x$fn)
+  })
+  return(mean(scores, na.rm = TRUE))
+}
+
+model_performance_micro_recall <- function(predicted, observed) {
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted, observed)
+  summed_matrix        <- confusion_matrixes[[1]]
+  for (i in 2:length(confusion_matrixes)) {
+    summed_matrix$tp <- summed_matrix$tp + confusion_matrixes[[i]]$tp
+    summed_matrix$fp <- summed_matrix$fp + confusion_matrixes[[i]]$fp
+    summed_matrix$tn <- summed_matrix$tn + confusion_matrixes[[i]]$tn
+    summed_matrix$fn <- summed_matrix$fn + confusion_matrixes[[i]]$fn
+  }
+  return(model_performance_recall(summed_matrix$tp, summed_matrix$fp, summed_matrix$tn, summed_matrix$fn))
+}
+
+model_performance_weighted_recall <- function(predicted, observed) {
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted, observed)
+  scores               <- sapply(confusion_matrixes, function(x) {
+    model_performance_recall(x$tp, x$fp, x$tn, x$fn)
+  })
+  return(weighted.mean(scores, prop.table(table(observed))[names(confusion_matrixes)], na.rm = TRUE))
+}
+
+# F1.
 model_performance_macro_f1 <- function(predicted, observed) {
-  predicted_vectorized <- turn_probs_into_vector(predicted)
-  confusion_matrixes   <- calculate_confusion_matrixes(predicted_vectorized, observed)
-  f1_scores            <- sapply(confusion_matrixes, function(x) {
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted, observed)
+  scores               <- sapply(confusion_matrixes, function(x) {
     model_performance_f1(x$tp, x$fp, x$tn, x$fn)
   })
-  return(mean(f1_scores))
+  return(mean(scores, na.rm = TRUE))
 }
 
 model_performance_micro_f1 <- function(predicted, observed) {
-  # For case where each point can be assigned only to one class micro_f1 equals acc.
   return(model_performance_accuracy_multi(predicted, observed))
 }
 
-model_performance_weighted_macro_f1 <- function(predicted, observed) {
-  predicted_vectorized <- turn_probs_into_vector(predicted)
-  confusion_matrixes   <- calculate_confusion_matrixes(predicted_vectorized, observed)
+model_performance_weighted_f1 <- function(predicted, observed) {
+  confusion_matrixes   <- calculate_confusion_matrixes(predicted, observed)
   f1_scores <- sapply(confusion_matrixes, function(x) {
     model_performance_f1(x$tp, x$fp, x$tn, x$fn)
   })
-  return(weighted.mean(f1_scores, prop.table(table(observed))[names(confusion_matrixes)]))
+  return(weighted.mean(f1_scores, prop.table(table(observed))[names(confusion_matrixes)], na.rm = TRUE))
 }
 
+
+# Rest
 model_performance_accuracy_multi <- function(predicted, observed) {
-  predicted_vectorized <- turn_probs_into_vector(predicted)
-  return(mean(predicted_vectorized == observed))
-}
-
-model_performance_weighted_macro_auc <- function(predicted, observed) {
-  observed   <- as.character(observed)
-  auc_scores <- sapply(unique(observed), function(x) {
-    model_performance_auc(predicted[,x], as.numeric(observed == x))
-  })
-  return(weighted.mean(auc_scores, prop.table(table(observed))[unique(observed)]))
-}
-
-turn_probs_into_vector <- function(observed) {
-  apply(observed, 1, function(x) {
-    colnames(observed)[which.max(x)]
-  })
+  return(mean(predicted == observed, na.rm = TRUE))
 }
 
 calculate_confusion_matrixes <- function(predicted, observed) {
   observed <- as.character(observed)
   ret <- lapply(unique(observed), function(x) {
-    tp <- mean(predicted[predicted == x] == observed[predicted == x])
-    fp <- mean(predicted[predicted == x] != observed[predicted == x])
-    tn <- mean(predicted[predicted != x] == observed[predicted != x])
-    fn <- mean(predicted[predicted != x] != observed[predicted != x])
-    list(tp = ifelse(is.nan(tp), 0, tp),
-         fp = ifelse(is.nan(fp), 0, fp),
-         tn = ifelse(is.nan(tn), 0, tn),
-         fn = ifelse(is.nan(fn), 0, fn))
+    tp <- sum(predicted[predicted == x] == observed[predicted == x])
+    fp <- sum(predicted[predicted == x] != observed[predicted == x])
+    tn <- sum(predicted[predicted != x] == observed[predicted != x])
+    fn <- sum(predicted[predicted != x] != observed[predicted != x])
+    list(tp = ifelse(is.nan(tp) || is.na(tp), 0, tp),
+         fp = ifelse(is.nan(fp) || is.na(fp), 0, fp),
+         tn = ifelse(is.nan(tn) || is.na(tn), 0, tn),
+         fn = ifelse(is.nan(fn) || is.na(fn), 0, fn))
   })
   names(ret) <- unique(observed)
   return(ret)

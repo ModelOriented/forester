@@ -5,7 +5,14 @@
 \title{Check whether the target column is unbalanced (for regression it bins values
 via quantiles)}
 \usage{
-check_y_balance(df, y = NULL, time = NULL, status = NULL, verbose = TRUE)
+check_y_balance(
+  df,
+  y = NULL,
+  time = NULL,
+  status = NULL,
+  type = "auto",
+  verbose = TRUE
+)
 }
 \arguments{
 \item{df}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -19,6 +26,11 @@ Either y, or pair: time, status can be used. By default NULL.}
 
 \item{status}{A string that indicates a status column name for survival analysis task.
 Either y, or pair: time, status can be used. By default NULL.}
+
+\item{type}{A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+sets the type of the task. If `auto` (the default option) then
+the function will figure out `type` based on the number of unique values
+in the `y` variable, or the presence of time/status columns.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}

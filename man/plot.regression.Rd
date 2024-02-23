@@ -4,10 +4,10 @@
 \alias{plot.regression}
 \title{Plot of Metrics for Regression Models}
 \usage{
-\method{plot}{regression}(train_output, models = NULL, type = "residuals", metric = "rmse")
+\method{plot}{regression}(x, models = NULL, type = "residuals", metric = "rmse", ...)
 }
 \arguments{
-\item{train_output}{An object, returned from \code{train()} function.}
+\item{x}{An object, returned from \code{train()} function.}
 
 \item{models}{A character or numeric that indicates which models
 will be presented. If `NULL` (the default option) then the three best models
@@ -17,6 +17,8 @@ will be presented.}
 indicates the type of chart.}
 
 \item{metric}{A character one of `rmse`/`mse`/`r2`/`mae` indicates the metric on the plots.}
+
+\item{...}{Other parameters that are necessary for consistency with generic plot function.}
 }
 \value{
 a ggplot2 object
@@ -25,10 +27,12 @@ a ggplot2 object
 Function plot.regression plots measure of quality of regression models.
 }
 \examples{
+\dontrun{
 library('forester')
 data('lisbon')
 
-train_output <- train(lisbon, 'Price', bayes_iter = 0, random_evals = 0)
-plot(train_output)
+x <- train(lisbon, 'Price', bayes_iter = 0, random_evals = 0)
+plot(x)
+}
 
 }

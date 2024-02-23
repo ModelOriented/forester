@@ -9,7 +9,7 @@
 #' @param status A string that indicates a status column name for survival analysis task.
 #' Either y, or pair: time, status can be used. By default NULL.
 #' @param type A string that determines if Machine Learning task is the
-#' `binary_clf`, `regression`, or `survival`.
+#' `binary_clf`, `regression`, `survival`, or `multiclass` task.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
@@ -22,10 +22,10 @@
 #' @export
 preprocessing <- function(data, y = NULL, time = NULL, status = NULL, type, verbose = FALSE) {
   pre_data   <- pre_rm_static_cols(data, y)
-  binary     <- binarize_target(pre_data, y, status)
+  pre_data   <- manage_missing(pre_data, y)
+  binary     <- binarize_target(pre_data, type, y, status)
   pre_data   <- binary$bin_data
   bin_labels <- binary$labels
-  pre_data   <- manage_missing(pre_data, y)
   # Legacy version of advanced preprocessing
   # if (advanced) {
   #   del_cor  <- delete_correlated_values(pre_data, y, verbose = verbose)
@@ -35,7 +35,7 @@ preprocessing <- function(data, y = NULL, time = NULL, status = NULL, type, verb
   # }
   del_cols   <- save_deleted_columns(data, pre_data)
 
-  if (type == 'binary_clf') {
+  if (type %in% c('binary_clf', 'multiclass')) {
     pre_data[, y] <- as.factor(pre_data[, y])
   } else if (type == 'survival') {
     pre_data[, status] <- as.factor(pre_data[, status])
@@ -77,6 +77,10 @@ pre_rm_static_cols <- function(data, y) {
 #'
 #' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix, and so on.
+#' @param type A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+#' sets the type of the task. If `auto` (the default option) then
+#' the function will figure out `type` based on the number of unique values
+#' in the `y` variable, or the presence of time/status columns.
 #' @param y A string that indicates a target column name for regression or classification.
 #' Either y, or status can be used. By default NULL.
 #' @param status A string that indicates a status column name for survival analysis task.
@@ -84,23 +88,15 @@ pre_rm_static_cols <- function(data, y) {
 #'
 #' @return A dataset with binarized target column.
 #' @export
-binarize_target <- function(data, y = NULL, status = NULL) {
-  if (guess_type(data, y) %in% c('binary_clf', 'survival')) {
+binarize_target <- function(data, type, y = NULL, status = NULL) {
+  if (type %in% c('binary_clf', 'survival', 'multiclass')) {
     if (is.null(y)) {
       y <- status
     }
     bin_data      <- data
     data[[y]]     <- as.factor(data[[y]])
-    bin_data[[y]] <- as.integer(data[[y]])
-    labels        <- c('1', '2')
-
-    for (i in 1:nrow(bin_data)) {
-      if (bin_data[[y]][i] == 1) {
-        labels[1] <- as.character(data[[y]][i])
-      } else {
-        labels[2] <- as.character(data[[y]][i])
-      }
-    }
+    bin_data[[y]] <- as.integer(data[[y]]) # From 1 to n.
+    labels        <- levels(data[[y]])
   } else {
     bin_data <- data
     labels   <- NULL

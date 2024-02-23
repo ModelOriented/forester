@@ -18,39 +18,38 @@
 #' \dontrun{
 #' library(forester)
 #' data('lisbon')
-#' train_output <- train(lisbon, 'Price', random_evals = 10, bayes_iter = 1)
-#' report(train_output)
+#' train_output <- train(lisbon, 'Price')
+#' report(train_output, 'regression.pdf')
 #' }
-
-report <-
-  function(train_output,
-           output_file   = NULL,
-           output_format = 'pdf_document',
-           output_dir    = getwd(),
-           check_data    = TRUE,
-           metric        = NULL) {
+report <- function(train_output,
+                   output_file   = NULL,
+                   output_format = 'pdf_document',
+                   output_dir    = getwd(),
+                   check_data    = TRUE,
+                   metric        = NULL) {
 
     tryCatch({
       find.package('tinytex')
     },
     error = function(cond) {
-      verbose_cat('Package not found: tinytex, to use it please follow',
+      verbose_cat(crayon::red('\u2716'), 'Package not found: tinytex, to use it please follow',
                   'guides for installation from GitHub repository README. The',
                   'report() fucntion is unable to work properly wihtout it. \n\n',
                   verbose = TRUE)
-      return(NULL)
+      stop('Package not found: tinytex, to use it please follow guides for installation from GitHub repository README. The report() function is unable to work properly wihtout it. \n\n')
     })
-
     if (train_output$type == 'regression') {
       input_file_path <- system.file('rmd', 'report_regression.Rmd', package = 'forester')
     } else if (train_output$type == 'binary_clf') {
       input_file_path <- system.file('rmd', 'report_binary.Rmd', package = 'forester')
     } else if (train_output$type == 'survival') {
-      verbose_cat(crayon::red('\u2716'), ' The report for survival analysis task is currently unavailable. \n\n')
-      stop()
+      verbose_cat(crayon::red('\u2716'), 'The report for survival analysis task is currently unavailable. \n\n')
+      stop('The report for survival analysis task is currently unavailable. \n\n')
+    } else if (train_output$type == 'multiclass') {
+      input_file_path <- system.file('rmd', 'report_multiclass.Rmd', package = 'forester')
     } else {
-      verbose_cat(crayon::red('\u2716'), ' The report for this task is currently unavailable. \n\n')
-      stop()
+      verbose_cat(crayon::red('\u2716'), 'The report for this task is currently unavailable. \n\n')
+      stop('The report for this task is currently unavailable. \n\n')
     }
 
     rmarkdown::render(

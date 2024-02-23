@@ -23,7 +23,7 @@ values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
 matter for survival analysis.}
 
 \item{type}{A string that determines if Machine Learning task is the
-`binary_clf`, `regression`, or `survival`.}
+`binary_clf`, `regression`, `survival`, or `multiclass` task.}
 }
 \value{
 A list of models for every engine.

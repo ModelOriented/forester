@@ -9,7 +9,8 @@ preprocessing_imputation(
   na_indicators = c(""),
   imputation_method = "median-other",
   k = 10,
-  m = 5
+  m = 5,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -29,6 +30,9 @@ set to 10. The parameter applicable only if selected `imputation_method` is 'knn
 \item{m}{An integer describing the number of multiple imputations to use.
 By default set to 5. The parameter applicable only if selected
 `imputation_method` is 'mice'.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 Imputed dataset.

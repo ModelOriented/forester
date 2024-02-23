@@ -4,7 +4,7 @@
 \alias{rm_static_cols}
 \title{Remove columns which are dominated by one value}
 \usage{
-rm_static_cols(data, y, threshold = 1)
+rm_static_cols(data, y, threshold = 1, verbose = FALSE)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -16,6 +16,9 @@ matrix and so on.}
 threshold of dominating values for column If feature has more dominating
 values it is going to be removed. By default set to 1, which indicates that
 all values are equal.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 A list containing two objects:

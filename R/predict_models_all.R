@@ -4,10 +4,11 @@
 #' @param data A test data for models created by `prepare_data()` function.
 #' @param y A string that indicates a target column name.
 #' @param type A string that determines if Machine Learning task is the
-#' `binary_clf`, `regression`, or `survival` task.
+#' `binary_clf`, `regression`, `survival`, or `multiclass` task.
 #'
 #' @return A list of predictions for every engine without names.
 #' @export
+#' @importFrom stats as.formula predict
 predict_models_all <- function(models, data, y, type) {
   predictions <- list(1:length(models))
   engine_all  <- c()
@@ -100,6 +101,33 @@ predict_models_all <- function(models, data, y, type) {
                                        prediction_type = 'Probability')
           )
         }
+      }
+      names(predictions) <- names(models)
+      return(predictions)
+    } else if (type == 'multiclass') {
+      for (i in 1:length(models)) {
+        if (engine[i] == 'ranger') {
+          predicts <- ranger::predictions(predict(models[[i]], data$ranger_data))
+
+        } else if (engine[i] == 'xgboost') {
+          predicts <- predict(models[[i]], data$xgboost_data)
+          predicts <- matrix(predicts, nrow = nrow(data$xgboost_data), ncol = length(unique(data$ranger_data[[y]])), byrow = TRUE)
+
+        } else if (engine[i] == 'decision_tree') {
+          predicts <- unname(predict(models[[i]], data$decision_tree_data, type = 'prob'))
+
+        } else if (engine[i] == 'lightgbm') {
+          predicts <- predict(models[[i]], data$lightgbm_data)
+
+        } else if (engine[i] == 'catboost') {
+          predicts <- catboost::catboost.predict(models[[i]], data$catboost_data,
+                                                 prediction_type = 'Probability')
+        }
+        preds <- c()
+        for (j in 1:nrow(predicts)) {
+          preds <- c(preds, which.max(unname(predicts[j, ])))
+        }
+        predictions[i] <- list(preds)
       }
       names(predictions) <- names(models)
       return(predictions)

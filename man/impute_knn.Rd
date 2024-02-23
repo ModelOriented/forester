@@ -4,7 +4,7 @@
 \alias{impute_knn}
 \title{Imputes all missing values with the KNN algorithm}
 \usage{
-impute_knn(data, na_indicators = c(""), k = 10)
+impute_knn(data, na_indicators = c(""), k = 10, verbose = FALSE)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -16,6 +16,9 @@ as these are already checked in other criterion.}
 
 \item{k}{An integer describing the number of nearest neighbours to use. By default
 set to 10.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 Imputed dataset.

@@ -7,13 +7,11 @@
 #' Either y, or pair: time, status can be used.
 #' @param status A string that indicates a status column name for survival analysis task.
 #' Either y, or pair: time, status can be used.
-#' @param models A list of models trained by `train_models()` function.
-#' They will be compered with models trained with different hyperparameters.
 #' @param engine A vector of tree-based models that shall be created. Possible
 #' values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
 #' matter for survival analysis.
 #' @param type A string that determines if Machine Learning task is the
-#' `binary_clf`, `regression`, or `survival`.
+#' `binary_clf`, `regression`, `survival`, or `multiclass` task.
 #' @param max_evals The number of trained models for each model type in `engine`.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none. Set to FALSE by default.
@@ -25,15 +23,19 @@ random_search <- function(train_data,
                           y      = NULL,
                           time   = NULL,
                           status = NULL,
-                          models,
                           engine,
                           type,
                           max_evals = 10,
                           verbose   = FALSE) {
+  if (!is.numeric(max_evals) | as.integer(max_evals) != max_evals ) {
+    verbose_cat(crayon::green('\u2714'), 'The number of random search evaluations must be an integer. \n\n', verbose = verbose)
+    stop('The number of bayesian optimization iterations must be an integer.')
+  }
   if (max_evals <= 0) {
     verbose_cat(crayon::green('\u2714'), 'Random search was turned off. \n\n', verbose = verbose)
     return(NULL)
   }
+
 
   ranger_grid <- list(
     num.trees       = c(5, 100, 1000),
@@ -117,7 +119,7 @@ random_search <- function(train_data,
       if (type == 'regression') {
         classification <- NULL
         probability    <- FALSE
-      } else if (type == 'binary_clf') {
+      } else if (type %in% c('binary_clf', 'multiclass')) {
         classification <- TRUE
         probability    <- TRUE
       }
@@ -148,16 +150,32 @@ random_search <- function(train_data,
     }
     if ('xgboost' %in% engine) {
       if (type == 'regression') {
-        objective <- 'reg:squarederror'
-        label     <- as.vector(train_data$ranger_data[[y]])
+        objective   <- 'reg:squarederror'
+        eval_metric <- 'rmse'
+        label       <- as.vector(train_data$ranger_data[[y]])
+        params      <- list(objective = objective, eval_metric = eval_metric)
       } else if (type == 'binary_clf') {
-        objective <- 'binary:logistic'
         if (any(train_data$ranger_data[[y]] == 2)) {
           label <- as.numeric(train_data$ranger_data[[y]]) - 1
         } else {
           label <- as.numeric(train_data$ranger_data[[y]])
         }
-        label <- as.vector(label)
+        objective   <- 'binary:logistic'
+        eval_metric <- 'auc'
+        label       <- as.vector(label)
+        num_class   <- 1
+        params      <- list(objective = objective, eval_metric = eval_metric, num_class = num_class)
+      } else if (type == 'multiclass') {
+        if (any(train_data$ranger_data[[y]] == 2)) {
+          label <- as.numeric(train_data$ranger_data[[y]]) - 1
+        } else {
+          label <- as.numeric(train_data$ranger_data[[y]])
+        }
+        objective   <- 'multi:softprob'
+        eval_metric <- 'merror'
+        label       <- as.vector(label)
+        num_class   <- length(unique(as.vector(label)))
+        params      <- list(objective = objective, eval_metric = eval_metric, num_class = num_class)
       }
       xgboost_models        <- list()
       expanded_xgboost_grid <- expand.grid(xgboost_grid)
@@ -168,15 +186,15 @@ random_search <- function(train_data,
         xgboost_models[i] <-
           list(
             xgboost::xgboost(
-              data      = train_data$xgboost_data,
-              label     = label,
-              objective = objective,
-              verbose   = 0,
-              nrounds   = unlist(sample_xgboost_grid[i, 'nrounds']),
-              subsample = unlist(sample_xgboost_grid[i, 'subsample']),
-              gamma     = unlist(sample_xgboost_grid[i, 'gamma']),
-              eta       = unlist(sample_xgboost_grid[i, 'eta']),
-              max_depth = unlist(sample_xgboost_grid[i, 'max_depth'])
+              data        = train_data$xgboost_data,
+              label       = label,
+              verbose     = 0,
+              params      = params,
+              nrounds     = unlist(sample_xgboost_grid[i, 'nrounds']),
+              subsample   = unlist(sample_xgboost_grid[i, 'subsample']),
+              gamma       = unlist(sample_xgboost_grid[i, 'gamma']),
+              eta         = unlist(sample_xgboost_grid[i, 'eta']),
+              max_depth   = unlist(sample_xgboost_grid[i, 'max_depth'])
             )
           )
       }
@@ -219,9 +237,9 @@ random_search <- function(train_data,
       if (type == 'binary_clf') {
         obj = 'binary'
         params <- list(objective = obj)
-      } else if (type == 'multi_clf') {
+      } else if (type == 'multiclass') {
         obj = 'multiclass'
-        params <- list(objective = obj)
+        params <- list(objective = obj, num_class = length(unique(as.vector(train_data$ranger_data[[y]]))))
       } else if (type == 'regression') {
         obj = 'regression'
         params <- list(objective = obj)
@@ -260,7 +278,7 @@ random_search <- function(train_data,
       if (type == 'binary_clf') {
         obj    <- 'Logloss'
         params <- list(loss_function = obj, logging_level = 'Silent')
-      } else if (type == 'multi_clf') {
+      } else if (type == 'multiclass') {
         obj    <- 'MultiClass'
         params <- list(loss_function = obj, logging_level = 'Silent')
       } else if (type == 'regression') {

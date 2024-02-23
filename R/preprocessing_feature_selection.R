@@ -28,10 +28,12 @@
 #' a bit higher. It is recommended to set this value equal to or less than CPU
 #' available cores. By default set to NULL, which will use maximal number of cores
 #' minus 1. Relevant for the `MCFS` method.
-#' @param method A string that indicates which algorithm will be used for MI method. Available
+#' @param method A string that indicates which algorithm will be used for `MI` method. Available
 #' options are the default 'estevez' which works well for smaller datasets, but can
 #' raise errors for bigger ones, and simpler 'peng'. More details present in the
 #' documentation of ?varrank method.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing two objects:
 #' \itemize{
@@ -46,10 +48,11 @@ preprocessing_feature_selection <- function(data,
                                             nperm = 1,
                                             cutoffPermutations = 20,
                                             threadsNumber = NULL,
-                                            method = 'estevez') {
+                                            method = 'estevez',
+                                            verbose = FALSE) {
 
   if (!feature_selection_method %in% c('VI', 'MCFS', 'MI', 'BORUTA')) {
-    verbose_cat(crayon::red('\u2716'), 'Preprocessing feature selection: The feature selection method must be one of VI, MCFS, MI, or BORUTA.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'Preprocessing feature selection: The feature selection method must be one of VI, MCFS, MI, or BORUTA.', '\n', verbose = verbose)
     stop('Preprocessing feature selection: The feature selection method must be one of VI, MCFS, MI, or BORUTA.')
   }
 
@@ -57,7 +60,7 @@ preprocessing_feature_selection <- function(data,
     if (max_features == 'default') {
       max_features <- min(10, ncol(data) - 1)
     }
-    fs_data <- select_vi(data, y, nperm = 1, max_features = max_features)
+    fs_data <- select_vi(data, y, nperm = nperm, max_features = max_features)
   } else if (feature_selection_method == 'MCFS') {
     if (max_features == 'default') {
       max_features <- NULL
@@ -90,6 +93,8 @@ preprocessing_feature_selection <- function(data,
 #' By default set to 1.
 #' @param max_features A positive integer value describing the desired number of
 #' selected features. By default set to 10.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing two objects:
 #' \itemize{
@@ -97,13 +102,13 @@ preprocessing_feature_selection <- function(data,
 #' \item \code{`idx`} The indexes of removed columns.
 #' }
 #' @export
-select_vi <- function(data, y, nperm = 1, max_features = 10) {
+select_vi <- function(data, y, nperm = 1, max_features = 10, verbose = FALSE) {
   if (nperm < 1 || as.integer(nperm) != nperm) {
-    verbose_cat(crayon::red('\u2716'), 'VI feature selection: Number of permutations must be an integer greater-equal than 1.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'VI feature selection: Number of permutations must be an integer greater-equal than 1.', '\n', verbose = verbose)
     stop('VI feature selection: Number of permutations must be an integer greater-equal than 1.')
   }
   if (max_features < 1 || max_features >= ncol(data) || as.integer(max_features) != max_features) {
-    verbose_cat(crayon::red('\u2716'), 'VI feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'VI feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).', '\n', verbose = verbose)
     stop('VI feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).')
   }
   data_org <- data
@@ -158,6 +163,8 @@ select_vi <- function(data, y, nperm = 1, max_features = 10) {
 #' @param max_features A positive integer value describing the desired number of
 #' selected features. By default set to NULL, then the MCFS algorithm uses all
 #' features that seems important to it.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing two objects:
 #' \itemize{
@@ -165,39 +172,43 @@ select_vi <- function(data, y, nperm = 1, max_features = 10) {
 #' \item \code{`idx`} The indexes of removed columns.
 #' }
 #' @export
-select_mcfs <- function(data, y, cutoffPermutations = 20, threadsNumber = NULL, max_features = NULL) {
+select_mcfs <- function(data, y, cutoffPermutations = 20, threadsNumber = NULL, max_features = NULL, verbose = FALSE) {
   if (is.null(threadsNumber)) {
     threadsNumber <- parallel::detectCores() - 1
   } else {
     if (as.integer(threadsNumber) != threadsNumber || threadsNumber < 1) {
-      verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of threads must be a positive integer.', '\n', verbose = TRUE)
+      verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of threads must be a positive integer.', '\n', verbose = verbose)
       stop('MCFS feature selection: Number of threads must be a positive integer.')
     }
   }
   if (threadsNumber > parallel::detectCores()) {
-    verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of cores cannot be larger than available cores.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of cores cannot be larger than available cores.', '\n', verbose = verbose)
     stop('MCFS feature selection: Number of cores cannot be larger than available cores.')
   }
   if (cutoffPermutations < 0 || cutoffPermutations %in% c(1,2) ||
       as.integer(cutoffPermutations) != cutoffPermutations) {
-    verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of cutoffPermutations must be equal 0, or greater-equal than 3, and be an integer.', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of cutoffPermutations must be equal 0, or greater-equal than 3, and be an integer.', '\n', verbose = verbose)
     stop('MCFS feature selection: Number of cutoffPermutations must be equal 0, or greater-equal than 3, and be an integer.')
   }
   if (!is.null(max_features)) {
     if (max_features < 1 || max_features >= ncol(data) || as.integer(max_features) != max_features) {
-      verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).', '\n', verbose = TRUE)
+      verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).', '\n', verbose = verbose)
       stop('MCFS feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).')
     }
   }
   if (ncol(data) - 1 < 10) {
-    verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of features is equal to', ncol(data) - 1, 'which is too few for the MCFS algorithm to work properly. Skipping this step.\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Number of features is equal to', ncol(data) - 1, 'which is too few for the MCFS algorithm to work properly. Skipping this step.\n', verbose = verbose)
     to_rm <- NULL
   } else {
     to_rm <- NULL
     form <- as.formula(paste0(y, ' ~.'))
     # We cannot suppress prints as they come from Java back-end.
     tryCatch({
-      mcfs <- rmcfs::mcfs(form, data, threadsNumber = threadsNumber, cutoffPermutations = cutoffPermutations)
+      if (verbose) {
+        mcfs <- rmcfs::mcfs(form, data, threadsNumber = threadsNumber, cutoffPermutations = cutoffPermutations)
+      } else {
+        capture.output(mcfs <- rmcfs::mcfs(form, data, threadsNumber = threadsNumber, cutoffPermutations = cutoffPermutations))
+      }
       # We select those features seen as important for MCFS algorithm.
       if (!is.null(max_features)) {
         max_fs <- min(mcfs$cutoff_value, max_features)
@@ -218,7 +229,7 @@ select_mcfs <- function(data, y, cutoffPermutations = 20, threadsNumber = NULL, 
     error = function(cond) {
       verbose_cat(crayon::red('\u2716'), 'MCFS feature selection: Java error occured in rmcfs package.',
                   'Please, consider using other FS method for this task. Provided outcomes does not contain ',
-                  'any form of Feature Selection, but other components were executed regularly. \n', verbose = TRUE)
+                  'any form of Feature Selection, but other components were executed regularly. \n', verbose = verbose)
       to_rm <- NULL
     })
   }
@@ -242,6 +253,8 @@ select_mcfs <- function(data, y, cutoffPermutations = 20, threadsNumber = NULL, 
 #' options are the default 'estevez' which works well for smaller datasets, but can
 #' raise errors for bigger ones, and simpler 'peng'. More details present in the
 #' documentation of ?varrank method.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' preprocessing process, if FALSE gives none.
 #'
 #' @return A list containing two objects:
 #' \itemize{
@@ -249,9 +262,9 @@ select_mcfs <- function(data, y, cutoffPermutations = 20, threadsNumber = NULL, 
 #' \item \code{`idx`} The indexes of removed columns.
 #' }
 #' @export
-select_mi_varrank <- function(data, y, max_features = 10, method = 'estevez') {
+select_mi_varrank <- function(data, y, max_features = 10, method = 'estevez', verbose = FALSE) {
   if (max_features < 1 || max_features >= ncol(data) || as.integer(max_features) != max_features) {
-    verbose_cat(crayon::red('\u2716'), 'MI varrank feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).', '\n', verbose = TRUE)
+    verbose_cat(crayon::red('\u2716'), 'MI varrank feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).', '\n', verbose = verbose)
     stop('MI varrank feature selection: Number of max_features must be an integer greater-equal than 1, and smaller than ncol(data).')
   }
   # We perform our own data discretization as the one used in varrank is corrupted in some cases.

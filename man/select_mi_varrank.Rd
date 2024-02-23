@@ -4,7 +4,13 @@
 \alias{select_mi_varrank}
 \title{Feature selection performed by varrank package}
 \usage{
-select_mi_varrank(data, y, max_features = 10, method = "estevez")
+select_mi_varrank(
+  data,
+  y,
+  max_features = 10,
+  method = "estevez",
+  verbose = FALSE
+)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -19,6 +25,9 @@ selected features. By default set to 10.}
 options are the default 'estevez' which works well for smaller datasets, but can
 raise errors for bigger ones, and simpler 'peng'. More details present in the
 documentation of ?varrank method.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 A list containing two objects:

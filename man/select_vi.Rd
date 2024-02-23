@@ -4,7 +4,7 @@
 \alias{select_vi}
 \title{Feature Selection performed by Variable Importance algorithm based on random forest}
 \usage{
-select_vi(data, y, nperm = 1, max_features = 10)
+select_vi(data, y, nperm = 1, max_features = 10, verbose = FALSE)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -17,6 +17,9 @@ By default set to 1.}
 
 \item{max_features}{A positive integer value describing the desired number of
 selected features. By default set to 10.}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 A list containing two objects:

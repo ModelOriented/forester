@@ -52,6 +52,28 @@ adult_prep <- custom_preprocessing(data = adult_sm,
 # Training
 
 ```{r}
+train_out <- train(data        = adult_sm,
+      y                          = 'salary', 
+      time                       = NULL,
+      status                     = NULL,
+      type                       = "auto",
+      engine                     = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
+      verbose                    = TRUE,
+      train_test_split           = c(0.6, 0.2, 0.2),
+      split_seed                 = NULL,
+      bayes_iter                 = 0,
+      random_evals               = 2,
+      metrics                    = "auto",
+      sort_by                    = "auto",
+      metric_function            = NULL,
+      metric_function_name       = NULL,
+      metric_function_decreasing = TRUE,
+      best_model_number          = 5,
+      custom_preprocessing       = NULL
+)
+```
+
+```{r}
 train_out_1 <- train(data        = adult_prep$data,
       y                          = 'salary', 
       time                       = NULL,

@@ -16,12 +16,13 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' data(lisbon)
 #' lisbon_train <- lisbon[1:200, ]
 #' lisbon_new   <- lisbon[201:246, ]
 #' out          <- train(lisbon_train, 'Price', verbose = FALSE, bayes_iter = 0, random_evals = 1)
 #' preds        <- predict_new(out, lisbon_new)
-#' preds
+#' }
 predict_new <- function(train_out, data, verbose = TRUE) {
   del_cols   <- train_out$deleted_columns
   y          <- train_out$y
@@ -35,9 +36,6 @@ predict_new <- function(train_out, data, verbose = TRUE) {
 
   # Preprocessing simulation.
   data <- data[, !(names(data) %in% del_cols)]
-  if (type == 'binary_clf') {
-    levels(data[[y]]) <- c(1, 2)
-  }
   if (nrow(data) > 29) {
     tryCatch({
       data <- manage_missing(data, y)
@@ -49,6 +47,7 @@ predict_new <- function(train_out, data, verbose = TRUE) {
     verbose_cat('No imputation performed due to only one observation. If any values are missing, user has to handle them by himself. \n', verbose = verbose)
   }
   data         <- prepare_data(data,
+                               type    = type,
                                y       = y,
                                engine  = engine,
                                predict = TRUE,

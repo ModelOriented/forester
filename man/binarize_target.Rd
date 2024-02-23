@@ -4,11 +4,16 @@
 \alias{binarize_target}
 \title{Binarize the target column}
 \usage{
-binarize_target(data, y = NULL, status = NULL)
+binarize_target(data, type, y = NULL, status = NULL)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
 matrix, and so on.}
+
+\item{type}{A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+sets the type of the task. If `auto` (the default option) then
+the function will figure out `type` based on the number of unique values
+in the `y` variable, or the presence of time/status columns.}
 
 \item{y}{A string that indicates a target column name for regression or classification.
 Either y, or status can be used. By default NULL.}

@@ -26,10 +26,11 @@ subset of columns that were deleted for the models and makes predictions.
 It is strongly advised that the new dataset shouldn't have any missing values.
 }
 \examples{
+\dontrun{
 data(lisbon)
 lisbon_train <- lisbon[1:200, ]
 lisbon_new   <- lisbon[201:246, ]
 out          <- train(lisbon_train, 'Price', verbose = FALSE, bayes_iter = 0, random_evals = 1)
 preds        <- predict_new(out, lisbon_new)
-preds
+}
 }

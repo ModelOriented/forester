@@ -31,7 +31,7 @@ score_models(
 \item{data}{A data for models created by `prepare_data()` function, used for
 Brier score calculations.}
 
-\item{type}{A string, determines if the future task is `binary_clf`, `regression`, or `survival`.}
+\item{type}{A string, determines if the future task is `binary_clf`, `regression`, `survival`, or `multiclass`.}
 
 \item{time}{A string that indicates a time column name for survival analysis task.
 Either y, or pair: time, status can be used.}
@@ -43,11 +43,15 @@ Either y, or pair: time, status can be used.}
 most important metrics are returned. For `all` all metrics are returned.
 For `NULL` no metrics returned but still sorted by `sort_by`. The metrics
 available for the binary classification are: `auc`, `f1`, `recall`, `precision`,
-`accuracy`, `sensitivity`, `specificity`, `balanced_accuracy`, and for the
-regression: `mse`, `rmse`, `r2`, `mad`, and `mae`.}
+`accuracy`, `sensitivity`, `specificity`, `balanced_accuracy`, for the
+regression: `mse`, `rmse`, `r2`, `mad`, `mae`, for the survival analysis:
+`Brier Score`, `Concordance Index (CIN)`, and for the multiclass classification: `accuracy`,
+`micro_averaged_precision`, `micro_averaged_recall`, `micro_averaged_f1`,
+`macro_averaged_precision`, `macro_averaged_recall`, `macro_averaged_f1`,
+`weighted_averaged_precision`, `weighted_averaged_recall`, `weighted_averaged_f1`.}
 
 \item{sort_by}{String with name of metric to sort by. For `auto` models going
-to be sorted by `rmse` for regression and `accuracy` for classification.}
+to be sorted by `rmse` for regression and `accuracy` for both classification tasks.}
 
 \item{metric_function}{The self-created function.
 It should look like name(predictions, observed) and return the numeric value.

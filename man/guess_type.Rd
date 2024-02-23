@@ -4,7 +4,7 @@
 \alias{guess_type}
 \title{Guess task type by the target value from the dataset}
 \usage{
-guess_type(data, y, max_unique_numeric = 5, max_unique_not_numeric = 15)
+guess_type(data, y, max_unique = 15)
 }
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
@@ -12,14 +12,11 @@ matrix, and so on.}
 
 \item{y}{A string that indicates a target column name.}
 
-\item{max_unique_numeric}{An integer describing the maximal number of unique
-values in `y` if `y` is numeric.}
-
-\item{max_unique_not_numeric}{An integer describing the maximal number of unique
-values in `y` if `y` is NOT numeric.}
+\item{max_unique}{An integer describing the maximal number of unique
+values in `y`.}
 }
 \value{
-A string describing the type of ml task: `binary_clf`, `multi_clf`,
+A string describing the type of ml task: `binary_clf`, `multiclass`,
 `regression`, or `survival`.
 }
 \description{

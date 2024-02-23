@@ -51,6 +51,28 @@ lisbon_prep  <- custom_preprocessing(data = lisbon,
 # Training
 
 ```{r}
+train_out <- train(data        = lisbon,
+      y                          = 'Price', 
+      time                       = NULL,
+      status                     = NULL,
+      type                       = "auto",
+      engine                     = c("ranger", "xgboost", "decision_tree", "lightgbm", "catboost"),
+      verbose                    = TRUE,
+      train_test_split           = c(0.6, 0.2, 0.2),
+      split_seed                 = NULL,
+      bayes_iter                 = 0,
+      random_evals               = 2,
+      metrics                    = "auto",
+      sort_by                    = "auto",
+      metric_function            = NULL,
+      metric_function_name       = NULL,
+      metric_function_decreasing = TRUE,
+      best_model_number          = 5,
+      custom_preprocessing       = NULL
+)
+```
+
+```{r}
 train_out_1 <- train(data        = lisbon_prep$data,
       y                          = 'Price', 
       time                       = NULL,

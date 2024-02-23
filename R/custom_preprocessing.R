@@ -10,6 +10,10 @@
 #' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix and so on.
 #' @param y A string that indicates a target column name.
+#' @param type A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+#' sets the type of the task. If `auto` (the default option) then
+#' forester will figure out `type` based on the number of unique values
+#' in the `y` variable, or the presence of time/status columns.
 #' @param na_indicators A list containing the values that will be treated as NA
 #' indicators. By default the list is c(''). WARNING Do not include NA or NaN,
 #' as these are already checked in other criterion.
@@ -130,10 +134,11 @@
 
 custom_preprocessing <- function(data,
                                  y,
+                                 type = 'auto',
                                  na_indicators = c(''),
                                  removal_parameters = list(
-                                   active_modules = c(duplicate_cols = TRUE, id_like_cols    = TRUE,
-                                                      static_cols    = TRUE, sparse_cols     = TRUE,
+                                   active_modules = c(duplicate_cols = TRUE, id_like_cols = TRUE,
+                                                      static_cols    = TRUE, sparse_cols  = TRUE,
                                                       corrupt_rows   = TRUE, correlated_cols = TRUE),
                                    id_names = c('id', 'nr', 'number', 'idx', 'identification', 'index'),
                                    static_threshold           = 0.99,
@@ -147,7 +152,7 @@ custom_preprocessing <- function(data,
                                    m = 5
                                  ),
                                  feature_selection_parameters = list(
-                                   feature_selection_method = 'VI',
+                                   feature_selection_method = 'none',
                                    max_features = 'default',
                                    nperm = 1,
                                    cutoffPermutations = 20,
@@ -155,17 +160,40 @@ custom_preprocessing <- function(data,
                                    method = 'estevez'
                                  ),
                                  verbose = FALSE) {
-  if ('tbl' %in% class(data)) {
+  if ('tbl' %in% class(data) || 'list' %in% class(data) || 'matrix' %in% class(data)) {
     data <- as.data.frame(data)
-    verbose_cat(crayon::red('\u2716'), 'Provided dataset is a tibble and not a',
-                'data.frame or matrix. Casting the dataset to data.frame format. \n\n',
+    verbose_cat(crayon::red('\u2716'), 'Provided dataset is a tibble, list or matrix and not a',
+                'data.frame. Casting the dataset to data.frame format. \n\n',
                 verbose = verbose)
   }
 
   if (!y %in% colnames(data)) {
     verbose_cat(crayon::red('\u2716'), 'Provided target column name for y parameter', y,
                 'is not present in the datataset. \n\n', verbose = verbose)
+    stop('Provided target column name for y parameter is not present in the datataset.')
   }
+
+  if (type == 'auto') {
+    type <- guess_type(data, y)
+    verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
+  } else if (!type %in% c('regression', 'binary_clf', 'survival', 'multiclass')) {
+    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification \n\n', verbose = verbose)
+    stop('Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification')
+  } else {
+    verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
+  }
+
+  if (any(is.null(removal_parameters), is.null(imputation_parameters), is.null(feature_selection_parameters),
+           is.na(removal_parameters),   is.na(imputation_parameters),   is.na(feature_selection_parameters))) {
+    verbose_cat(crayon::red('\u2716'), 'Parameters varaibles cannot be NULL, or NA. If you want to turn off something, read documentation on how to do it. You cannot turn off data imputation module.', verbose = verbose)
+    stop('Parameters varaibles cannot be NULL, or NA. If you want to turn off something, read documentation on how to do it. You cannot turn off data imputation module.')
+  }
+
+  if (!all(is.list(removal_parameters), is.list(imputation_parameters), is.list(feature_selection_parameters))) {
+    verbose_cat(crayon::red('\u2716'), 'All parameters variables have to be lists in a form described as in documentation.', verbose = verbose)
+    stop('All parameters variables have to be lists in a form described as in documentation.')
+  }
+
   org_data <- data
   cols     <- colnames(data)
   removal  <- preprocessing_removal(data,
@@ -176,12 +204,13 @@ custom_preprocessing <- function(data,
                                     sparse_columns_threshold   = removal_parameters$sparse_columns_threshold,
                                     sparse_rows_threshold      = removal_parameters$sparse_rows_threshold,
                                     na_indicators              = na_indicators,
-                                    high_correlation_threshold = removal_parameters$high_correlation_threshold)
+                                    high_correlation_threshold = removal_parameters$high_correlation_threshold,
+                                    verbose                    = verbose)
 
   verbose_cat(crayon::green('\u2714'), 'Preprocessing removal part finished succesfully. The process deleted',
               length(removal$rm_col), 'columns, and', length(removal$rm_row), 'rows. \n', verbose = verbose)
 
-  binary     <- binarize_target(removal$data, y)
+  binary     <- binarize_target(removal$data, type, y)
   data       <- binary$bin_data
   bin_labels <- binary$labels
 
@@ -189,7 +218,8 @@ custom_preprocessing <- function(data,
                                          na_indicators     = na_indicators,
                                          imputation_method = imputation_parameters$imputation_method,
                                          k                 = imputation_parameters$k,
-                                         m                 = imputation_parameters$m)
+                                         m                 = imputation_parameters$m,
+                                         verbose           = verbose)
 
   verbose_cat(crayon::green('\u2714'), 'Preprocessing imputation part finished succesfully. \n', verbose = verbose)
   data <- imputation
@@ -203,7 +233,8 @@ custom_preprocessing <- function(data,
                                                          nperm                    = feature_selection_parameters$nperm,
                                                          cutoffPermutations       = feature_selection_parameters$cutoffPermutations,
                                                          threadsNumber            = feature_selection_parameters$threadsNumber,
-                                                         method                   = feature_selection_parameters$method)
+                                                         method                   = feature_selection_parameters$method,
+                                                         verbose                  = verbose)
     data <- feature_selection$data
   }
 

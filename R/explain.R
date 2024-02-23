@@ -9,19 +9,21 @@
 #' (1) a vector of the same number of observations as `data` or
 #' (2) a character name of variable in the `data` that contains
 #' the target variable.
-#' @param verbose A logical value determining whether explainer creation messages
-#' should be printed or not.
+#' @param verbose A logical value, if set to TRUE, provides all information about
+#' the process, if FALSE gives none.
 #'
 #' @return A list of DALEX explainers for 5 models of different engines.
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' data(lisbon)
 #' train_output   <- train(lisbon, 'Price', verbose = FALSE, random_evals = 2, bayes_iter = 1)
 #' best_explainer <- explain(train_output$best_models_on_valid[[1]][1],
 #'                           train_output$valid_data, train_output$y)
 #' best_explainers <- explain(train_output$best_models_on_valid[[1]],
 #'                            train_output$valid_data, train_output$y)
+#'}
 explain <- function(models, test_data, y, verbose = FALSE) {
   type <- guess_type(test_data$ranger_data, y)
 
@@ -53,11 +55,9 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     } else if ('catboost.Model' %in% m_class) {
       engine <- 'catboost'
     }
-
     if ('ranger' == engine) {
       exp_data   <- test_data$ranger_data
       target     <- as.numeric(test_data$ranger_data[[y]])
-      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (single_model) {
         explainer <- DALEX::explain(model = models,
@@ -74,7 +74,6 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     if ('xgboost' == engine) {
       exp_data <- test_data$xgboost_data
       target   <- as.numeric(test_data$ranger_data[[y]])
-      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (type == 'binary_clf') {
         target <- as.integer(target)
@@ -95,7 +94,6 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     if ('decision_tree' == engine) {
       exp_data <- test_data$decision_tree_data
       target   <- as.numeric(test_data$ranger_data[[y]])
-      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (single_model) {
         explainer <- DALEX::explain(model = models,
@@ -104,15 +102,14 @@ explain <- function(models, test_data, y, verbose = FALSE) {
                                     verbose = verbose)
       } else {
         explainer <- DALEX::explain(model = models[[i]],
-                                                  data = exp_data,
-                                                  y = as.vector(target),
-                                                  verbose = verbose)
+                                    data = exp_data,
+                                    y = as.vector(target),
+                                    verbose = verbose)
       }
     }
     if ('lightgbm' == engine) {
       exp_data <- test_data$lightgbm_data
       target   <- as.numeric(test_data$ranger_data[[y]])
-      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (type == 'binary_clf') {
         target <- as.integer(target) - 1
@@ -133,7 +130,6 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     if ('catboost' == engine) {
       exp_data <- test_data$catboost_data
       target   <- as.numeric(test_data$ranger_data[[y]])
-      test_data$ranger_data[[y]] <- as.numeric(test_data$ranger_data[[y]])
 
       if (type == 'binary_clf') {
         if (max(target) > 1) {
@@ -174,7 +170,5 @@ explain <- function(models, test_data, y, verbose = FALSE) {
     }
   }
 
-  return(
-    explainers
-  )
+  return(explainers)
 }

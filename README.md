@@ -73,7 +73,7 @@ The *forester* package is **an AutoML tool in R** that wraps up all machine lear
 
 ## For whom is this package created?
 
-The  forester  package is designed for beginners in data science, but also for more  experienced users. They get an easy-to-use tool that can be used to prepare high-quality baseline models for comparison with more advanced methods or a set of output parameters for more thorough optimisations.
+The  forester  package is designed for beginners in data science, but also for more  experienced users. They get an easy-to-use tool that can be used to prepare high-quality baseline models for comparison with more advanced methods or a set of output parameters for more thorough optimization.
 
 ## Introductory blogs
 
@@ -84,7 +84,10 @@ The  forester  package is designed for beginners in data science, but also for m
 
 ## Authors
 
-This package is created inside the MI2.AI (Warsaw University of Technology) as both scientific research and Bachelor thesis by:
+Currently (since the version 1.2.0) the package is being developed as both scientific research and Masters thesis at WUT (Warsaw University of Technology), by [Hubert Ruczyński](https://github.com/HubertR21), under the supervision of [Anna Kozak](https://github.com/kozaka93), and [Anna Cena](https://github.com/cenka).
+
+
+Beforehand (up till the version 1.1.4) this package was created inside the MI2.AI (Warsaw University of Technology) as both scientific research and Bachelor thesis by:
 - [Adrianna Grudzień](https://github.com/grudzienAda),
 - [Hubert Ruczyński](https://github.com/HubertR21), 
 - [Patryk Słowakiewicz](https://github.com/PSlowakiewicz).
@@ -93,6 +96,6 @@ Project co-ordinator and supervisor: [Anna Kozak](https://github.com/kozaka93)
 
 Auxiliary supervisor [Przemysław Biecek](https://github.com/pbiecek)
 
-The previous version of forester was created by:
+The first version of forester was created by:
 - Hoang Thien Ly
 - Szymon Szmajdziński

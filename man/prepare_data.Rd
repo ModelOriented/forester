@@ -6,6 +6,7 @@
 \usage{
 prepare_data(
   data,
+  type,
   y = NULL,
   time = NULL,
   status = NULL,
@@ -17,6 +18,9 @@ prepare_data(
 \arguments{
 \item{data}{A data source, that is one of the major R formats: data.table, data.frame,
 matrix and so on.}
+
+\item{type}{A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
+sets the type of the task.}
 
 \item{y}{A string that indicates a target column name for regression or classification.
 Either y, or pair: time, status can be used. By default NULL.}

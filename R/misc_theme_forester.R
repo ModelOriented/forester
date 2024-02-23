@@ -54,5 +54,3 @@ colors_discrete_forester <- function(n = 2) {
 colors_diverging_forester <- function() {
   c('#7C843C', '#74533D')
 }
-
-

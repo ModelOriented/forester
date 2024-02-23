@@ -6,7 +6,8 @@
 \usage{
 rm_id_like_columns(
   data,
-  id_names = c("id", "nr", "number", "idx", "identification", "index")
+  id_names = c("id", "nr", "number", "idx", "identification", "index"),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -15,6 +16,9 @@ matrix, and so on.}
 
 \item{id_names}{A vector of strings indicating which column names are perceived
 as ID-like. By default the list is: ['id', 'nr', 'number', 'idx', 'identification', 'index'].}
+
+\item{verbose}{A logical value, if set to TRUE, provides all information about
+preprocessing process, if FALSE gives none.}
 }
 \value{
 A list containing two objects

@@ -11,7 +11,7 @@
 #' values are: `ranger`, `xgboost`,`decision_tree`, `lightgbm`, `catboost`. Doesn't
 #' matter for survival analysis.
 #' @param type A string that determines if Machine Learning task is the
-#' `binary_clf`, `regression`, or `survival`.
+#' `binary_clf`, `regression`, `survival`, or `multiclass` task.
 #'
 #' @return A list of models for every engine.
 #' @export
@@ -34,13 +34,9 @@ train_models <- function(data, y = NULL, time = NULL, status = NULL, engine, typ
     lightgbm_model      <- NULL
     catboost_model      <- NULL
 
-    if (type == 'multi_clf') {
-      stop('Multilabel classification is not supported currently!')
-    }
-
     for (i in 1:length(engine)) {
       if (engine[i] == 'ranger') {
-        if (type == 'binary_clf') {
+        if (type %in% c('binary_clf', 'multiclass')) {
           ranger_model <-
             ranger::ranger(dependent.variable.name = y,
                            data = data$ranger_data,
@@ -55,15 +51,34 @@ train_models <- function(data, y = NULL, time = NULL, status = NULL, engine, typ
       } else if (engine[i] == 'xgboost') {
         if (type == 'binary_clf') {
           if (any(data$ranger_data[[y]] == 2)) {
-            data$ranger_data[[y]] <- as.numeric(data$ranger_data[[y]]) - 1
+            xgb_ranger_data <- data$ranger_data
+            xgb_ranger_data[[y]] <- as.numeric(data$ranger_data[[y]]) - 1
+          } else {
+            xgb_ranger_data <- data$ranger_data
           }
+
         xgboost_model <-
           xgboost::xgboost(data$xgboost_data,
-                           as.vector(data$ranger_data[[y]]),
+                           as.vector(xgb_ranger_data[[y]]),
                            objective = 'binary:logistic',
                            nrounds = 20,
                            verbose = 0,
                            eval_metric = 'auc')
+        } else if (type == 'multiclass'){
+          if (any(data$ranger_data[[y]] == 2)) {
+            xgb_ranger_data <- data$ranger_data
+            xgb_ranger_data[[y]] <- as.numeric(data$ranger_data[[y]]) - 1
+          } else {
+            xgb_ranger_data <- data$ranger_data
+          }
+          xgboost_model <-
+            xgboost::xgboost(data$xgboost_data,
+                           as.vector(xgb_ranger_data[[y]]),
+                           objective = 'multi:softprob',
+                           nrounds = 20,
+                           verbose = 0,
+                           eval_metric = 'merror',
+                           num_class = length(unique(as.vector(xgb_ranger_data[[y]]))))
         } else if (type == 'regression'){
           xgboost_model <-
             xgboost::xgboost(data$xgboost_data,
@@ -82,9 +97,9 @@ train_models <- function(data, y = NULL, time = NULL, status = NULL, engine, typ
         if (type == 'binary_clf') {
           obj    <- 'binary'
           params <- list(objective = obj)
-        } else if (type == 'multi_clf') {
+        } else if (type == 'multiclass') {
           obj    <- 'multiclass'
-          params <- list(objective = obj)
+          params <- list(objective = obj, num_class = length(unique(as.vector(data$ranger_data[[y]]))))
         } else if (type == 'regression') {
           obj    <- 'regression'
           params <- list(objective = obj)
@@ -98,7 +113,7 @@ train_models <- function(data, y = NULL, time = NULL, status = NULL, engine, typ
         if (type == 'binary_clf') {
           obj    <- 'Logloss'
           params <- list(loss_function = obj, logging_level = 'Silent')
-        } else if (type == 'multi_clf') {
+        } else if (type == 'multiclass') {
           obj    <- 'MultiClass'
           params <- list(loss_function = obj, logging_level = 'Silent')
         } else if (type == 'regression') {

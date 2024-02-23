@@ -10,35 +10,35 @@
 #' on all columns in the `data`.
 #' @param y A target variable, being a character name of variable in the `data`
 #' that contains the target variable for classification and regression tasks.
-#' By default set to NULL. If you use y, don't use time, and status, which are
+#' By default set to NULL. If you use y, don't use `time`, and `status`, which are
 #' reserved for survival analysis.
 #' @param time A target variable, being a character name of variable in the `data`
-#' that describes the time column for survival analysis task. By default set to NULL.
-#' You have to use both time, and status together. If you use it, you cannot use y
+#' that describes the `time` column for survival analysis task. By default set to NULL.
+#' You have to use both `time`, and `status` together. If you use it, you cannot use `y`
 #' as it is reserved for classification and regression tasks.
 #' @param status A target variable, being a character name of variable in the `data`
-#' that describes the status for survival analysis task. By default set to NULL.
-#' You have to use both time, and status together. If you use it, you cannot use y
+#' that describes the `status` for survival analysis task. By default set to NULL.
+#' You have to use both `time`, and `status` together. If you use it, you cannot use `y`
 #' as it is reserved for classification and regression tasks.
-#' @param type A character, one of `binary_clf`/`regression`/`survival`/`auto` that
+#' @param type A character, one of `binary_clf`/`regression`/`survival`/`auto`/`multiclass` that
 #' sets the type of the task. If `auto` (the default option) then
 #' forester will figure out `type` based on the number of unique values
-#' in the `y` variable, or the presence of time/status columns.
+#' in the `y` variable, or the presence of `time`/`status` columns.
 #' @param engine A vector of tree-based models that shall be tested.
 #' Possible values are: `ranger`, `xgboost`, `decision_tree`, `lightgbm`, `catboost`.
 #' All models from this vector will be trained and the best one will be returned.
 #' It doesn't matter for survival analysis.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' training process, if FALSE gives none.
-#' @param train_test_split A 3-value vector, describing the proportions of train,
+#' @param train_test_split A 3-value, numeric vector, describing the proportions of train,
 #' test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).
 #' @param split_seed An integer value describing the seed for the split into
 #' train, test, and validation datasets. By default no seed is set and the split
 #' is performed randomly. Default value is NULL.
 #' @param bayes_iter An integer value describing number of optimization rounds
-#' used by the Bayesian optimization.
+#' used by the Bayesian optimization. If set to 0 it turns off this method.
 #' @param random_evals An integer value describing number of trained models
-#' with different parameters by random search.
+#' with different parameters by random search. If set to 0 it turns off this method.
 #' @param metrics A vector of metrics names. By default param set for `auto`, most important metrics are returned.
 #' For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.
 #' @param sort_by A string with a name of metric to sort by.
@@ -51,7 +51,7 @@
 #' By default `metric_function_name` is `metric_function`.
 #' @param metric_function_decreasing A logical value indicating how metric_function
 #' should be sorted. `TRUE` by default.
-#' @param best_model_number Number best models to be chosen as element of the return.
+#' @param best_model_number Number of best models to be chosen as element of the return.
 #' All trained models will be returned as different element of the return.
 #' @param custom_preprocessing An object returned by the `custom_preprocessing()`
 #' function. By default it is set to NULL, which indicates that basic preprocessing
@@ -66,7 +66,7 @@
 #' \item \code{`status`} The original column name describing status for survival analysis task.
 #' \item \code{`type`} The type of the ML task. If the user did not specify a type in the
 #' input parameters, the algorithm recognizes, uses and returns the same type.
-#' It could be `binary_clf`, `regression`, or `survival`.
+#' It could be `binary_clf`, `regression`, `survival`, or  `multiclass`.
 #'
 #' \item \code{`deleted_columns`} Column names from the original data frame that have been
 #' removed in the data preprocessing process, e.g. due to too high correlation
@@ -114,39 +114,36 @@
 #' \item \code{`predictions_valid`} Predictions for all trained models on a validation dataset.
 #'
 #' \item \code{`predictions_train_labels`} Predictions for all trained models on a
-#' train dataset with human readable labels.
+#' train dataset with human readable labels (for classification tasks only).
 #' \item \code{`predictions_test_labels`} Predictions for all trained models on a
-#' test dataset with human readable labels.
+#' test dataset with human readable labels (for classification tasks only).
 #' \item \code{`predictions_valid_labels`} Predictions for all trained models on a
-#' validation dataset with human readable labels.
+#' validation dataset with human readable labels (for classification tasks only).
 #'
 #' \item \code{`predictions_best_train`} Predictions for best trained models on a train dataset.
 #' \item \code{`predictions_best_test`} Predictions for best trained models on a test dataset.
 #' \item \code{`predictions_best_valid`} Predictions for best trained models on a validation dataset.
 #'
 #' \item \code{`predictions_best_train_labels`} Predictions for best trained models on a
-#' train dataset with human readable labels.
+#' train dataset with human readable labels (for classification tasks only).
 #' \item \code{`predictions_best_test_labels`} Predictions for best trained models on a
-#' test dataset with human readable labels.
+#' test dataset with human readable labels (for classification tasks only).
 #' \item \code{`predictions_best_valid_labels`} Predictions for best trained models on a
-#' validation dataset with human readable labels.
+#' validation dataset with human readable labels (for classification tasks only).
 #'
 #' \item \code{`score_train`} The list of metrics for all trained models calculated on a train
-#' dataset. For regression task there are: mse, r2 and mad metrics. For the
-#' classification task there are: f1, auc, recall, precision and accuracy.
+#' dataset.
 #' \item \code{`score_test`} The list of metrics for all trained models calculated on a test
-#' dataset. For regression task there are: mse, r2 and mad metrics. For the
-#' classification task there are: f1, auc, recall, precision and accuracy.
+#' dataset.
 #' \item \code{`score_valid`} The list of metrics for all trained models calculated on a validation
-#' dataset. For regression task there are: mse, r2 and mad metrics. For the
-#' classification task there are: f1, auc, recall, precision and accuracy.
+#' dataset.
 #'
 #' \item \code{`test_observed`} Values of y column from the test dataset.
 #' \item \code{`train_observed`} Values of y column from the training dataset.
 #' \item \code{`valid_observed`} Values of y column from the validation dataset.
 #'
 #' \item \code{`test_observed_labels`} Values of y column from the test dataset as text labels
-#' (for classification task only).
+#' (for classification tasks only).
 #' \item \code{`train_observed_labels`} Values of y column from the training dataset as text
 #' labels (for classification task only).
 #' \item \code{`valid_observed_labels`} Values of y column from the validation dataset as text
@@ -191,14 +188,16 @@ train <- function(data,
       verbose_cat(crayon::red('\u2716'), 'Lack of target variables. Please specify',
                   'either y (for classification or regression tasks), or time and',
                   'status (for survival analysis). \n\n', verbose = verbose)
-      return(NULL)
+      stop('Lack of target variables. Please specify either y (for classification
+           or regression tasks), or time and status (for survival analysis)')
     }
   } else {
     if (!is.null(time) | !is.null(status)) {
       verbose_cat(crayon::red('\u2716'), 'Provided too many targets. Please specify',
                   'either y (for classification or regression tasks), or time and',
                   'status (for survival analysis). \n\n', verbose = verbose)
-      return(NULL)
+      stop('Provided too many targets. Please specify either y (for classification
+           or regression tasks), or time and status (for survival analysis).')
     }
   }
 
@@ -210,35 +209,51 @@ train <- function(data,
   error = function(cond) {
     verbose_cat(crayon::red('\u2716'), 'Package not found: catboost, to use it please ',
                 'follow guides for installation from GitHub repository README.',
-                'Otherwise remove it from the engine \n\n', verbose = verbose)
-    return(NULL)
+                'Otherwise remove it from the engine. \n\n', verbose = verbose)
+    stop('Package not found: catboost, to use it please follow guides for installation
+         from GitHub repository README. Otherwise remove it from the engine.')
   })
 
-  if ('tbl' %in% class(data)) {
+  if ('tbl' %in% class(data) || 'list' %in% class(data) || 'matrix' %in% class(data)) {
     data <- as.data.frame(data)
-    verbose_cat(crayon::red('\u2716'), 'Provided dataset is a tibble and not a',
-                'data.frame or matrix. Casting the dataset to data.frame format. \n\n',
+    verbose_cat(crayon::red('\u2716'), 'Provided dataset is a tibble, list or matrix and not a',
+                'data.frame. Casting the dataset to data.frame format. \n\n',
                 verbose = verbose)
   }
 
   if (type == 'auto') {
     type <- guess_type(data, y)
+    if (type == 'regression') {
+      data[[y]] <- as.numeric(data[[y]])
+    }
     verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
-  } else if (!type %in% c('regression', 'binary_clf', 'survival')) {
-    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival` and `auto` for automatic task identification \n\n', verbose = verbose)
+  } else if (!type %in% c('regression', 'binary_clf', 'survival', 'multiclass')) {
+    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification \n\n', verbose = verbose)
+    stop('Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification')
   } else {
     verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
   }
 
+  if (type == 'survial') {
+    if (!status %in% colnames(data) || !time %in% colnames(data)) {
+      verbose_cat(crayon::red('\u2716'), 'Provided target column name for time or status parameters',
+                  status, time, 'is not present in the datataset. \n\n', verbose = verbose)
+      stop('Provided target column name for time or status parameter is not present in the datataset.')
+    }
+  } else if (!y %in% colnames(data)) {
+    verbose_cat(crayon::red('\u2716'), 'Provided target column name for y parameter', y,
+                'is not present in the datataset. \n\n', verbose = verbose)
+    stop('Provided target column name for y parameter is not present in the datataset.')
+  }
 
 
   if (is.null(custom_preprocessing)) {
-    check_report              <- check_data(data, y, time, status, verbose)
+    check_report              <- check_data(data, y, time, status, type, verbose)
     preprocessed_data         <- preprocessing(data, y, time, status, type)
     preprocessed_data$rm_rows <- NULL
     verbose_cat(crayon::green('\u2714'), 'Data preprocessed with basic preprocessing. \n', verbose = verbose)
   } else {
-    check_report      <- check_data(custom_preprocessing$data, y, time, status, verbose)
+    check_report      <- check_data(custom_preprocessing$data, y, time, status, type, verbose)
     preprocessed_data <- custom_preprocessing
     verbose_cat(crayon::green('\u2714'), 'Imported preprocessed data from custom_preprocessing(). \n', verbose = verbose)
   }
@@ -259,14 +274,14 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Data split and balanced. \n', verbose = verbose)
 
-  train_data <- prepare_data(split_data$train, y, time, status, engine)
-  test_data  <- prepare_data(split_data$test,  y, time, status, engine,
+  train_data <- prepare_data(split_data$train, type, y, time, status, engine)
+  test_data  <- prepare_data(split_data$test, type,  y, time, status, engine,
                              predict = TRUE, split_data$train)
-  valid_data <- prepare_data(split_data$valid, y, time, status, engine,
+  valid_data <- prepare_data(split_data$valid, type, y, time, status, engine,
                              predict = TRUE, split_data$train)
 
   # For creating VS plot and predicting on train (catboost, lgbm).
-  raw_train  <- prepare_data(split_data$train, y, time, status,engine,
+  raw_train  <- prepare_data(split_data$train, type, y, time, status,engine,
                              predict = TRUE, split_data$train)
 
   verbose_cat(crayon::green('\u2714'), 'Correct formats prepared. \n', verbose = verbose)
@@ -275,7 +290,6 @@ train <- function(data,
   verbose_cat(crayon::green('\u2714'), 'Models with default parameters successfully trained. \n', verbose = verbose)
 
   model_random   <- random_search(train_data,
-                                  test_data,
                                   y         = y,
                                   time      = time,
                                   status    = status,
@@ -311,7 +325,6 @@ train <- function(data,
                 rep('random_search', length(model_random$engine)),
                 'bayes_opt')
   }
-
 
   predict_train    <- predict_models_all(models_all, raw_train,  y, type = type)
   predict_test     <- predict_models_all(models_all, test_data,  y, type = type)
@@ -366,12 +379,14 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Created the score boards for all models. \n', verbose = verbose)
 
-  # Choosing the best models on validation dataset.
-  best_model_number    <- min(best_model_number, length(models_all))
-  best_models_on_valid <- list(
-    models = models_all[score_valid[1:best_model_number, 'name']],
-    engine = score_valid[1:best_model_number, 'engine'])
+  choose_best_models <- function(models, engine, score, number) {
+    number <- min(number, length(models))
+    return(list(
+      models = models[score[1:number, 'name']],
+      engine = score[1:number, 'engine']))
+  }
 
+  best_models_on_valid   <- choose_best_models(models_all, engine_all, score_valid, best_model_number)
   predictions_best_train <- predict_models_all(best_models_on_valid$models, raw_train,  y, type = type)
   predictions_best_test  <- predict_models_all(best_models_on_valid$models, test_data,  y, type = type)
   predictions_best_valid <- predict_models_all(best_models_on_valid$models, valid_data, y, type = type)
@@ -397,7 +412,6 @@ train <- function(data,
     predictions_best_valid_labels  <- predictions_best_valid
 
     labels <- preprocessed_data$bin_labels
-
     # Human-readable observed values with text labels.
     # For the observed values.
     for (i in 1:length(train_observed)) {
@@ -471,10 +485,65 @@ train <- function(data,
     }
   }
 
+  if (type == 'multiclass') {
+    test_observed  <- as.numeric(test_observed)
+    train_observed <- as.numeric(train_observed)
+    valid_observed <- as.numeric(valid_observed)
+
+    test_observed_labels           <- test_observed
+    train_observed_labels          <- train_observed
+    valid_observed_labels          <- valid_observed
+
+    predict_train_labels           <- predict_train
+    predict_test_labels            <- predict_test
+    predict_valid_labels           <- predict_valid
+
+    predictions_best_train_labels  <- predictions_best_train
+    predictions_best_test_labels   <- predictions_best_test
+    predictions_best_valid_labels  <- predictions_best_valid
+
+    labels <- preprocessed_data$bin_labels
+    # Human-readable observed values with text labels.
+    # For the observed values.
+    for (i in 1:length(train_observed)) {
+      train_observed_labels[i] <- labels[train_observed[i]]
+    }
+    for (i in 1:length(test_observed)) {
+      test_observed_labels[i]  <- labels[test_observed[i]]
+    }
+    for (i in 1:length(valid_observed)) {
+      valid_observed_labels[i] <- labels[valid_observed[i]]
+    }
+    # For the all models predictions.
+    for (j in 1:length(predict_train)){
+      for (i in 1:length(predict_train[[j]])) {
+        predict_train_labels[[j]][i] <- labels[predict_train[[j]][i]]
+      }
+      for (i in 1:length(predict_test[[j]])) {
+        predict_test_labels[[j]][i]  <- labels[predict_test[[j]][i]]
+      }
+      for (i in 1:length(predict_valid[[j]])) {
+        predict_valid_labels[[j]][i] <- labels[predict_valid[[j]][i]]
+      }
+    }
+    # For the best models predictions.
+    for (j in 1:length(predictions_best_train)){
+      for (i in 1:length(predictions_best_train[[j]])) {
+        predictions_best_train_labels[[j]][i] <- labels[predictions_best_train[[j]][i]]
+      }
+      for (i in 1:length(predictions_best_test[[j]])) {
+        predictions_best_test_labels[[j]][i]  <- labels[predictions_best_test[[j]][i]]
+      }
+      for (i in 1:length(predictions_best_valid[[j]])) {
+        predictions_best_valid_labels[[j]][i] <- labels[predictions_best_valid[[j]][i]]
+      }
+    }
+  }
+
   verbose_cat(crayon::green('\u2714'), 'Created human-readable labels for observables and predictions. \n', verbose = verbose)
 
-  if (type == 'binary_clf') {
-    binary_clf_models <- list(
+  if (type %in% c('binary_clf', 'multiclass')) {
+    clf_models <- list(
         data                    = data,
         y                       = y,
         time                    = time,
@@ -530,53 +599,53 @@ train <- function(data,
         train_observed_labels   = train_observed_labels,
         valid_observed_labels   = valid_observed_labels
       )
-    class(binary_clf_models) <- c('binary_clf', 'list')
-    return(binary_clf_models)
+    class(clf_models) <- c(type, 'list')
+    return(clf_models)
   } else {
     other_models <- list(
-        type                    = type,
-        deleted_columns         = preprocessed_data$rm_colnames,
-        preprocessed_data       = preprocessed_data$data,
-        bin_labels              = preprocessed_data$bin_labels,
-        deleted_rows            = preprocessed_data$rm_rows,
+      type                    = type,
+      deleted_columns         = preprocessed_data$rm_colnames,
+      preprocessed_data       = preprocessed_data$data,
+      bin_labels              = preprocessed_data$bin_labels,
+      deleted_rows            = preprocessed_data$rm_rows,
 
-        models_list             = models_all,
-        data                    = data,
-        y                       = y,
-        time                    = time,
-        status                  = status,
+      models_list             = models_all,
+      data                    = data,
+      y                       = y,
+      time                    = time,
+      status                  = status,
 
-        raw_train               = raw_train,
-        check_report            = check_report$str,
-        outliers                = check_report$outliers,
+      raw_train               = raw_train,
+      check_report            = check_report$str,
+      outliers                = check_report$outliers,
 
-        best_models_on_valid    = best_models_on_valid,
-        engine                  = engine,
+      best_models_on_valid    = best_models_on_valid,
+      engine                  = engine,
 
-        train_data              = train_data,
-        test_data               = test_data,
-        valid_data              = valid_data,
+      train_data              = train_data,
+      test_data               = test_data,
+      valid_data              = valid_data,
 
-        train_inds              = split_data$train_inds,
-        test_inds               = split_data$test_inds,
-        valid_inds              = split_data$valid_inds,
+      train_inds              = split_data$train_inds,
+      test_inds               = split_data$test_inds,
+      valid_inds              = split_data$valid_inds,
 
-        predict_train           = predict_train,
-        predict_test            = predict_test,
-        predict_valid           = predict_valid,
+      predict_train           = predict_train,
+      predict_test            = predict_test,
+      predict_valid           = predict_valid,
 
-        predictions_best_train  = predictions_best_train,
-        predictions_best_test   = predictions_best_test,
-        predictions_best_valid  = predictions_best_valid,
+      predictions_best_train  = predictions_best_train,
+      predictions_best_test   = predictions_best_test,
+      predictions_best_valid  = predictions_best_valid,
 
-        score_test              = score_test,
-        score_train             = score_train,
-        score_valid             = score_valid,
+      score_test              = score_test,
+      score_train             = score_train,
+      score_valid             = score_valid,
 
-        test_observed           = test_observed,
-        train_observed          = train_observed,
-        valid_observed          = valid_observed
-      )
+      test_observed           = test_observed,
+      train_observed          = train_observed,
+      valid_observed          = valid_observed
+    )
     if (type == 'regression') {
       class(other_models) <- c('regression', 'list')
     } else if (type == 'survival') {
