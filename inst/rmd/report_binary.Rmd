@@ -75,7 +75,7 @@ plot(train_output, models = NULL, type = 'comparison', metric = 'accuracy')
 This scatter plot tackles the issue of the overfitting, and compares large amounts of models at once. On the x axis we provide the metrics value evaluated on the training dataset, whereas on the y axis we have the same for the testing dataset. Models performance is assessed in two ways. Firstly, we want the model to have as small value as possible on the testing dataset (so we want it to be lower than other models). Secondly, we want to choose the model which is close to the x = y line, because it means that the model is not overfitted, so it generalizes better. In most cases we want to chose the model that is less overfitted, even though it has worse performance.
 
 ```{r train vs test plot, out.width = '100%'}
-plot(train_output, models = 5, type = 'train-test', metric = 'accuracy') 
+plot(train_output, models = min(5, nrow(train_output$score_test)), type = 'train-test', metric = 'accuracy') 
 ```
 
 \newpage

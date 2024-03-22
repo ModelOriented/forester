@@ -12,6 +12,7 @@ random_search(
   engine,
   type,
   max_evals = 10,
+  parallel = FALSE,
   verbose = FALSE
 )
 }
@@ -35,6 +36,9 @@ matter for survival analysis.}
 `binary_clf`, `regression`, `survival`, or `multiclass` task.}
 
 \item{max_evals}{The number of trained models for each model type in `engine`.}
+
+\item{parallel}{A logical value, if set to TRUE, the function will use parallel computing.
+By default set to FALSE.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none. Set to FALSE by default.}

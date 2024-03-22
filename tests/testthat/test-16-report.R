@@ -9,7 +9,6 @@ test_that('test-report', {
     load(capture.output(cat(folder, file, sep ='')))
   }
   train_outputs <- list(lisbon_train, testing_data_train, iris_train, compas_train)
-
   for (i in 1:length(train_outputs)) {
     capture.output(
       suppressMessages(

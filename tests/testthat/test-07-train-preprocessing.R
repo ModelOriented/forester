@@ -17,6 +17,7 @@ test_that('test-train-preprocessing', {
       verbose = FALSE,
       bayes_iter   = 0,
       random_evals = 0,
+      parallel     = FALSE,
       custom_preprocessing = data_tasks[[i]])
 
     expect_equal(class(output$data), 'data.frame')
@@ -45,7 +46,9 @@ test_that('test-train-preprocessing', {
       verbose = FALSE,
       bayes_iter   = 0,
       random_evals = 0,
+      parallel     = FALSE,
       custom_preprocessing = NULL)
+
     expect_equal(class(output$data), 'data.frame')
     expect_equal(class(output$y), 'character')
     expect_true(!is.null(output$preprocessed_data))

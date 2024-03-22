@@ -48,12 +48,12 @@ check_data <- function(data, y = NULL, time = NULL, status = NULL, type = 'auto'
     if (type == 'regression') {
       data[[y]] <- as.numeric(data[[y]])
     }
-    verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
+    verbose_cat(crayon::green('\u2714'), 'Type guessed as:', type, '\n\n', verbose = verbose)
   } else if (!type %in% c('regression', 'binary_clf', 'survival', 'multiclass')) {
     verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification \n\n', verbose = verbose)
     stop('Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification')
   } else {
-    verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
+    verbose_cat(crayon::green('\u2714'), 'Type provided as:', type, '\n\n', verbose = verbose)
   }
 
   if (type == 'survial') {

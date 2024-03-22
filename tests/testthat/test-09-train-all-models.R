@@ -34,12 +34,13 @@ test_that('test-train-all-models', {
 
   # Train random search models
   for (i in 1:length(prepared_data)) {
+    capture.output(suppressWarnings(suppressMessages(
     models_random[[i]] <- random_search(train_data = prepared_data[[i]]$train_data,
                                         y          = targets[i],
                                         engine     = engine,
                                         type       = types[i],
                                         max_evals  = 4,
-                                        verbose    = FALSE)
+                                        verbose    = FALSE))))
   }
   for (i in 1:length(models_random)) {
     expect_equal(length(models_random[[i]]$models), 16)
@@ -54,13 +55,14 @@ test_that('test-train-all-models', {
 
   # Train models with Bayesian optimization.
   for (i in 1:length(prepared_data)) {
+    capture.output(suppressWarnings(suppressMessages(
     models_bayes[[i]] <- train_models_bayesopt(train_data = prepared_data[[i]]$train_data,
                                                y          = targets[i],
                                                test_data  = prepared_data[[i]]$test_data,
                                                engine     = engine,
                                                type       = types[i],
                                                iters.n    = 2,
-                                               verbose    = FALSE)
+                                               verbose    = FALSE))))
   }
   for (i in 1:length(models_bayes)) {
     expect_equal(length(models_bayes[[i]]), 4)

@@ -2,7 +2,7 @@
 #'
 #' @param train The return from `train` function.
 #' @param file A string describing the name and path of the file. By default set to
-#' NULL which creates a `forester_{timestamp}` in current working directory.
+#' NULL which creates a `forester_TIMESTAMP` in current working directory.
 #' @param verbose  A logical value, if set to TRUE, provides all information about
 #' training process, if FALSE gives none.
 #' @param return_name A logical value, if set to TRUE, function returns \

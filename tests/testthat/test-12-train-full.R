@@ -5,7 +5,14 @@ test_that('test-train-full', {
                '/iris_custom_prep.RData',   '/compas_custom_prep.RData')
   targets <- c('Price', 'y', 'Species', 'Two_yr_Recidivism')
   types   <- c('regression', 'regression', 'multiclass', 'binary_clf')
-  engine  <- c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
+  tryCatch({ # For CRAN, we need to omit catboost, as it is not there.
+    find.package('catboost')
+    engine  <- c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
+  },
+  error = function(cond) {
+    engine  <- c('ranger', 'xgboost', 'decision_tree', 'lightgbm')
+  })
+
   for (file in files) {
     load(capture.output(cat(folder, file, sep ='')))
   }
@@ -24,6 +31,7 @@ test_that('test-train-full', {
                           random_evals     = 1,
                           metrics          = 'auto',
                           sort_by          = 'auto',
+                          parallel         = FALSE,
                           custom_preprocessing = custom_data[[i]]))
   }
 

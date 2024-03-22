@@ -79,7 +79,7 @@ plot.regression <- function(x,
     residuals_all <- c()
 
     for (model in models_num) {
-      residuals     <- (x$test_observed - x$predict_test[[model]])
+      residuals     <- (x$test_observed - x$predictions_test[[model]])
       residuals_all <- c(residuals_all, residuals)
     }
 
@@ -105,9 +105,9 @@ plot.regression <- function(x,
     prediction_test_all  <- c()
 
     for (model in models_num) {
-      prediction_train     <- x$predict_train[[model]]
+      prediction_train     <- x$predictions_train[[model]]
       prediction_train_all <- c(prediction_train_all, prediction_train)
-      prediction_test      <- x$predict_test[[model]]
+      prediction_test      <- x$predictions_test[[model]]
       prediction_test_all  <- c(prediction_test_all, prediction_test)
     }
 
@@ -155,7 +155,7 @@ plot.regression <- function(x,
 
     score <- cbind(train_score, test_score)
 
-    p <- ggplot(score, aes_string(x = paste0(metric, '_train'), y = paste0(metric, '_test'), color = 'engine')) +
+    p <- ggplot(score, aes(x = .data[[paste0(metric, '_train')]], y = .data[[paste0(metric, '_test')]], color = 'engine')) +
       geom_point() +
       geom_abline(intercept = 0, slope = 1) +
       theme_forester() +

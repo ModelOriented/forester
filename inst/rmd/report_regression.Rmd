@@ -39,7 +39,7 @@ The names of the models were created by a pattern *Engine_TuningMethod_Id*, wher
 ## Best models for validation dataset
 
 ```{r table}
-score_frame          <- params$train_output$score_valid
+score_frame          <- train_output$score_valid
 score_rounded        <- score_frame
 
 for(i in 5:ncol(score_rounded)) {
@@ -81,8 +81,8 @@ This scatter plot on the x axis presents us the observed values of the dataset, 
 In this case we say that the model where observations are closer to each other is better. This visualization lets us also check if the model overfits or not. If predicted values for the train subplot are close to the line, whereas, for the train subplot are far from it, it suggests that the model might be overfitted, so it generalizes poorly for the unseen data.
 
 ```{r train-test-observed-predicted plot, out.width = '100%'}
-if (params$train_output$type == 'regression') {
-  plot(params$train_output, models = NULL, type = 'train-test-observed-predicted', metric = 'rmse')
+if (train_output$type == 'regression') {
+  plot(train_output, models = NULL, type = 'train-test-observed-predicted', metric = 'rmse')
 }
 ```
 
@@ -93,8 +93,8 @@ if (params$train_output$type == 'regression') {
 This scatter plot tackles the issue of the overfitting, and compares large amounts of models at once. On the x axis we provide the metrics value evaluated on the training dataset, whereas on the y axis we have the same for the testing dataset. Models performance is assessed in two ways. Firstly, we want the model to have as small value as possible on the testing dataset (so we want it to be lower than other models). Secondly, we want to choose the model which is close to the x = y line, because it means that the model is not overfitted, so it generalizes better. In most cases we want to chose the model that is less overfitted, even though it has worse performance.
 
 ```{r overfitting plot, out.width = '100%'}
-if (params$train_output$type == 'regression') {
-  plot(params$train_output, models = 5, type = 'train-test', metric = 'rmse')
+if (train_output$type == 'regression') {
+  plot(train_output, models = min(5, nrow(train_output$score_test)), type = 'train-test', metric = 'rmse')
 }
 ```
 
