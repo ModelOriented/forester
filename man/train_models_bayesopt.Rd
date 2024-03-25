@@ -12,7 +12,9 @@ train_models_bayesopt(
   test_data,
   engine,
   type,
+  parallel = FALSE,
   iters.n = 7,
+  bayes_info = list(verbose = 0, plotProgress = FALSE),
   return_params = FALSE,
   verbose = TRUE
 )
@@ -38,7 +40,20 @@ matter for survival analysis.}
 \item{type}{A string that determines if Machine Learning task is the
 `binary_clf`, `regression`, or `survival`.}
 
+\item{parallel}{A logical value, if set to TRUE, the function will use parallel computing.
+By default set to FALSE.}
+
 \item{iters.n}{The number of iterations of BayesOpt function.}
+
+\item{bayes_info}{A list with two values, determining the verbosity of the Bayesian
+Optmization process. The first value is `verbose` with 3 levels: 0 - no output;
+1 - describes what is hapenning, and if we can reach local optimum; 2 - addtionally
+provides infromation about recent, and the best scores. The second value is
+`plotProgress`, which is a logical value indicating if the progress of the Bayesian
+Optimization should be plotted. WARNING it will create plot after each step, thus
+it might be computationally expensive. Both arguments come from the
+`ParBayesianOptimization` package. It only matters if you set global verbose to TRUE.
+Default values are: list(verbose = 0, plotProgress = FALSE).}
 
 \item{return_params}{A logical value, if set to TRUE, returns optimized model parameters.}
 

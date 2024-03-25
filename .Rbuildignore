@@ -12,3 +12,4 @@ _pkgdown.yaml
 ^report_binary.pdf
 ^report_multiclass.pdf
 ^report_regression.pdf
+^cran-comments\.md$

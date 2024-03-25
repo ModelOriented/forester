@@ -18,8 +18,19 @@
 #' matter for survival analysis.
 #' @param type A string that determines if Machine Learning task is the
 #' `binary_clf`, `regression`, or `survival`.
-#' @param return_params A logical value, if set to TRUE, returns optimized model parameters.
+#' @param parallel A logical value, if set to TRUE, the function will use parallel computing.
+#' By default set to FALSE.
 #' @param iters.n The number of iterations of BayesOpt function.
+#' @param bayes_info A list with two values, determining the verbosity of the Bayesian
+#' Optmization process. The first value is `verbose` with 3 levels: 0 - no output;
+#' 1 - describes what is hapenning, and if we can reach local optimum; 2 - addtionally
+#' provides infromation about recent, and the best scores. The second value is
+#' `plotProgress`, which is a logical value indicating if the progress of the Bayesian
+#' Optimization should be plotted. WARNING it will create plot after each step, thus
+#' it might be computationally expensive. Both arguments come from the
+#' `ParBayesianOptimization` package. It only matters if you set global verbose to TRUE.
+#' Default values are: list(verbose = 0, plotProgress = FALSE).
+#' @param return_params A logical value, if set to TRUE, returns optimized model parameters.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
 #'
@@ -33,7 +44,9 @@ train_models_bayesopt <- function(train_data,
                                   test_data,
                                   engine,
                                   type,
+                                  parallel = FALSE,
                                   iters.n = 7,
+                                  bayes_info = list(verbose = 0, plotProgress = FALSE),
                                   return_params = FALSE,
                                   verbose = TRUE) {
   if (!is.numeric(iters.n) | as.integer(iters.n) != iters.n ) {
@@ -41,7 +54,7 @@ train_models_bayesopt <- function(train_data,
     stop('The number of bayesian optimization iterations must be an integer.')
   }
   if (iters.n <= 0) {
-    verbose_cat(crayon::green('\u2714'), 'Bayesian Optimization was turned off. \n\n', verbose = verbose)
+    verbose_cat(crayon::green('\u2714'), 'Bayesian Optimization was turned off. \n', verbose = verbose)
     return(NULL)
   }
 
@@ -59,6 +72,8 @@ train_models_bayesopt <- function(train_data,
   models_params$catboost_params      <- NULL
 
   if (type == 'survival') {
+    verbose_cat('   ', crayon::green('\u2714'), 'rfsrc: Starting training procedure.\n', verbose = verbose)
+    t0 <- as.numeric(Sys.time())
     fitness_fun_rfsrc <- function(ntree, nodesize, nsplit) {
 
       # Our optimized metric is the Brier score.
@@ -96,18 +111,21 @@ train_models_bayesopt <- function(train_data,
       expr = {
         if (verbose) {
           capture.output(
-          bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_rfsrc,
-                                                     bounds     = bounds,
-                                                     initPoints = length(bounds) + 5,
-                                                     iters.n    = iters.n,
-                                                     verbose    = 1))
+          bayes <- ParBayesianOptimization::bayesOpt(FUN          = fitness_fun_rfsrc,
+                                                     bounds       = bounds,
+                                                     initPoints   = length(bounds) + 5,
+                                                     iters.n      = iters.n,
+                                                     verbose      = bayes_info[[1]],
+                                                     parallel     = parallel,
+                                                     plotProgress = bayes_info[[2]]))
         } else {
           capture.output(
           bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_rfsrc,
                                                      bounds     = bounds,
                                                      initPoints = length(bounds) + 5,
                                                      iters.n    = iters.n,
-                                                     verbose    = 0))
+                                                     verbose    = 0,
+                                                     parallel   = parallel))
         }
       },
       error = function(e) {
@@ -121,7 +139,7 @@ train_models_bayesopt <- function(train_data,
         data      = train_data$ranger_data,
         splitrule = 'logrankscore'
       )
-      verbose_cat(crayon::red('\u2716'), 'rfsrc: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
+      verbose_cat('   ', crayon::red('\u2716'), 'rfsrc: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
     } else {
       if (return_params == TRUE) {
         models_params$ranger_params$ntree    <- as.integer(ParBayesianOptimization::getBestPars(bayes)$ntree)
@@ -137,8 +155,10 @@ train_models_bayesopt <- function(train_data,
         nsplit    = as.integer(ParBayesianOptimization::getBestPars(bayes)$nsplit),
         splitrule = 'logrankscore'
       )
-      verbose_cat(crayon::green('\u2714'), 'rfsrc: Bayesian Optimization was successful!\n', verbose = verbose)
+      verbose_cat('   ', crayon::green('\u2714'), 'rfsrc: Bayesian Optimization was successful!\n', verbose = verbose)
     }
+    t1 <- as.numeric(Sys.time())
+    verbose_cat('   ', crayon::green('\u2714'), 'rfsrc: It took', round(t1 - t0, 2), 'seconds. \n', verbose = verbose)
 
     if (return_params == TRUE) {
       # To remove models that are NULL.
@@ -158,6 +178,8 @@ train_models_bayesopt <- function(train_data,
 
   for (i in 1:length(engine)) {
     if (engine[i] == 'ranger') {
+      verbose_cat('   ', crayon::green('\u2714'), 'ranger: Starting training procedure.\n', verbose = verbose)
+      t0 <- as.numeric(Sys.time())
       if (type == 'regression') {
         classification <- FALSE
         probability    <- FALSE
@@ -218,18 +240,21 @@ train_models_bayesopt <- function(train_data,
         expr = {
           if (verbose) {
             suppressWarnings(
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_ranger,
-                                                       bounds     = bounds,
-                                                       initPoints = length(bounds) + 5,
-                                                       iters.n    = iters.n,
-                                                       verbose    = 1))
+            bayes <- ParBayesianOptimization::bayesOpt(FUN          = fitness_fun_ranger,
+                                                       bounds       = bounds,
+                                                       initPoints   = length(bounds) + 5,
+                                                       iters.n      = iters.n,
+                                                       verbose      = bayes_info[[1]],
+                                                       parallel     = parallel,
+                                                       plotProgress = bayes_info[[2]]))
           } else {
             suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_ranger,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0))
+                                                       verbose    = 0,
+                                                       parallel   = parallel))
           }
         },
         error = function(e) {
@@ -244,7 +269,7 @@ train_models_bayesopt <- function(train_data,
           classification  = classification,
           probability     = probability
         )
-        verbose_cat(crayon::red('\u2716'), 'ranger: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
+        verbose_cat('   ', crayon::red('\u2716'), 'ranger: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
       } else {
         if (return_params == TRUE) {
           models_params$ranger_params$num.trees       <- as.integer(ParBayesianOptimization::getBestPars(bayes)$num.trees)
@@ -262,11 +287,14 @@ train_models_bayesopt <- function(train_data,
           classification  = classification,
           probability     = probability
         )
-        verbose_cat(crayon::green('\u2714'), 'ranger: Bayesian Optimization was successful!\n', verbose = verbose)
+        verbose_cat('   ', crayon::green('\u2714'), 'ranger: Bayesian Optimization was successful!\n', verbose = verbose)
       }
+      t1 <- as.numeric(Sys.time())
+      verbose_cat('   ', crayon::green('\u2714'), 'ranger: It took', round(t1 - t0, 2), 'seconds. \n', verbose = verbose)
     }
     else if (engine[i] == 'xgboost') {
-
+      verbose_cat('   ', crayon::green('\u2714'), 'xgboost: Starting training procedure.\n', verbose = verbose)
+      t0 <- as.numeric(Sys.time())
       if (type == 'binary_clf') {
         objective   <- 'binary:logistic'
         eval_metric <- 'auc'
@@ -333,18 +361,21 @@ train_models_bayesopt <- function(train_data,
         expr = {
           if (verbose) {
             suppressWarnings(
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_xgboost,
-                                                       bounds     = bounds,
-                                                       initPoints = length(bounds) + 5,
-                                                       iters.n    = iters.n,
-                                                       verbose    = 1))
+            bayes <- ParBayesianOptimization::bayesOpt(FUN          = fitness_fun_xgboost,
+                                                       bounds       = bounds,
+                                                       initPoints   = length(bounds) + 5,
+                                                       iters.n      = iters.n,
+                                                       verbose      = bayes_info[[1]],
+                                                       parallel     = parallel,
+                                                       plotProgress = bayes_info[[2]]))
           } else {
             suppressWarnings(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_xgboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0))
+                                                       verbose    = 0,
+                                                       parallel   = parallel))
           }
         },
         error = function(e) {
@@ -358,7 +389,7 @@ train_models_bayesopt <- function(train_data,
                                                         params    = params,
                                                         nrounds   = 5000,
                                                         verbose   = 1))
-        verbose_cat(crayon::red('\u2716'), 'xgboost: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
+        verbose_cat('   ', crayon::red('\u2716'), 'xgboost: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
       } else {
         if (return_params == TRUE) {
           models_params$xgboost_params$nrounds   <- as.integer(ParBayesianOptimization::getBestPars(bayes)$nrounds)
@@ -377,10 +408,14 @@ train_models_bayesopt <- function(train_data,
                                             subsample = ParBayesianOptimization::getBestPars(bayes)$subsample,
                                             gamma     = ParBayesianOptimization::getBestPars(bayes)$gamma,
                                             max_depth = as.integer(ParBayesianOptimization::getBestPars(bayes)$max_depth)))
-        verbose_cat(crayon::green('\u2714'), 'xgboost: Bayesian Optimization was successful!\n', verbose = verbose)
+        verbose_cat('   ', crayon::green('\u2714'), 'xgboost: Bayesian Optimization was successful!\n', verbose = verbose)
       }
+      t1 <- as.numeric(Sys.time())
+      verbose_cat('   ', crayon::green('\u2714'), 'xgboost: It took', round(t1 - t0, 2), 'seconds. \n', verbose = verbose)
     }
     else if (engine[i] == 'decision_tree') {
+      verbose_cat('   ', crayon::green('\u2714'), 'decision_tree: Starting training procedure.\n', verbose = verbose)
+      t0      <- as.numeric(Sys.time())
       form    <- as.formula(paste0(y, ' ~.'))
       fitness_fun_decision_tree <- function(minsplit, minprob, maxdepth, nresample) {
         model <- partykit::ctree(form, data = train_data$decision_tree_data,
@@ -425,19 +460,22 @@ train_models_bayesopt <- function(train_data,
       tryCatch(
         expr = {
           if (verbose) {
-            suppressWarnings(
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_decision_tree,
-                                                       bounds     = bounds,
-                                                       initPoints = length(bounds) + 5,
-                                                       iters.n    = iters.n,
-                                                       verbose    = 1))
+            suppressWarnings(suppressMessages(
+            bayes <- ParBayesianOptimization::bayesOpt(FUN          = fitness_fun_decision_tree,
+                                                       bounds       = bounds,
+                                                       initPoints   = length(bounds) + 5,
+                                                       iters.n      = iters.n,
+                                                       verbose      = bayes_info[[1]],
+                                                       parallel     = parallel,
+                                                       plotProgress = bayes_info[[2]])))
           } else {
-            suppressWarnings(
+            suppressWarnings(suppressMessages(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_decision_tree,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0))
+                                                       verbose    = 0,
+                                                       parallel   = FALSE)))
           }
         },
         error = function(e) {
@@ -447,7 +485,7 @@ train_models_bayesopt <- function(train_data,
 
       if (is.null(bayes)) {
         decision_tree_model <- partykit::ctree(form, data = train_data$decision_tree_data)
-        verbose_cat(crayon::red('\u2716'), 'decision_tree: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
+        verbose_cat('   ', crayon::red('\u2716'), 'decision_tree: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
       } else {
         if (return_params == TRUE) {
           models_params$decision_tree_params$minsplit  <- as.integer(ParBayesianOptimization::getBestPars(bayes)$minsplit)
@@ -461,11 +499,14 @@ train_models_bayesopt <- function(train_data,
                                                minprob   = ParBayesianOptimization::getBestPars(bayes)$minprob,
                                                maxdepth  = as.integer(ParBayesianOptimization::getBestPars(bayes)$maxdepth),
                                                nresample = as.integer(ParBayesianOptimization::getBestPars(bayes)$nresample))
-        verbose_cat(crayon::green('\u2714'), 'decision_tree: Bayesian Optimization was successful!\n', verbose = verbose)
+        verbose_cat('   ', crayon::green('\u2714'), 'decision_tree: Bayesian Optimization was successful!\n', verbose = verbose)
       }
+      t1 <- as.numeric(Sys.time())
+      verbose_cat('   ', crayon::green('\u2714'), 'decision_tree: It took', round(t1 - t0, 2), 'seconds. \n', verbose = verbose)
     }
     else if (engine[i] == 'lightgbm') {
-
+      verbose_cat('   ', crayon::green('\u2714'), 'lightgbm: Starting training procedure.\n', verbose = verbose)
+      t0                  <- as.numeric(Sys.time())
       fitness_fun_lightgbm <- function(learning_rate, num_leaves, num_iterations) {
 
         if (type == 'binary_clf') {
@@ -479,16 +520,14 @@ train_models_bayesopt <- function(train_data,
           obj    <- 'regression'
           params <- list(objective = obj)
         }
-
         params <- append(params, c(
           learning_rate  = learning_rate,
           num_leaves     = as.integer(num_leaves),
           num_iterations = as.integer(num_iterations)
           ))
-
-        model      <- lightgbm::lgb.train(params  = params,
-                                          data    = train_data$lightgbm_data,
-                                          verbose = 0)
+        model <- lightgbm::lgb.train(params  = params,
+                                     data    = train_data$lightgbm_data,
+                                     verbose = 0)
 
         if (type %in% c('binary_clf', 'regression')) {
           preds    <- predict(model, test_data$lightgbm_data)
@@ -519,28 +558,31 @@ train_models_bayesopt <- function(train_data,
                      num_iterations = c(5L, 100L))
 
       bayes <- NULL
+
       tryCatch(
         expr = {
           if (verbose) {
-            suppressWarnings(
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_lightgbm,
-                                                       bounds     = bounds,
-                                                       initPoints = length(bounds) + 5,
-                                                       iters.n    = iters.n,
-                                                       verbose    = 1))
-          } else {
-            suppressWarnings(
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_lightgbm,
-                                                       bounds     = bounds,
-                                                       initPoints = length(bounds) + 5,
-                                                       iters.n    = iters.n,
-                                                       verbose    = 0))
-          }
-        },
+            suppressWarnings(suppressMessages(
+              bayes <- ParBayesianOptimization::bayesOpt(FUN          = fitness_fun_lightgbm,
+                                                         bounds       = bounds,
+                                                         initPoints   = length(bounds) + 5,
+                                                         iters.n      = iters.n,
+                                                         verbose      = bayes_info[[1]],
+                                                         parallel     = FALSE,
+                                                         plotProgress = bayes_info[[2]])))
+              } else {
+                suppressWarnings(suppressMessages(
+                  bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_lightgbm,
+                                                             bounds     = bounds,
+                                                             initPoints = length(bounds) + 5,
+                                                             iters.n    = iters.n,
+                                                             verbose    = 0,
+                                                             parallel   = FALSE)))
+              }
+          },
         error = function(e) {
           print(e)
-        }
-      )
+        })
 
       if (type == 'binary_clf') {
         obj    <- 'binary'
@@ -557,7 +599,7 @@ train_models_bayesopt <- function(train_data,
         lightgbm_model <- lightgbm::lgb.train(params  = params,
                                               data    = train_data$lightgbm_data,
                                               verbose = -1)
-        verbose_cat(crayon::red('\u2716'), 'lightgbm: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
+        verbose_cat('   ', crayon::red('\u2716'), 'lightgbm: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
       } else {
         if (return_params == TRUE) {
           models_params$lightgbm_params$learning_rate  <- ParBayesianOptimization::getBestPars(bayes)$learning_rate
@@ -572,10 +614,14 @@ train_models_bayesopt <- function(train_data,
         lightgbm_model <- lightgbm::lgb.train(params  = params,
                                               data    = train_data$lightgbm_data,
                                               verbose = -1)
-        verbose_cat(crayon::green('\u2714'), 'lightgbm: Bayesian Optimization was successful!\n', verbose = verbose)
+        verbose_cat('   ', crayon::green('\u2714'), 'lightgbm: Bayesian Optimization was successful!\n', verbose = verbose)
       }
+      t1 <- as.numeric(Sys.time())
+      verbose_cat('   ', crayon::green('\u2714'), 'lightgbm: It took', round(t1 - t0, 2), 'seconds. \n', verbose = verbose)
     }
     else if (engine[i] == 'catboost') {
+      verbose_cat('   ', crayon::green('\u2714'), 'catboost: Starting training procedure.\n', verbose = verbose)
+      t0                   <- as.numeric(Sys.time())
       fitness_fun_catboost <- function(iterations, border_count, depth, learning_rate, min_data_in_leaf) {
         if (type == 'binary_clf') {
           obj    <- 'Logloss'
@@ -641,19 +687,22 @@ train_models_bayesopt <- function(train_data,
       tryCatch(
         expr = {
           if (verbose) {
-            suppressWarnings(
-            bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_catboost,
-                                                       bounds     = bounds,
-                                                       initPoints = length(bounds) + 5,
-                                                       iters.n    = iters.n,
-                                                       verbose    = 1))
+            suppressWarnings(suppressMessages(
+            bayes <- ParBayesianOptimization::bayesOpt(FUN          = fitness_fun_catboost,
+                                                       bounds       = bounds,
+                                                       initPoints   = length(bounds) + 5,
+                                                       iters.n      = iters.n,
+                                                       verbose      = bayes_info[[1]],
+                                                       parallel     = FALSE,
+                                                       plotProgress = bayes_info[[2]])))
           } else {
-            suppressWarnings(
+            suppressWarnings(suppressMessages(
             bayes <- ParBayesianOptimization::bayesOpt(FUN        = fitness_fun_catboost,
                                                        bounds     = bounds,
                                                        initPoints = length(bounds) + 5,
                                                        iters.n    = iters.n,
-                                                       verbose    = 0))
+                                                       verbose    = 0,
+                                                       parallel   = FALSE)))
           }
         },
         error = function(e) {
@@ -674,7 +723,7 @@ train_models_bayesopt <- function(train_data,
 
       if (is.null(bayes)) {
         capture.output(catboost_model <- catboost::catboost.train(train_data$catboost_data, params = params))
-        verbose_cat(crayon::red('\u2716'), 'catboost: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
+        verbose_cat('   ', crayon::red('\u2716'), 'catboost: Bayesian Optimization failed! The model has default parameters.\n', verbose = verbose)
       } else {
         if (return_params == TRUE) {
           models_params$catboost_params$iterations       <- as.integer(ParBayesianOptimization::getBestPars(bayes)$iterations)
@@ -691,8 +740,10 @@ train_models_bayesopt <- function(train_data,
           min_data_in_leaf = as.integer(ParBayesianOptimization::getBestPars(bayes)$min_data_in_leaf)))
 
         capture.output(catboost_model <- catboost::catboost.train(train_data$catboost_data, params = params))
-        verbose_cat(crayon::green('\u2714'), 'catboost: Bayesian Optimization was successful!\n', verbose = verbose)
+        verbose_cat('   ', crayon::green('\u2714'), 'catboost: Bayesian Optimization was successful!\n', verbose = verbose)
       }
+      t1 <- as.numeric(Sys.time())
+      verbose_cat('   ', crayon::green('\u2714'), 'catboost: It took', round(t1 - t0, 2), 'seconds. \n', verbose = verbose)
     }
   }
 

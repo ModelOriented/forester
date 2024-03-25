@@ -255,7 +255,7 @@ draw_scatterplot <- function(train_observed, train_predictions, test_observed, t
     ggplot2::ggtitle('Observed vs Predicted values for \nbest model train subset') +
     ggplot2::xlim(0,max(unlist(train_predictions), unlist(train_observed))) +
     ggplot2::ylim(0,max(unlist(train_predictions), unlist(train_observed))) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], size = 0.5, linetype = 'dashed') +
+    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], linewidth = 0.5, linetype = 'dashed') +
     ggplot2::theme_minimal() +
     ggplot2::coord_fixed() +
     ggplot2::theme(legend.position = 'none',
@@ -268,7 +268,7 @@ draw_scatterplot <- function(train_observed, train_predictions, test_observed, t
     ggplot2::ggtitle('Observed vs Predicted values for \nbest model test subset') +
     ggplot2::xlim(0,max(unlist(test_predictions), unlist(test_observed))) +
     ggplot2::ylim(0,max(unlist(test_predictions), unlist(test_observed))) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], size = 0.5, linetype = 'dashed') +
+    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], linewidth = 0.5, linetype = 'dashed') +
     ggplot2::theme_minimal() +
     ggplot2::coord_fixed() +
     ggplot2::theme(legend.position = 'none',
@@ -339,7 +339,7 @@ draw_rmse_plot <- function(train_observed, train_predictions, test_observed, tes
     ggplot2::ggtitle('RMSE Train vs Test plot') +
     ggplot2::xlim(min(unlist(train_rmse), unlist(test_rmse)),max(unlist(train_rmse), unlist(test_rmse))) +
     ggplot2::ylim(min(unlist(train_rmse), unlist(test_rmse)),max(unlist(train_rmse), unlist(test_rmse))) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], size = 0.5, linetype = 'dashed') +
+    ggplot2::geom_abline(intercept = 0, slope = 1, colour = colors_discrete_forester()[[5]], linewidth = 0.5, linetype = 'dashed') +
     ggplot2::theme_minimal() +
     ggplot2::theme(plot.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 20),
                    axis.title = ggplot2::element_text(face = 'bold', colour = colors_discrete_forester()[[1]], size = 14),

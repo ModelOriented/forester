@@ -12,10 +12,13 @@ train(
   type = "auto",
   engine = c("ranger", "xgboost", "decision_tree", "lightgbm"),
   verbose = TRUE,
+  check_correlation = TRUE,
   train_test_split = c(0.6, 0.2, 0.2),
   split_seed = NULL,
   bayes_iter = 10,
+  bayes_info = list(verbose = 0, plotProgress = FALSE),
   random_evals = 10,
+  parallel = TRUE,
   metrics = "auto",
   sort_by = "auto",
   metric_function = NULL,
@@ -58,6 +61,10 @@ It doesn't matter for survival analysis.}
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 training process, if FALSE gives none.}
 
+\item{check_correlation}{A logical value, if set to TRUE, provides information about
+the correlations between numeric, and categorical pairs of variables as a part
+of data check. Available only when verbose is set to TRUE. Default value is TRUE.}
+
 \item{train_test_split}{A 3-value, numeric vector, describing the proportions of train,
 test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).}
 
@@ -68,8 +75,22 @@ is performed randomly. Default value is NULL.}
 \item{bayes_iter}{An integer value describing number of optimization rounds
 used by the Bayesian optimization. If set to 0 it turns off this method.}
 
+\item{bayes_info}{A list with two values, determining the verbosity of the Bayesian
+Optmization process. The first value is `verbose` with 3 levels: 0 - no output;
+1 - describes what is hapenning, and if we can reach local optimum; 2 - addtionally
+provides infromation about recent, and the best scores. The second value is
+`plotProgress`, which is a logical value indicating if the progress of the Bayesian
+Optimization should be plotted. WARNING it will create plot after each step, thus
+it might be computationally expensive. Both arguments come from the
+`ParBayesianOptimization` package. It only matters if you set global verbose to TRUE.
+Default values are: list(verbose = 0, plotProgress = FALSE).}
+
 \item{random_evals}{An integer value describing number of trained models
 with different parameters by random search. If set to 0 it turns off this method.}
+
+\item{parallel}{A logical value indicating if the parallel method for random search
+and Bayesian Optimizations should be used. Unfortunately it works properly
+for ranger and xgboost models only. By default it is set to TRUE.}
 
 \item{metrics}{A vector of metrics names. By default param set for `auto`, most important metrics are returned.
 For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.}
@@ -115,7 +136,7 @@ means: removing columns with one value for all rows, binarizing the target
 column, managing missing values and in advanced preprocessing: deleting
 correlated values, deleting columns that are ID-like columns and performing
 Boruta algorithm for selecting most important features.
-\item \code{`bin_labels`} Labels of binarized target value - {1, 2} values for binary
+\item \code{`bin_labels`} Labels of binarized target value - 1 or 2 for binary
 classification and NULL for regression.
 \item \code{`deleted_rows`} The indexes of rows deleted during the preprocessing,
 if none were removed the value is NULL.

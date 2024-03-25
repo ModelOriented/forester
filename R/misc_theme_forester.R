@@ -25,8 +25,8 @@ theme_forester <- function() {
           strip.text    = element_text(color = 'black', size = 12, hjust = 0),
           axis.text.x   = element_text(color = 'black'),
           axis.text.y   = element_text(color = 'black'),
-          panel.grid.major.y = element_line(color = 'grey90', size = 0.5, linetype = 1),
-          panel.grid.minor.y = element_line(color = 'grey90', size = 0.5,  linetype = 1),
+          panel.grid.major.y = element_line(color = 'grey90', linewidth = 0.5, linetype = 1),
+          panel.grid.minor.y = element_line(color = 'grey90', linewidth = 0.5,  linetype = 1),
           panel.grid.minor.x = element_blank(),
           panel.grid.major.x = element_blank())
 

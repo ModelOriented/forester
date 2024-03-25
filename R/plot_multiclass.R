@@ -79,18 +79,19 @@ plot.multiclass <- function(x,
   }
   if (type == 'comparison') {
     test_scores    <- data.frame(t(x$score_test[, (NCOL(x$score_test) - 3):NCOL(x$score_test)]))
-    test_scores    <- test_scores[, 1:10]
+    no_cols        <- min(10, ncol(test_scores))
+    test_scores    <- test_scores[, 1:no_cols]
     test_y         <- data.frame(metric = rownames(test_scores), value = unlist(test_scores))
-    test_data      <- x$score_test[1:10, ]
+    test_data      <- x$score_test[1:no_cols, ]
     test_data$name <- factor(test_data$name, levels = unique(test_data$name))
     test_all       <- cbind(test_data[rep(seq_len(nrow(test_data)), each = 4), ],
                             data.frame(metric = rownames(test_scores), value = unlist(test_scores)))
     test_all       <- test_all[, c('name', 'engine', 'tuning', 'metric', 'value')]
 
     valid_scores    <- data.frame(t(x$score_valid[, (NCOL(x$score_valid) - 3):NCOL(x$score_valid)]))
-    valid_scores    <- valid_scores[, 1:10]
+    valid_scores    <- valid_scores[, 1:no_cols]
     valid_y         <- data.frame(metric = rownames(valid_scores), value = unlist(valid_scores))
-    valid_data      <- x$score_valid[1:10, ]
+    valid_data      <- x$score_valid[1:no_cols, ]
     valid_data$name <- factor(valid_data$name, levels = unique(valid_data$name))
     valid_all       <- cbind(valid_data[rep(seq_len(nrow(valid_data)), each = 4), ],
                              data.frame(metric = rownames(valid_scores), value = unlist(valid_scores)))
@@ -110,7 +111,7 @@ plot.multiclass <- function(x,
         color = metric,
         group = metric
       )) +
-        geom_line(size = 1) +
+        geom_line(linewidth = 1) +
         scale_color_manual(values = colors_discrete_forester(length(unique(all$name)))) +
         theme_forester() +
         geom_point() +
@@ -183,7 +184,8 @@ plot.multiclass <- function(x,
   }
 
   if(type == 'train-test') {
-    models_names <- x$score_test$name[1:10]
+    no_columns <- min(10, ncol(x$score_test))
+    models_names <- x$score_test$name[1:no_columns]
 
     train_score <- x$score_train[x$score_train$name %in% models_names, ]
     names(train_score)[which(names(train_score) %in% c('accuracy', 'weighted_averaged_precision',
@@ -200,7 +202,7 @@ plot.multiclass <- function(x,
 
     score <- cbind(train_score, test_score)
 
-    p <- ggplot(score, aes_string(x = paste0(metric, '_train'), y = paste0(metric, '_test'), color = 'engine')) +
+    p <- ggplot(score, aes(x = .data[[paste0(metric, '_train')]], y = .data[[paste0(metric, '_test')]], color = 'engine')) +
       geom_point() +
       geom_abline(intercept = 0, slope = 1) +
       theme_forester() +

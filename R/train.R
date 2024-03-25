@@ -30,6 +30,9 @@
 #' It doesn't matter for survival analysis.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' training process, if FALSE gives none.
+#' @param check_correlation A logical value, if set to TRUE, provides information about
+#' the correlations between numeric, and categorical pairs of variables as a part
+#' of data check. Available only when verbose is set to TRUE. Default value is TRUE.
 #' @param train_test_split A 3-value, numeric vector, describing the proportions of train,
 #' test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).
 #' @param split_seed An integer value describing the seed for the split into
@@ -37,8 +40,20 @@
 #' is performed randomly. Default value is NULL.
 #' @param bayes_iter An integer value describing number of optimization rounds
 #' used by the Bayesian optimization. If set to 0 it turns off this method.
+#' @param bayes_info A list with two values, determining the verbosity of the Bayesian
+#' Optmization process. The first value is `verbose` with 3 levels: 0 - no output;
+#' 1 - describes what is hapenning, and if we can reach local optimum; 2 - addtionally
+#' provides infromation about recent, and the best scores. The second value is
+#' `plotProgress`, which is a logical value indicating if the progress of the Bayesian
+#' Optimization should be plotted. WARNING it will create plot after each step, thus
+#' it might be computationally expensive. Both arguments come from the
+#' `ParBayesianOptimization` package. It only matters if you set global verbose to TRUE.
+#' Default values are: list(verbose = 0, plotProgress = FALSE).
 #' @param random_evals An integer value describing number of trained models
 #' with different parameters by random search. If set to 0 it turns off this method.
+#' @param parallel A logical value indicating if the parallel method for random search
+#' and Bayesian Optimizations should be used. Unfortunately it works properly
+#' for ranger and xgboost models only. By default it is set to TRUE.
 #' @param metrics A vector of metrics names. By default param set for `auto`, most important metrics are returned.
 #' For `all` all metrics are returned. For `NULL` no metrics returned but still sorted by `sort_by`.
 #' @param sort_by A string with a name of metric to sort by.
@@ -76,7 +91,7 @@
 #' column, managing missing values and in advanced preprocessing: deleting
 #' correlated values, deleting columns that are ID-like columns and performing
 #' Boruta algorithm for selecting most important features.
-#' \item \code{`bin_labels`} Labels of binarized target value - {1, 2} values for binary
+#' \item \code{`bin_labels`} Labels of binarized target value - 1 or 2 for binary
 #' classification and NULL for regression.
 #' \item \code{`deleted_rows`} The indexes of rows deleted during the preprocessing,
 #' if none were removed the value is NULL.
@@ -165,24 +180,27 @@
 #' train_output$score_valid
 #' }
 train <- function(data,
-                  y                = NULL,
-                  time             = NULL,
-                  status           = NULL,
-                  type             = 'auto',
-                  engine           = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
-                  verbose          = TRUE,
-                  train_test_split = c(0.6, 0.2, 0.2),
-                  split_seed       = NULL,
-                  bayes_iter       = 10,
-                  random_evals     = 10,
-                  metrics          = 'auto',
-                  sort_by          = 'auto',
-                  metric_function  = NULL,
+                  y                 = NULL,
+                  time              = NULL,
+                  status            = NULL,
+                  type              = 'auto',
+                  engine            = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
+                  verbose           = TRUE,
+                  check_correlation = TRUE,
+                  train_test_split  = c(0.6, 0.2, 0.2),
+                  split_seed        = NULL,
+                  bayes_iter        = 10,
+                  bayes_info        = list(verbose = 0, plotProgress = FALSE),
+                  random_evals      = 10,
+                  parallel          = TRUE,
+                  metrics           = 'auto',
+                  sort_by           = 'auto',
+                  metric_function   = NULL,
                   metric_function_name       = NULL,
                   metric_function_decreasing = TRUE,
                   best_model_number          = 5,
                   custom_preprocessing       = NULL) {
-
+  t0 <- as.numeric(Sys.time())
   if (is.null(y)) {
     if (is.null(time) | is.null(status)) {
       verbose_cat(crayon::red('\u2716'), 'Lack of target variables. Please specify',
@@ -226,29 +244,35 @@ train <- function(data,
     if (type == 'regression') {
       data[[y]] <- as.numeric(data[[y]])
     }
-    verbose_cat(crayon::green('\u2714'), 'Type guessed as: ', type, '\n\n', verbose = verbose)
+    verbose_cat(crayon::green('\u2714'), 'Type guessed as:', type, '\n', verbose = verbose)
   } else if (!type %in% c('regression', 'binary_clf', 'survival', 'multiclass')) {
-    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification \n\n', verbose = verbose)
+    verbose_cat(crayon::red('\u2716'), 'Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification \n', verbose = verbose)
     stop('Invalid value. Correct task types are: `binary_clf`, `regression`, `survival`, `multiclass`, and `auto` for automatic task identification')
   } else {
-    verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n\n', verbose = verbose)
+    verbose_cat(crayon::green('\u2714'), 'Type provided as: ', type, '\n', verbose = verbose)
   }
 
   if (type == 'survial') {
     if (!status %in% colnames(data) || !time %in% colnames(data)) {
       verbose_cat(crayon::red('\u2716'), 'Provided target column name for time or status parameters',
-                  status, time, 'is not present in the datataset. \n\n', verbose = verbose)
+                  status, time, 'is not present in the datataset. \n', verbose = verbose)
       stop('Provided target column name for time or status parameter is not present in the datataset.')
     }
   } else if (!y %in% colnames(data)) {
     verbose_cat(crayon::red('\u2716'), 'Provided target column name for y parameter', y,
-                'is not present in the datataset. \n\n', verbose = verbose)
+                'is not present in the datataset. \n', verbose = verbose)
     stop('Provided target column name for y parameter is not present in the datataset.')
   }
 
+  if (parallel) {
+    cores <- parallel::detectCores()
+    cl    <- parallel::makeCluster(cores - 1)
+    doParallel::registerDoParallel(cl)
+    verbose_cat(crayon::green('\u2714'), 'Parallel processing is turned on. Registered', cores - 1, 'cores. \n', verbose = verbose)
+  }
 
   if (is.null(custom_preprocessing)) {
-    check_report              <- check_data(data, y, time, status, type, verbose)
+    check_report              <- check_data(data, y, time, status, type, verbose, check_correlation = check_correlation)
     preprocessed_data         <- preprocessing(data, y, time, status, type)
     preprocessed_data$rm_rows <- NULL
     verbose_cat(crayon::green('\u2714'), 'Data preprocessed with basic preprocessing. \n', verbose = verbose)
@@ -286,8 +310,16 @@ train <- function(data,
 
   verbose_cat(crayon::green('\u2714'), 'Correct formats prepared. \n', verbose = verbose)
 
+  b_t0 <- as.numeric(Sys.time())
   model_basic    <- train_models(train_data, y, time, status, engine, type)
-  verbose_cat(crayon::green('\u2714'), 'Models with default parameters successfully trained. \n', verbose = verbose)
+  b_t1 <- as.numeric(Sys.time())
+  verbose_cat('\n', crayon::green('\u2714'), ' Models with default parameters successfully trained. \n', verbose = verbose, sep = '')
+  verbose_cat('   ', crayon::green('\u2714'), 'Default: It took', round(b_t1 - b_t0, 2), 'seconds. \n', verbose = verbose)
+
+  if (random_evals > 0) {
+    rs_t0 <- as.numeric(Sys.time())
+    verbose_cat('\n', crayon::green('\u2714'), ' Starting Random Search training process. \n', verbose = verbose, sep = '')
+  }
 
   model_random   <- random_search(train_data,
                                   y         = y,
@@ -296,21 +328,35 @@ train <- function(data,
                                   engine    = engine,
                                   type      = type,
                                   max_evals = random_evals,
+                                  parallel  = parallel,
                                   verbose   = verbose)
+  if (random_evals > 0) {
+    rs_t1 <- as.numeric(Sys.time())
+    verbose_cat('\n', crayon::green('\u2714'), ' Models optimized with Random Search successfully trained. \n', verbose = verbose, sep = '')
+    verbose_cat('   ', crayon::green('\u2714'), 'Random Search: It took', round(rs_t1 - rs_t0, 2), 'seconds. \n', verbose = verbose)
+  }
 
-  verbose_cat(crayon::green('\u2714'), 'Models optimized with random search successfully trained. \n', verbose = verbose)
+  if (bayes_iter > 0) {
+    bo_t0 <- as.numeric(Sys.time())
+    verbose_cat('\n', crayon::green('\u2714'), ' Starting Bayesian Optimization training process. \n', verbose = verbose, sep = '')
+  }
 
   model_bayes <- train_models_bayesopt(train_data,
-                                       y         = y,
-                                       time      = time,
-                                       status    = status,
-                                       test_data = test_data,
-                                       engine    = engine,
-                                       type      = type,
-                                       iters.n   = bayes_iter,
-                                       verbose   = verbose)
-
-  verbose_cat(crayon::green('\u2714'), 'Models optimized with Bayesian Optimization successfully trained. \n', verbose = verbose)
+                                       y          = y,
+                                       time       = time,
+                                       status     = status,
+                                       test_data  = test_data,
+                                       engine     = engine,
+                                       type       = type,
+                                       parallel   = parallel,
+                                       iters.n    = bayes_iter,
+                                       bayes_info = bayes_info,
+                                       verbose    = verbose)
+  if (bayes_iter > 0) {
+    bo_t1 <- as.numeric(Sys.time())
+    verbose_cat('\n', crayon::green('\u2714'), ' Models optimized with Bayesian Optimization successfully trained. \n', verbose = verbose, sep = '')
+    verbose_cat('   ', crayon::green('\u2714'), 'Bayesian Optimization: It took', round(bo_t1 - bo_t0, 2), 'seconds. \n', verbose = verbose)
+  }
 
 
   models_all <- c(model_basic, model_random$models, model_bayes)
@@ -330,7 +376,7 @@ train <- function(data,
   predict_test     <- predict_models_all(models_all, test_data,  y, type = type)
   predict_valid    <- predict_models_all(models_all, valid_data, y, type = type)
 
-  verbose_cat(crayon::green('\u2714'), 'Created the predictions for all models. \n', verbose = verbose)
+  verbose_cat('\n', crayon::green('\u2714'), ' Created the predictions for all models. \n', verbose = verbose, sep = '')
 
   score_train <- score_models(models_all,
                               predict_train,
@@ -391,7 +437,7 @@ train <- function(data,
   predictions_best_test  <- predict_models_all(best_models_on_valid$models, test_data,  y, type = type)
   predictions_best_valid <- predict_models_all(best_models_on_valid$models, valid_data, y, type = type)
 
-  verbose_cat(crayon::green('\u2714'), 'Created the predctions for best models. \n', verbose = verbose)
+  verbose_cat(crayon::green('\u2714'), 'Created the predictions for the best models. \n', verbose = verbose)
 
   # Providing the original labels to the target.
   if (type == 'binary_clf') {
@@ -541,7 +587,8 @@ train <- function(data,
   }
 
   verbose_cat(crayon::green('\u2714'), 'Created human-readable labels for observables and predictions. \n', verbose = verbose)
-
+  t1 <- as.numeric(Sys.time())
+  verbose_cat(crayon::green('\u2714'), 'The train() run took', round(t1 - t0, 2), 'seconds. \n', verbose = verbose)
   if (type %in% c('binary_clf', 'multiclass')) {
     clf_models <- list(
         data                    = data,
@@ -630,9 +677,9 @@ train <- function(data,
       test_inds               = split_data$test_inds,
       valid_inds              = split_data$valid_inds,
 
-      predict_train           = predict_train,
-      predict_test            = predict_test,
-      predict_valid           = predict_valid,
+      predictions_train       = predict_train,
+      predictions_test        = predict_test,
+      predictions_valid       = predict_valid,
 
       predictions_best_train  = predictions_best_train,
       predictions_best_test   = predictions_best_test,

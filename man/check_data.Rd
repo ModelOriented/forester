@@ -10,7 +10,8 @@ check_data(
   time = NULL,
   status = NULL,
   type = "auto",
-  verbose = TRUE
+  verbose = TRUE,
+  check_correlation = TRUE
 )
 }
 \arguments{
@@ -33,6 +34,10 @@ in the `y` variable, or the presence of time/status columns.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 the process, if FALSE gives none.}
+
+\item{check_correlation}{A logical value, if set to TRUE, provides information about
+the correlations between numeric, and categorical pairs of variables.
+Available only when verbose is set to TRUE. Default value is TRUE.}
 }
 \value{
 A list with two vectors: lines of the report (str) and the outliers (outliers).

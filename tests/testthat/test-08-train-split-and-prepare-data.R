@@ -7,7 +7,16 @@ test_that('test-train-split-and-prepare-data', {
                '/iris_prep.RData',   '/compas_prep.RData')
   targets <- c('Price', 'y', 'Species', 'Two_yr_Recidivism')
   types   <- c('regression', 'regression', 'multiclass', 'binary_clf')
-  engine  <- c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
+  tryCatch({ # For CRAN, we need to omit catboost, as it is not there.
+    find.package('catboost')
+    engine  <- c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost')
+    classes <- c("data.frame", "matrix", "data.frame", "lgb.Dataset", "catboost.Pool")
+  },
+  error = function(cond) {
+    engine  <- c('ranger', 'xgboost', 'decision_tree', 'lightgbm')
+    classes <- c("data.frame", "matrix", "data.frame", "lgb.Dataset")
+  })
+
   for (file in files) {
     load(capture.output(cat(folder, file, sep ='')))
   }
@@ -103,7 +112,6 @@ test_that('test-train-split-and-prepare-data', {
       expect_equal(nrow(raw_train[[j]]),  nrow(split_data$train))
     }
     # Are there correct classes created.
-    classes <- c("data.frame", "matrix", "data.frame", "lgb.Dataset", "catboost.Pool")
     for (j in c(1, 2, 3, 5)) {
       expect_true(classes[j] %in% class(train_data[[j]]))
       expect_true(classes[j] %in% class(test_data[[j]]))
