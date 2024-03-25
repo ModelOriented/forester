@@ -12,6 +12,7 @@ train(
   type = "auto",
   engine = c("ranger", "xgboost", "decision_tree", "lightgbm"),
   verbose = TRUE,
+  check_correlation = TRUE,
   train_test_split = c(0.6, 0.2, 0.2),
   split_seed = NULL,
   bayes_iter = 10,
@@ -59,6 +60,10 @@ It doesn't matter for survival analysis.}
 
 \item{verbose}{A logical value, if set to TRUE, provides all information about
 training process, if FALSE gives none.}
+
+\item{check_correlation}{A logical value, if set to TRUE, provides information about
+the correlations between numeric, and categorical pairs of variables as a part
+of data check. Available only when verbose is set to TRUE. Default value is TRUE.}
 
 \item{train_test_split}{A 3-value, numeric vector, describing the proportions of train,
 test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).}

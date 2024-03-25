@@ -30,6 +30,9 @@
 #' It doesn't matter for survival analysis.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' training process, if FALSE gives none.
+#' @param check_correlation A logical value, if set to TRUE, provides information about
+#' the correlations between numeric, and categorical pairs of variables as a part
+#' of data check. Available only when verbose is set to TRUE. Default value is TRUE.
 #' @param train_test_split A 3-value, numeric vector, describing the proportions of train,
 #' test, validation subsets to original data set. Default values are: c(0.6, 0.2, 0.2).
 #' @param split_seed An integer value describing the seed for the split into
@@ -177,21 +180,22 @@
 #' train_output$score_valid
 #' }
 train <- function(data,
-                  y                = NULL,
-                  time             = NULL,
-                  status           = NULL,
-                  type             = 'auto',
-                  engine           = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
-                  verbose          = TRUE,
-                  train_test_split = c(0.6, 0.2, 0.2),
-                  split_seed       = NULL,
-                  bayes_iter       = 10,
-                  bayes_info       = list(verbose = 0, plotProgress = FALSE),
-                  random_evals     = 10,
-                  parallel         = TRUE,
-                  metrics          = 'auto',
-                  sort_by          = 'auto',
-                  metric_function  = NULL,
+                  y                 = NULL,
+                  time              = NULL,
+                  status            = NULL,
+                  type              = 'auto',
+                  engine            = c('ranger', 'xgboost', 'decision_tree', 'lightgbm'),
+                  verbose           = TRUE,
+                  check_correlation = TRUE,
+                  train_test_split  = c(0.6, 0.2, 0.2),
+                  split_seed        = NULL,
+                  bayes_iter        = 10,
+                  bayes_info        = list(verbose = 0, plotProgress = FALSE),
+                  random_evals      = 10,
+                  parallel          = TRUE,
+                  metrics           = 'auto',
+                  sort_by           = 'auto',
+                  metric_function   = NULL,
                   metric_function_name       = NULL,
                   metric_function_decreasing = TRUE,
                   best_model_number          = 5,
@@ -268,7 +272,7 @@ train <- function(data,
   }
 
   if (is.null(custom_preprocessing)) {
-    check_report              <- check_data(data, y, time, status, type, verbose)
+    check_report              <- check_data(data, y, time, status, type, verbose, check_correlation = check_correlation)
     preprocessed_data         <- preprocessing(data, y, time, status, type)
     preprocessed_data$rm_rows <- NULL
     verbose_cat(crayon::green('\u2714'), 'Data preprocessed with basic preprocessing. \n', verbose = verbose)

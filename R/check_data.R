@@ -14,6 +14,9 @@
 #' in the `y` variable, or the presence of time/status columns.
 #' @param verbose A logical value, if set to TRUE, provides all information about
 #' the process, if FALSE gives none.
+#' @param check_correlation A logical value, if set to TRUE, provides information about
+#' the correlations between numeric, and categorical pairs of variables.
+#' Available only when verbose is set to TRUE. Default value is TRUE.
 #'
 #' @return A list with two vectors: lines of the report (str) and the outliers (outliers).
 #' @export
@@ -22,7 +25,7 @@
 #' check_data(lisbon, 'Price')
 #' @importFrom stats IQR cor median sd
 #' @importFrom utils capture.output
-check_data <- function(data, y = NULL, time = NULL, status = NULL, type = 'auto', verbose = TRUE) {
+check_data <- function(data, y = NULL, time = NULL, status = NULL, type = 'auto', verbose = TRUE, check_correlation = TRUE) {
   options(warn = -1)
 
   if (is.null(y)) {
@@ -77,7 +80,9 @@ check_data <- function(data, y = NULL, time = NULL, status = NULL, type = 'auto'
   str <- c(str, check_missing(df, y, time, status, verbose))
   df  <- manage_missing(df, y)
   str <- c(str, check_dim(df, verbose))
-  str <- c(str, check_cor(df, y, time, status, verbose)$str)
+  if (check_correlation) {
+    str <- c(str, check_cor(df, y, time, status, verbose)$str)
+  }
   rtr <- check_outliers(df, verbose)
   str <- c(str, rtr$str)
   str <- c(str, check_y_balance(df, y, time, status, type, verbose))

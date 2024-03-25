@@ -79,19 +79,19 @@ plot.multiclass <- function(x,
   }
   if (type == 'comparison') {
     test_scores    <- data.frame(t(x$score_test[, (NCOL(x$score_test) - 3):NCOL(x$score_test)]))
-    no_columns     <- min(10, ncol(test_scores))
-    test_scores    <- test_scores[, 1:no_columns]
+    no_cols        <- min(10, ncol(test_scores))
+    test_scores    <- test_scores[, 1:no_cols]
     test_y         <- data.frame(metric = rownames(test_scores), value = unlist(test_scores))
-    test_data      <- x$score_test[1:no_columns, ]
+    test_data      <- x$score_test[1:no_cols, ]
     test_data$name <- factor(test_data$name, levels = unique(test_data$name))
     test_all       <- cbind(test_data[rep(seq_len(nrow(test_data)), each = 4), ],
                             data.frame(metric = rownames(test_scores), value = unlist(test_scores)))
     test_all       <- test_all[, c('name', 'engine', 'tuning', 'metric', 'value')]
 
     valid_scores    <- data.frame(t(x$score_valid[, (NCOL(x$score_valid) - 3):NCOL(x$score_valid)]))
-    valid_scores    <- valid_scores[, 1:no_columns]
+    valid_scores    <- valid_scores[, 1:no_cols]
     valid_y         <- data.frame(metric = rownames(valid_scores), value = unlist(valid_scores))
-    valid_data      <- x$score_valid[1:no_columns, ]
+    valid_data      <- x$score_valid[1:no_cols, ]
     valid_data$name <- factor(valid_data$name, levels = unique(valid_data$name))
     valid_all       <- cbind(valid_data[rep(seq_len(nrow(valid_data)), each = 4), ],
                              data.frame(metric = rownames(valid_scores), value = unlist(valid_scores)))

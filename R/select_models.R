@@ -1,23 +1,41 @@
-#' Select models from train() output/
+#' Select models from train() output.
 #'
 #' The function provides a necessary interface for minimizing the size of output
 #' created with train(). It not only selects the models, but also the data,
 #' predictions, and all other necessary information.
 #'
 #' @param train_output The output created with train() function.
-#' @param model_names The character vector including the names of models, that
-#' we want to select.
+#' @param models The vector including either the names of models or their indexes,
+#' that we want to select.
 #'
 #' @return The train_output with selected models.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' out     <- train(iris, 'Species', random_evals = 30, bayes_iters = 0)
-#' new_out <- select_models(out, c('random_forest_RS_1', 'xgboost_RS_14'))
+#' out      <- train(iris, 'Species', random_evals = 30, bayes_iters = 0)
+#' new_out  <- select_models(out, c('random_forest_RS_1', 'xgboost_RS_14'))
+#' new_out2 <- select_models(out, c(1, 15, 30, 45))
 #' }
-select_models <- function(train_output, model_names) {
-  output <- train_output
+select_models <- function(train_output, models) {
+  output       <- train_output
+  model_names <- c()
+
+  if (!train_output$type %in% c('regression', 'binary_clf', 'multiclass', 'survival')) {
+    verbose_cat(crayon::red('\u2716'), 'Provided vartaible is not the train_output from train() function. \n')
+    stop('Provided vartaible is not the train_output from train() function.')
+  }
+
+  if (is.numeric(models)) {
+    if (any(models > length(output$models_list))) {
+      verbose_cat(crayon::red('\u2716'), 'One or more of the integers in models are greater than the number of models.\n')
+      stop('One or more of the integers in models are greater than the number of models.')
+    }
+    model_names <- names(output$models_list)[models]
+  } else {
+    model_names <- models
+  }
+
   selected_engines <- c()
   for (engine in output$engine) {
     for (name in model_names) {

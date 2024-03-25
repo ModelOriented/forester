@@ -79,7 +79,7 @@ plot.binary_clf <- function(x,
   }
   if (type == 'comparison') {
     test_scores    <- data.frame(t(x$score_test[, (NCOL(x$score_test) - 2):NCOL(x$score_test)]))
-    no_cols <- min(10, ncol(test_scores))
+    no_cols        <- min(10, ncol(test_scores))
     test_scores    <- test_scores[, 1:no_cols]
     test_y         <- data.frame(metric = rownames(test_scores), value = unlist(test_scores))
     test_data      <- x$score_test[1:no_cols, ]

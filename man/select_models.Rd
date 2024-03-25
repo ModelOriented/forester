@@ -2,15 +2,15 @@
 % Please edit documentation in R/select_models.R
 \name{select_models}
 \alias{select_models}
-\title{Select models from train() output/}
+\title{Select models from train() output.}
 \usage{
-select_models(train_output, model_names)
+select_models(train_output, models)
 }
 \arguments{
 \item{train_output}{The output created with train() function.}
 
-\item{model_names}{The character vector including the names of models, that
-we want to select.}
+\item{models}{The vector including either the names of models or their indexes,
+that we want to select.}
 }
 \value{
 The train_output with selected models.
@@ -22,7 +22,8 @@ predictions, and all other necessary information.
 }
 \examples{
 \dontrun{
-out     <- train(iris, 'Species', random_evals = 30, bayes_iters = 0)
-new_out <- select_models(out, c('random_forest_RS_1', 'xgboost_RS_14'))
+out      <- train(iris, 'Species', random_evals = 30, bayes_iters = 0)
+new_out  <- select_models(out, c('random_forest_RS_1', 'xgboost_RS_14'))
+new_out2 <- select_models(out, c(1, 15, 30, 45))
 }
 }

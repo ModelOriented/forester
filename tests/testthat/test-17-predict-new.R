@@ -32,7 +32,7 @@ test_that('test-predict-new', {
     # Part of select models tests.
     expect_no_error(
       new_output <- select_models(train_output = output,
-                                  model_names = names(output$models_list)[c(1, 2, 3, 4)]))
+                                  models = names(output$models_list)[c(1, 2, 3, 4)]))
     expect_no_error(
       predictions_new <- predict_new(train_out = new_output,
                                  data      = new_data[[i]],

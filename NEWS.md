@@ -10,6 +10,7 @@
 -   Introduced the `select_models()` function, which lets the user shrink the output of `train()` function to the selected models only. It is useful when the user wants to focus on the best models only, and limit the size of the output, while maintaining the ability to generate reports, and other functionalities.
 -   Fixed an issue where for different tasks we had incosistent parameters in the output of the `train()` function, regarding the predictions of all three sets.
 -   Modified the tests, so they fit with the current package version, and added tests for `select_models()` function.
+-   Added `check_correlation` parameter for both `train()` and `check_Data()` functions, which lets the user decide whether to check the correlation between the features or not. In some corner cases, with highly dimensional data, it can be time-consuming, and not necessary.
     
 # forester 1.5.0
 
