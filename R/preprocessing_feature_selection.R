@@ -1,18 +1,18 @@
-#' Conducts a feature selection process with one out of four proposed methods
+#' Conducts a feature selection process with one out of five proposed methods
 #'
 #' \itemize{
-#' \item \code{`VI`} The variable importance method based on random forest - short time,
-#' \item \code{`MCFS`} The Monte Carlo Feature Selection - long time,
-#' \item \code{`MI`} The Varrank method based on mutual information scores - moderate time,
-#' if we set too big `max_features` it can work really long,
-#' \item \code{`BORUTA`} The BORUTA algorithm - short time.
+#' \item \code{`VI`} The variable importance method based on random forest - long time, worst results,
+#' \item \code{`MCFS`} The Monte Carlo Feature Selection - short time, reasonable results,
+#' \item \code{`MI`} The Varrank method based on mutual information scores - short time,
+#' if we set too big `max_features` it can work really long, bad results,
+#' \item \code{`BORUTA`} The BORUTA algorithm - long time, best results.
 #' }
 #'
 #' @param data A data source, that is one of the major R formats: data.table, data.frame,
 #' matrix and so on.
 #' @param y A string that indicates a target column name.
 #' @param feature_selection_method A string value indication the feature selection method.
-#' The imputation method must be one of 'VI', 'MCFS', 'MI', or 'BORUTA'.
+#' The imputation method must be one of 'VI', 'MCFS', 'MI', or 'BORUTA' (default).
 #' @param max_features A positive integer value describing the desired number of
 #' selected features. Initial value set as 'default' which is min(10, ncol(data) - 1)
 #' for `VI` and `MI`, and NULL (number of relevant features chosen by the method)
@@ -43,7 +43,7 @@
 #' @export
 preprocessing_feature_selection <- function(data,
                                             y,
-                                            feature_selection_method = 'VI',
+                                            feature_selection_method = 'BORUTA',
                                             max_features = 'default',
                                             nperm = 1,
                                             cutoffPermutations = 20,

@@ -2,12 +2,12 @@
 % Please edit documentation in R/preprocessing_feature_selection.R
 \name{preprocessing_feature_selection}
 \alias{preprocessing_feature_selection}
-\title{Conducts a feature selection process with one out of four proposed methods}
+\title{Conducts a feature selection process with one out of five proposed methods}
 \usage{
 preprocessing_feature_selection(
   data,
   y,
-  feature_selection_method = "VI",
+  feature_selection_method = "BORUTA",
   max_features = "default",
   nperm = 1,
   cutoffPermutations = 20,
@@ -23,7 +23,7 @@ matrix and so on.}
 \item{y}{A string that indicates a target column name.}
 
 \item{feature_selection_method}{A string value indication the feature selection method.
-The imputation method must be one of 'VI', 'MCFS', 'MI', or 'BORUTA'.}
+The imputation method must be one of 'VI', 'MCFS', 'MI', or 'BORUTA' (default).}
 
 \item{max_features}{A positive integer value describing the desired number of
 selected features. Initial value set as 'default' which is min(10, ncol(data) - 1)
@@ -61,10 +61,10 @@ A list containing two objects:
 }
 \description{
 \itemize{
-\item \code{`VI`} The variable importance method based on random forest - short time,
-\item \code{`MCFS`} The Monte Carlo Feature Selection - long time,
-\item \code{`MI`} The Varrank method based on mutual information scores - moderate time,
-if we set too big `max_features` it can work really long,
-\item \code{`BORUTA`} The BORUTA algorithm - short time.
+\item \code{`VI`} The variable importance method based on random forest - long time, worst results,
+\item \code{`MCFS`} The Monte Carlo Feature Selection - short time, reasonable results,
+\item \code{`MI`} The Varrank method based on mutual information scores - short time,
+if we set too big `max_features` it can work really long, bad results,
+\item \code{`BORUTA`} The BORUTA algorithm - long time, best results.
 }
 }

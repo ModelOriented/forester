@@ -21,6 +21,4 @@ test_that('test-check-data', {
     expect_output(check_y_balance(df, y, time, status, type, verbose))
     expect_output(detect_id_columns(df, verbose))
   }
-
-
 })

@@ -43,6 +43,5 @@ test_that('test-predict-new', {
     for (j in 1:(length(predictions) - 1)) {
       expect_equal(length(as.vector(predictions[[j]])), length(as.vector(predictions[[j + 1]])))
     }
-
   }
 })

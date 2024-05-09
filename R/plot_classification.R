@@ -246,7 +246,7 @@ plot.binary_clf <- function(x,
 
     score <- cbind(train_score, test_score)
 
-    p <- ggplot(score, aes(x = .data[[paste0(metric, '_train')]], y = .data[[paste0(metric, '_test')]], color = 'engine')) +
+    p <- ggplot(score, aes(x = .data[[paste0(metric, '_train')]], y = .data[[paste0(metric, '_test')]], color = .data[['engine']])) +
       geom_point() +
       geom_abline(intercept = 0, slope = 1) +
       theme_forester() +
