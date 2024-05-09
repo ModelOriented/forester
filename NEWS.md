@@ -1,3 +1,8 @@
+# forester 1.6.1
+-   Changed default feature selection method in `custom_preprocessing()`, and `preprocessing_feature_selection()` to `BORUTA`, as it is the most effective one,
+-   Changed default imputation method for `preprocessing()` inside `train()` to `knn`, as it is the most effective one,
+-   Fixed an issue for VS plots, where the color was not assigned properly for the models,
+
 # forester 1.6.0
 
 -   Updated `.Rbuildignore`, `DESCRIPTION`, and `NAMESPACE`.

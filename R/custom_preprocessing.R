@@ -61,7 +61,7 @@
 #' the same column names. The parameters are described below:
 #' \itemize{
 #' \item \code{`feature_selection_method`} A string value indication the feature selection method.
-#' The imputation method must be one of 'VI', 'MCFS', 'MI', 'BORUTA', or 'none' if we don't
+#' The imputation method must be one of 'VI', 'MCFS', 'MI', 'BORUTA' (default), or 'none' if we don't
 #' want it.
 #' \item \code{`max_features`} A positive integer value describing the desired number of
 #' selected features. Initial value set as 'default' which is min(10, ncol(data) - 1)
@@ -117,7 +117,7 @@
 #'                        m = 5
 #'                      ),
 #'                      feature_selection_parameters = list(
-#'                        feature_selection_method = 'VI',
+#'                        feature_selection_method = 'BORUTA',
 #'                        max_features = 'default',
 #'                        nperm = 1,
 #'                        cutoffPermutations = 20,
@@ -152,7 +152,7 @@ custom_preprocessing <- function(data,
                                    m = 5
                                  ),
                                  feature_selection_parameters = list(
-                                   feature_selection_method = 'none',
+                                   feature_selection_method = 'BORUTA',
                                    max_features = 'default',
                                    nperm = 1,
                                    cutoffPermutations = 20,

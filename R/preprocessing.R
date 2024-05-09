@@ -1,4 +1,4 @@
-#' Conduct preprocessing processes
+#' Conduct basic preprocessing processes
 #'
 #' @param data A data source, that is one the of major R formats: data.table, data.frame,
 #' matrix, and so on.
@@ -133,8 +133,7 @@ manage_missing <- function(df, y) {
     df <- df[, -col_to_rm]
   }
   # Input missing values via mice algorithm.
-  df <- mice::mice(df, seed = 123, print = FALSE, remove_collinear = FALSE)
-  df <- mice::complete(df)
+  df <- preprocessing_imputation(df, imputation_method = 'knn', verbose = FALSE)
   return(df)
 }
 

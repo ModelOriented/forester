@@ -16,7 +16,7 @@ custom_preprocessing(
     static_threshold = 0.99, sparse_columns_threshold = 0.3, sparse_rows_threshold = 0.3,
     high_correlation_threshold = 0.7),
   imputation_parameters = list(imputation_method = "median-other", k = 10, m = 5),
-  feature_selection_parameters = list(feature_selection_method = "none", max_features =
+  feature_selection_parameters = list(feature_selection_method = "BORUTA", max_features =
     "default", nperm = 1, cutoffPermutations = 20, threadsNumber = NULL, method =
     "estevez"),
   verbose = FALSE
@@ -83,7 +83,7 @@ selection process. It needs to be provided as presented in an example with exact
 the same column names. The parameters are described below:
 \itemize{
 \item \code{`feature_selection_method`} A string value indication the feature selection method.
-The imputation method must be one of 'VI', 'MCFS', 'MI', 'BORUTA', or 'none' if we don't
+The imputation method must be one of 'VI', 'MCFS', 'MI', 'BORUTA' (default), or 'none' if we don't
 want it.
 \item \code{`max_features`} A positive integer value describing the desired number of
 selected features. Initial value set as 'default' which is min(10, ncol(data) - 1)
@@ -147,7 +147,7 @@ k <- custom_preprocessing(data = lisbon,
                        m = 5
                      ),
                      feature_selection_parameters = list(
-                       feature_selection_method = 'VI',
+                       feature_selection_method = 'BORUTA',
                        max_features = 'default',
                        nperm = 1,
                        cutoffPermutations = 20,

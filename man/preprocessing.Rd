@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing.R
 \name{preprocessing}
 \alias{preprocessing}
-\title{Conduct preprocessing processes}
+\title{Conduct basic preprocessing processes}
 \usage{
 preprocessing(
   data,
@@ -41,5 +41,5 @@ A list containing three objects:
 }
 }
 \description{
-Conduct preprocessing processes
+Conduct basic preprocessing processes
 }
