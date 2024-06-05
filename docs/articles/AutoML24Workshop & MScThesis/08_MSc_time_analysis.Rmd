@@ -1,0 +1,606 @@
+---
+title: "Masters Thesis forester: Time analysis"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    code_folding: hide
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Imports and settings
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(patchwork)
+library(scales)
+library(dplyr)
+library(forcats)
+library(kableExtra)
+library(knitr)
+library(DT)
+library(GGally)
+library(tidyr)
+```
+
+# Data import
+
+```{r}
+duration_train_df      <- readRDS('MSc_processed_results/training_duration.RData')
+duration_preprocessing <- readRDS('MSc_processed_results/preprocessing_duration.RData')
+training_summary_table <- readRDS('MSc_processed_results/training_summary_table.RData')
+testing_summary_table  <- readRDS('MSc_processed_results/testing_summary_table.RData')
+validation_summary_table <- readRDS('MSc_processed_results/validation_summary_table.RData')
+```
+
+## Name changes
+
+As the data comes from the `forester` package in a raw form, in order to prepare plots for the Thesis/paper we rename some values, so they look nicer on plots.
+
+```{r}
+change_factors <- function(dataset, score = FALSE) {
+  dataset$Task_type         <- as.factor(dataset$Task_type)
+  dataset$Task_type         <- fct_recode(dataset$Task_type, 'Binary' = 'binary', 'Multiclass' = 'multiclass', 'Regression' = 'regression')
+  dataset$Feature_selection <- as.factor(dataset$Feature_selection)
+  dataset$Feature_selection <- fct_recode(dataset$Feature_selection, 'None' = 'none', 'VI' = 'VI', 'MCFS' = 'MCFS', 'MI' = 'MI', 'Boruta' = 'BORUTA')
+  dataset$Imputation        <- as.factor(dataset$Imputation)
+  dataset$Imputation        <- fct_recode(dataset$Imputation, 'Median-other' = 'median-other', 'Median-frequency' = 'median-frequency', 'KNN' = 'knn', 'MICE' = 'mice')
+  dataset$Removal           <- as.factor(dataset$Removal)
+  dataset$Removal           <- fct_recode(dataset$Removal, 'Min' = 'removal_min', 'Med' = 'removal_med', 'Max' = 'removal_max')
+  if (score) {
+    dataset$Engine         <- as.factor(dataset$Engine)
+    dataset$Engine         <- fct_recode(dataset$Engine, 'LightGBM' = 'lightgbm', 'CatBoost' = 'catboost', 'Random forest' = 'ranger', 'XGBoost' = 'xgboost', 'Decision tree' = 'decision_tree', 'All' = 'all')
+  }
+  return(dataset)
+}
+
+duration_train_df        <- change_factors(duration_train_df)
+training_summary_table   <- change_factors(training_summary_table, TRUE)
+testing_summary_table    <- change_factors(testing_summary_table, TRUE)
+validation_summary_table <- change_factors(validation_summary_table, TRUE)
+```
+
+# Time analysis
+
+An important aspect of our analysis is the time complexity of different approaches, as extended preprocessing module leads to more time consuming computations, which could be spent for example on training the models. On the other hand, thorough preparation step might result in removing lots of unnecessary columns, so the model should be able to learn faster. Despite the absolute preprocessing time, another important aspect is the relative duration to training time. Ex. if the training takes 1000 seconds than preprocessing lasting 100 is not so much as in the case when training takes 100 seconds. We will work on slightly modified data frame presented below.
+
+```{r}
+duration_df                                 <- duration_train_df
+full_duration                               <- duration_preprocessing$Duration + duration_df$Duration
+duration_df$Preprocessing_duration          <- duration_preprocessing$Duration
+duration_df$Preprocessing_duration_fraction <- round(duration_df$Preprocessing_duration / full_duration, 3)
+duration_df$Full_duration                   <- full_duration
+rmarkdown::paged_table(duration_df)
+```
+
+## Training time preparation
+
+In this section we prepare the data for the analysis of training time.
+
+```{r, echo=FALSE}
+column_fractions <- c()
+max_fields_num   <- c()
+task_type        <- c()
+Columns          <- c()
+datasets         <- unique(training_summary_table$Dataset)
+for (i in 1:length(unique(training_summary_table$Dataset))) {
+  cols <- training_summary_table[training_summary_table$Dataset == datasets[i], 'Columns']
+  rows <- training_summary_table[training_summary_table$Dataset == datasets[i], 'Rows']
+  Columns          <- c(Columns, max(cols))
+  column_fractions <- c(column_fractions, round(min(cols) / max(cols), 2))
+  max_fields_num   <- c(max_fields_num, max(rows) * max(cols))
+  if (i <= 10) {
+    task_type <- c(task_type, 'Binary')
+  } else if (i > 18) {
+    task_type <- c(task_type, 'Regression')
+  } else {
+    task_type <- c(task_type, 'Multiclass')
+  }
+}
+left_columns <- data.frame(Dataset = datasets, Column_fraction = column_fractions, Columns = Columns, 
+                           Max_fields_number = max_fields_num, Task_type = task_type)
+```
+
+```{r}
+left_columns_binary <- left_columns[left_columns$Task_type == 'Binary', ]
+left_columns_binary$Dataset <- as.factor(left_columns_binary$Dataset)
+left_columns_binary$Dataset <- fct_reorder(left_columns_binary$Dataset, left_columns_binary$Max_fields_number)
+
+left_columns_multiclass <- left_columns[left_columns$Task_type == 'Multiclass', ]
+left_columns_multiclass$Dataset <- as.factor(left_columns_multiclass$Dataset)
+left_columns_multiclass$Dataset <- fct_reorder(left_columns_multiclass$Dataset, left_columns_multiclass$Max_fields_number)
+
+left_columns_regression <- left_columns[left_columns$Task_type == 'Regression', ]
+left_columns_regression$Dataset <- as.factor(left_columns_regression$Dataset)
+left_columns_regression$Dataset <- fct_reorder(left_columns_regression$Dataset, left_columns_regression$Max_fields_number)
+
+left_columns <- rbind(left_columns_binary, left_columns_multiclass, left_columns_regression)
+
+duration_df$Dataset <- factor(duration_df$Dataset, levels = levels(left_columns$Dataset))
+```
+
+## Duration preprocessing fixes
+
+Unfortuantely, during the data preparation phase some mistakes occured, thus we have to enhance data quality.
+
+```{r}
+duration_preprocessing$Dataset           <- gsub(' ', '', duration_preprocessing$Dataset)
+duration_preprocessing$Feature_selection <- gsub(' ', '', duration_preprocessing$Feature_selection)
+duration_preprocessing$Imputation        <- gsub(' ', '', duration_preprocessing$Imputation)
+duration_preprocessing$Removal           <- gsub(' ', '', duration_preprocessing$Removal)
+duration_preprocessing$Dataset           <- factor(duration_preprocessing$Dataset, levels = levels(left_columns$Dataset))
+duration_preprocessing                   <- change_factors(duration_preprocessing)
+```
+
+## Plots theme
+
+We define the custom theme for this work, so the adjustments are easier to make.
+
+```{r}
+paper_theme <- function() {
+  theme_minimal() +
+  theme(plot.title    = element_text(colour = 'black', size = 26),
+        plot.subtitle = element_text(colour = 'black', size = 16),
+        axis.title.x  = element_text(colour = 'black', size = 18),
+        axis.title.y  = element_text(colour = 'black', size = 16),
+        axis.text.y   = element_text(colour = "black", size = 16),
+        axis.text.x   = element_text(colour = "black", size = 16),
+        strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ),
+        strip.text.y.right = element_text(angle = 0),
+        legend.title = element_text(colour = 'black', size = 18),
+        legend.text  = element_text(colour = "black", size = 16),
+        strip.text.y.left = element_text(size = 16, angle = 0, hjust = 1))
+}
+```
+
+## Training time
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+a <- ggplot(data = left_columns, aes(color = Task_type, fill = Task_type)) + 
+  geom_segment(aes(x = Columns * column_fractions, xend = Columns, y = Dataset, yend = Dataset)) +
+  geom_point(aes(x = Columns * column_fractions, y = Dataset), size = 3) +
+  geom_point(aes(x = Columns, y = Dataset), size = 3) +
+  labs(title = 'Columns range',
+       subtitle = 'full vs minimal columns',
+       x = 'Number of columns',
+       y = '',
+       color = 'Task type',
+       fill  = 'Task type') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE)  +
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.text.y   = element_blank(),
+        legend.position = "none")
+
+b <- ggplot(data = duration_df, aes(x = Duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  labs(title = 'Training time',
+       subtitle = 'for different ML tasks',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task type',
+       fill  = 'Task type') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE)  + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+
+c <- ggplot(data = left_columns, aes(x = Max_fields_number, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_col(alpha = 0.7) + 
+  labs(title = 'Dataset size',
+       subtitle = 'described as number of fields',
+       x = 'Number of fields',
+       y = '',
+       color = 'Task_type',
+       fill  = 'Task_type') +
+  scale_x_continuous(trans = log2_trans(), 
+                     breaks = trans_breaks('log2', function(x) 2^x),
+                     labels = trans_format('log2', math_format(2^.x))) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.text.y   = element_blank(),
+        legend.position = "none")
+
+(b | a | c) + plot_layout(widths = c(5, 2, 2))
+```
+
+The visualization above presents training duration box-plots for different ML tasks. Each box-plot is based on 38 different preprocessing strategies. An intention behind this analysis is to find out if training times differ significantly depending on the preprocessing strategy used before.
+
+The middle plot presents us the difference between initial number of columns (right dot), and the minimal number of columns after the most harsh preprocessing (left dot).
+
+The x scale on the plots was transformed by applying the log2 in order to easily detect if maximal and minimal values (which are not outliers) differ more than two times. We will say that the training times differ significantly if this min-max ratio is bigger than 2 times.
+
+After considering such definition we can say that training times differ significantly on in 9 of 25 datasets.
+
+It happens for those datasets that have the biggest reduction of columns.
+
+Interestingly, it is not so highly correlated with the initial number of columns being large.
+
+Morover, we can notice that the training time doesn't depend so much on the initial number of fields. Of course biggger tasks (eg. multiclass ones) tend to train longer, but it is not so clear.
+
+## Preprocessing time
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+d <- ggplot(data = duration_df, aes(x = Preprocessing_duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  labs(title = 'Preprocessing time',
+       subtitle = 'for different ML tasks',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task type',
+       fill  = 'Task type') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+(d | a | c) + plot_layout(widths = c(5, 2, 2))
+```
+
+We can notice that the preprocessing of regression tasks lasted the longest, multiclass tasks were roughly in the middle, and the binary classification was the quickest.
+
+We can observe that the time of preprocessing is highly dependent on the dimensionality of considered dataset.
+
+Once more, larger differences of preprocessing time are more visible, when the number of columns is reduced significantly.
+
+Additionally, we can witnes that modfied datasets (with suffix -mod) are less time consuming than their original counterparts.
+
+## Combined time
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+e <- ggplot(data = duration_df, aes(x = Full_duration, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  labs(title = 'Combined preprocessing and training time',
+       subtitle = 'for different ML tasks',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Task type',
+       fill  = 'Task type') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+
+(e | a | c) + plot_layout(widths = c(3, 1, 1))
+```
+
+Finally we want to analyse the combined times of both preprocessing and training. It is crucial as the process of preparing the data and training of models is always connected. The plot shows us that the duration of whole process was shorter for smaller tasks which were mostly the binary classification ones.
+
+We can clearly see that multiclass tasks are the most time consuming, and the regression tasks are in the middle, and binary ones were relatively fast.
+
+## Preprocessing + Training
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+(d | b  + theme(axis.text.y = element_blank(), axis.title.y = element_blank(),)) / guide_area() + plot_layout(guides = "collect") + plot_layout(height = c(1, 0.05)) 
+```
+
+## Time fraction
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+f <- ggplot(data = duration_df, aes(x = Preprocessing_duration_fraction, y = Dataset, color = Task_type, fill = Task_type)) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  labs(title = 'Preprocessing time fraction',
+       subtitle = ' in comparison to full process, for different ML tasks',
+       x = 'Fraction of preprocessing time',
+       y = 'Dataset',
+       color = 'Task type',
+       fill  = 'Task type') +
+  xlim(0, 1) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+
+(f | a | c) + plot_layout(widths = c(3, 1, 1))
+```
+
+Probably even more insightful analysis can be derived from the analysis of fraction of time spent on preprocessing compared to the one of training. Intuitively we can understand that the more on the left is the observation, the shorter the relative preprocessing time.
+
+As we can see for almost every dataset we can witness that some preprocessing options are disproportionately time consuming to the training time, thus comes the conclusion that we always have to be sensitive when it comes to the choice of preprocessing methods.
+
+Quite interestingly, the fractions doesn't depend so much on the number of initial size of the dataset, but the combination of both this and the number of deleted columns. The most interesting cases are although the multiclass tasks, as they tend to get heavily reduced, and whilst maintaining the big sizes their preprocessing should take more time, however due to increadibly long training of models for those tasks, the preprocessing time is not so significant.
+
+## Preprocessing components analysis
+
+It is also extremely important to analyse the execution times depending on different preprocessing strategies. Those times are not only crucial for evaluation of different preprocessing steps, but more importantly let us gain the intuition which steps are time consuming, and which ones are almost cost-free.
+
+### Feature selection impact
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+bool_fs <- duration_df
+bool_fs$Feature_selection <- ifelse(bool_fs$Feature_selection != 'None', 'Yes', 'No')
+
+g <- ggplot(data = bool_fs, aes(x = Preprocessing_duration, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  theme_minimal() + 
+  labs(title = 'Preprocessing time',
+       subtitle = 'for different ML tasks, divided by presence of feature selection',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Is feature selection used?',
+       fill  = 'Is feature selection used?') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+
+
+g1 <- ggplot(data = bool_fs, aes(x = Duration, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  theme_minimal() + 
+  labs(title = 'Training time',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Is feature selection used?',
+       fill  = 'Is feature selection used?') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        axis.text.y   = element_blank(),
+        legend.position = "none")
+
+(g | g1) / guide_area() + plot_layout(guides = "collect") + plot_layout(height = c(1, 0.05)) 
+```
+
+We observe that for the majority of datasets, the preprocessing was much cheaper than the model training, however in some cases it was far from the truth. In the case of the largest datasets, especially from the regression tasks, we can observe a high impact of preprocessing in overall time complexity, which in some cases outlasted the training time a few times. Interestingly, the fractions do not depend so much on the initial size of the dataset, but on the combination of both this and the number of deleted columns. It shows that ML enthusiasts should be careful while designing their preprocessing pipeline.
+
+### No feature selection removal strategies
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+no_fs <- duration_preprocessing[duration_preprocessing$Feature_selection == 'None', ]
+
+h <- ggplot(data = no_fs, aes(x = Duration, y = Dataset, color = factor(Removal), fill = factor(Removal))) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  labs(title = 'Preprocessing time',
+       subtitle = 'for different ML tasks, divided by removal strategy',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Removal strategy',
+       fill  = 'Removal strategy') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+
+h
+```
+
+The results indicate that for each task, the differences between the three strategies are in most cases insignificant. The medium approach is the most time-consistent option, whereas the other two tend to differ a lot. Interestingly, the maximal approach is not always the longest-lasting one, even though it adds more methods than other strategies. We can see, however, that it always lasts longer than the medium variant, which is due to the presence of highly correlated column removal.
+
+### No feature selection Imputation methods
+
+```{r fig.height=10, fig.width=20, echo=FALSE}
+no_fs_imp <- no_fs[no_fs$Dataset %in% c('breast-w', 'credit-approval', "credit-g-mod", "phoneme-mod", "car-mod", "satimage-mod", "elevators-mod", "kin8nm-mod"), ]
+i <- ggplot(data = no_fs_imp, aes(x = Duration, y = Dataset, color = factor(Imputation), fill = factor(Imputation))) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  labs(title = 'Preprocessing time',
+       subtitle = 'for different ML tasks, divided by imputation strategy',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Imputation method',
+       fill  = 'Imputation method') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+
+j <- ggplot(data = no_fs, aes(x = Duration, y = Dataset, color = factor(Imputation), fill = factor(Imputation))) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  labs(title = 'Preprocessing time comparison',
+       subtitle = 'for different ML tasks, divided by imputation strategy',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Imputation method',
+       fill  = 'Imputation method') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+
+i
+```
+
+```{r}
+no_fs_imp_average <- no_fs_imp %>% group_by(Imputation) %>% summarise(Average_duration = round(mean(Duration)))
+no_fs_imp_average
+```
+
+Another factor to analyse is to check the impact of imputation methods on the preprocessing times. We have a wide range of data, as the mod-variants are the original datasets with introduced missing values with completely at random strategy.
+
+The plot above show us that the slowest method is definitely KNN (22s), the second one is MICE (16s), and two fastest ones are median-other (6s) and median-fequency (5s). It is worth noticing that MICE can lead to over 8 times longer preprocessing times, than the fastest method.
+
+```{r fig.height=16, fig.width=20, echo=FALSE}
+j
+```
+
+Additionally, we include the plot for all datasets, as it is interesting to see that the differences are not so significant for the tasks not including missing values.
+
+### Different feature selection methods
+
+```{r fig.height=16, fig.width=20, echo=FALSE}
+only_fs       <- duration_preprocessing[duration_preprocessing$Feature_selection != 'None', ]
+only_fs_niche <- only_fs[only_fs$Feature_selection %in% c('MI', 'MCFS'), ]
+only_fs_top   <- only_fs[only_fs$Feature_selection %in% c('VI', 'Boruta'), ]
+
+k <- ggplot(data = only_fs, aes(x = Duration, y = Dataset, color = factor(Feature_selection), fill = factor(Feature_selection))) + 
+  geom_boxplot(alpha = 0.7, outlier.size = 3) + 
+  labs(title = 'Preprocessing time',
+       subtitle = 'for different ML tasks, divided by feature selection method',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature selection method',
+       fill  = 'Feature selection method') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x), limits = c(NA, 4100)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+k
+```
+
+We can notice significant differences between the execution times of the methods.
+
+Moreover, in general we can say that the duration doesn't differ a lot inside a single FS method.
+
+We want to use that assumptions in order to compare all methods in a more readable way by the comparison of their medians, as the abundance of colors and box-plots is hardly understandable here.
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+datasets <- unique(only_fs$Dataset)
+VI       <- c()
+MCFS     <- c()
+MI       <- c()
+Boruta   <- c()
+
+for (i in unique(only_fs$Dataset)) {
+  ds     <- only_fs[only_fs$Dataset == i, ]
+  VI     <- c(VI,     median(ds[ds$Feature_selection == 'VI',   'Duration']))
+  MCFS   <- c(MCFS,   median(ds[ds$Feature_selection == 'MCFS', 'Duration']))
+  MI     <- c(MI,     median(ds[ds$Feature_selection == 'MI',   'Duration']))
+  Boruta <- c(Boruta, median(ds[ds$Feature_selection == 'Boruta', 'Duration']))
+}
+
+median_fs      <- data.frame(Dataset = datasets, VI = VI, MCFS = MCFS, Boruta = Boruta, MI = MI)
+long_median_fs <- reshape(median_fs, varying = c('MI' ,'VI', 'MCFS', 'Boruta'), v.names = c('Duration'), 
+                          times = c('MI' ,'VI', 'MCFS', 'Boruta'), direction = 'long')
+long_median_fs <- long_median_fs[, 1:3]
+
+rownames(long_median_fs) <- NULL
+colnames(long_median_fs) <- c('Dataset', 'Method', 'Duration')
+
+l <- ggplot(data = long_median_fs, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.7) + 
+  labs(title = 'Preprocessing median time',
+       subtitle = 'for different ML tasks, divided by feature selection method',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature selection method',
+       fill  = 'Feature selection method') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+l
+```
+
+The visualization above clearly indicates that in the forester package we can witness the division between slow and fast feature selection methods, where VI and Boruta are in the first group, whereas, MCFS and MI in the second one. In order to analyse them thoroughly let's create two subplots that separate those two.
+
+```{r fig.height=12, fig.width=20, echo=FALSE}
+long_median_fs_slow <- long_median_fs[long_median_fs$Method %in% c('VI', 'Boruta'), ]
+long_median_fs_fast <- long_median_fs[long_median_fs$Method %in% c('MCFS', 'MI'), ]
+
+m <- ggplot(data = long_median_fs_slow, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.7) + 
+  labs(title = 'Preprocessing median time',
+       subtitle = 'for slow feature selection methods',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature selection method',
+       fill  = 'Feature selection method') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y   = element_blank(),
+        legend.position = "bottom")
+
+n <- ggplot(data = long_median_fs_fast, aes(x = Duration, y = Dataset, color = factor(Method), fill = factor(Method))) + 
+  geom_point(size = 5, alpha = 0.7) + 
+  labs(title = 'Preprocessing median time',
+       subtitle = 'for fast feature selection methods',
+       x = 'Duration [s]',
+       y = 'Dataset',
+       color = 'Feature selection method',
+       fill  = 'Feature selection method') +
+  scale_x_continuous(trans = log2_trans(), breaks = trans_breaks('log2', function(x) 2^x)) +
+  annotation_logticks(base = 2, scaled = TRUE) + 
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968","#74533d",  "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.text.y   = element_blank(),
+        axis.title.y  = element_blank(),
+        legend.position = "bottom")
+m | n
+```
+
+This time we can easily distinguish which preprocessing methods are faster and slower among considered pairs.
+
+In the case of less time-demanding ones presented on the right plot, almost every time MCFS method is faster than MI, and in some cases the differences are significant as they can reach up to 16 times difference.
+
+For the slow methods VI is always the most time consuming, and Boruta is the second one. The differences are however pretty significant every time.
+
+Summing up, the order from fastest to slowest feature selection method is: MCFS, MI, Boruta, VI with average preprocessing times equal to 11s, 16s, 133s (\~3 mins), and 480s (\~8 mins).
+
+```{r}
+only_fs_average <- only_fs %>% group_by(Feature_selection) %>% summarise(Average_duration = round(mean(Duration)))
+only_fs_average
+```
+
+## Summary
+
+1.  The major time differences depend on the number of columns after preprocessing, not the initial number of columns,
+2.  Training time does not depend much on the dataset size,
+3.  Preprocessing time is highly dependent on the dimensionality of the considered dataset,
+4.  Multiclass tasks are the most time-consuming, regression tasks are in the middle, and binary ones are relatively fast,
+5.  Although for the majority of datasets, the preprocessing time is not so demanding for the largest tasks, the preprocessing can be disproportionately time-consuming,
+6.  The most time-consuming part is feature selection, as in some cases it may last even 32\~times longer than the ones without them,
+7.  The order from fastest to slowest feature selection method is: MCFS, MI, Boruta, VI with average preprocessing times equal to 11s, 16s, 133s ($\sim$ 2 minutes), and 480s ($\sim$ 8 minutes),
+8.  With the right choices made, feature selection can be reasonably fast,
+9.  We can ignore differences in preprocessing times for removal strategies, as the results are fairly similar and short,
+10. The slowest method is KNN, the second one is MICE, and the two fastest ones are median-other and median-frequency.

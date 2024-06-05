@@ -1,0 +1,1250 @@
+---
+title: "Masters Thesis forester: Performance analysis"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    code_folding: hide
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Imports and settings
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(patchwork)
+library(scales)
+library(dplyr)
+library(forcats)
+library(kableExtra)
+library(knitr)
+library(DT)
+library(GGally)
+library(tidyr)
+```
+
+# Data import
+
+```{r}
+duration_train_df        <- readRDS('MSc_processed_results/training_duration.RData')
+training_summary_table   <- readRDS('MSc_processed_results/training_summary_table.RData')
+testing_summary_table    <- readRDS('MSc_processed_results/testing_summary_table.RData')
+validation_summary_table <- readRDS('MSc_processed_results/validation_summary_table.RData')
+```
+
+# Name changes
+
+As the data comes from the `forester` package in a raw form, in order to prepare plots for the Thesis/paper we rename some values, so they look nicer on plots.
+
+```{r}
+change_factors <- function(dataset, score = FALSE) {
+  dataset$Task_type                 <- as.factor(dataset$Task_type)
+  dataset$Task_type                 <- fct_recode(dataset$Task_type, 'Binary' = 'binary', 'Multiclass' = 'multiclass', 'Regression' = 'regression')
+  dataset$Feature_selection         <- as.factor(dataset$Feature_selection)
+  dataset$Feature_selection         <- fct_recode(dataset$Feature_selection, 'None' = 'none', 'VI' = 'VI', 'MCFS' = 'MCFS', 'MI' = 'MI', 'Boruta' = 'BORUTA')
+  dataset$Imputation                <- as.factor(dataset$Imputation)
+  dataset$Imputation                <- fct_recode(dataset$Imputation, 'Median-other' = 'median-other', 'Median-frequency' = 'median-frequency', 'KNN' = 'knn', 'MICE' = 'mice')
+  dataset$Removal                   <- as.factor(dataset$Removal)
+  dataset$Removal                   <- fct_recode(dataset$Removal, 'Min' = 'removal_min', 'Med' = 'removal_med', 'Max' = 'removal_max')
+  if (score) {
+    dataset$Engine         <- as.factor(dataset$Engine)
+    dataset$Engine         <- fct_recode(dataset$Engine, 'LightGBM' = 'lightgbm', 'CatBoost' = 'catboost', 'Random forest' = 'ranger', 'XGBoost' = 'xgboost', 'Decision tree' = 'decision_tree', 'All' = 'all')
+  }
+  return(dataset)
+}
+
+duration_train_df        <- change_factors(duration_train_df)
+training_summary_table   <- change_factors(training_summary_table, TRUE)
+testing_summary_table    <- change_factors(testing_summary_table, TRUE)
+validation_summary_table <- change_factors(validation_summary_table, TRUE)
+```
+
+# Paper theme
+
+We define the custom theme for this work, so the adjustments are easier to make.
+
+```{r}
+paper_theme <- function() {
+  theme_minimal() +
+  theme(plot.title    = element_text(colour = 'black', size = 26),
+        plot.subtitle = element_text(colour = 'black', size = 16),
+        axis.title.x  = element_text(colour = 'black', size = 18),
+        axis.title.y  = element_text(colour = 'black', size = 16),
+        axis.text.y   = element_text(colour = "black", size = 16),
+        axis.text.x   = element_text(colour = "black", size = 16),
+        strip.background = element_rect(fill = "white", color = "white"),
+        strip.text = element_text(size = 6 ),
+        strip.text.y.right = element_text(angle = 0),
+        legend.title = element_text(colour = 'black', size = 18),
+        legend.text  = element_text(colour = "black", size = 16),
+        strip.text.y.left = element_text(size = 16, angle = 0, hjust = 1))
+}
+```
+
+# Results
+
+## Data preparation
+
+In this section we preprare the data for the majority of analysis. We will focus on validation results only, and the aggregations are made for all of engines. We also calculate the baselines, which are defined as a preprocessing strategy which has minimal removal strategy, median-other imputation, and lack of feature selection methods.
+
+```{r, echo=FALSE}
+all_engines               <- validation_summary_table[validation_summary_table$Engine == 'All', ]
+
+all_engines_bin           <- all_engines[all_engines$Task_type == 'Binary' & all_engines$Metric == 'accuracy', ]
+all_engines_mcl           <- all_engines[all_engines$Task_type == 'Multiclass' & all_engines$Metric == 'accuracy', ]
+all_engines_reg           <- all_engines[all_engines$Task_type == 'Regression' & all_engines$Metric == 'r2', ]
+
+all_engines_bin_baselines <- all_engines_bin[which(all_engines_bin$Removal =='Min' & 
+                                                   all_engines_bin$Imputation =='Median-other' & 
+                                                   all_engines_bin$Feature_selection =='None'), ]
+all_engines_mcl_baselines <- all_engines_mcl[which(all_engines_mcl$Removal =='Min' & 
+                                                   all_engines_mcl$Imputation =='Median-other' & 
+                                                   all_engines_mcl$Feature_selection =='None'), ]
+all_engines_reg_baselines <- all_engines_reg[which(all_engines_reg$Removal =='Min' & 
+                                                   all_engines_reg$Imputation =='Median-other' & 
+                                                   all_engines_reg$Feature_selection =='None'), ]
+```
+
+```{r}
+all_engines_bin_baselines$Fields <- all_engines_bin_baselines$Rows * all_engines_bin_baselines$Columns
+all_engines_mcl_baselines$Fields <- all_engines_mcl_baselines$Rows * all_engines_mcl_baselines$Columns
+all_engines_reg_baselines$Fields <- all_engines_reg_baselines$Rows * all_engines_reg_baselines$Columns
+
+all_engines_bin_baselines$Dataset <- as.factor(all_engines_bin_baselines$Dataset)
+all_engines_bin_baselines$Dataset <- fct_reorder(all_engines_bin_baselines$Dataset, all_engines_bin_baselines$Fields)
+
+all_engines_mcl_baselines$Dataset <- as.factor(all_engines_mcl_baselines$Dataset)
+all_engines_mcl_baselines$Dataset <- fct_reorder(all_engines_mcl_baselines$Dataset, all_engines_mcl_baselines$Fields)
+
+all_engines_reg_baselines$Dataset <- as.factor(all_engines_reg_baselines$Dataset)
+all_engines_reg_baselines$Dataset <- fct_reorder(all_engines_reg_baselines$Dataset, all_engines_reg_baselines$Fields)
+
+all_engines_baselines <- rbind(all_engines_bin_baselines, all_engines_mcl_baselines, all_engines_reg_baselines)
+```
+
+## Automated preprocessibility function
+
+The next step is the definition of function calculating the preprocessibility value. Preprocessibility measures how much a preprocessing strategies improve the outcomes in comparison to the baseline. We divide it into positive, and negative preprocessibility, where the first one describes the positive impact, and the second the negative one. The positive is caluclated as `max(Maximum - Baseline, 0)`, whereas the negative one as `max(Maximum - Baseline, 0)`.
+
+The function also calculates the amount of times when we get scores better, equal or worse than the baseline. There are also 3 different scearios in which we can use the function with different grouping complexities.
+
+```{r message=FALSE, warning=FALSE}
+calculate_preprocessibility <- function(data, baselines, grouping, grouping2 = NULL) {
+  if (is.null(grouping)) {
+    preprocessibility <- data %>% 
+      left_join(baselines, by = 'Dataset') %>%
+      rename(Baseline = Max.y, Max = Max.x, Min = Min.x, Task_type = Task_type.x) %>%
+      mutate(Win  = ifelse(Max > Baseline,  1, 0)) %>%
+      mutate(Lose = ifelse(Max < Baseline,  1, 0)) %>%
+      mutate(Tie  = ifelse(Max == Baseline, 1, 0)) %>%
+      group_by(Dataset) %>%
+      summarise(Minimum = round(min(Max), 4),
+                Maximum = round(max(Max), 4),
+                Wins    = sum(Win),
+                Loses   = sum(Lose),
+                Ties    = sum(Tie),
+                Baseline = round(mean(Baseline), 4),
+                Win   = round(min(max((Wins  / (Wins + Loses + Ties)), 0), 1), 5),
+                Loss  = round(min(max((Loses / (Wins + Loses + Ties)), 0), 1), 5),
+                Tie   = round(min(max((Ties  / (Wins + Loses + Ties)), 0), 1), 5),
+                Postive_preprocessibility  = round(max(Maximum - Baseline, 0), 5),
+                Negative_preprocessibility = round(min(Minimum - Baseline, 0), 5)) %>%
+      select(Dataset, Maximum, Minimum, Baseline, Postive_preprocessibility, Negative_preprocessibility, Wins, Loses, Ties, Win, Loss, Tie) %>%
+      left_join(baselines, by = 'Dataset') %>%
+      select(Dataset, Task_type, Maximum, Minimum, Baseline, Postive_preprocessibility, Negative_preprocessibility, Wins, Loses, Ties, Win, Loss, Tie, Fields)
+    preprocessibility$Dataset <- as.factor(preprocessibility$Dataset)
+    preprocessibility$Dataset <- fct_reorder(preprocessibility$Dataset, preprocessibility$Fields)
+  } else if (is.null(grouping2)) {
+    preprocessibility <- data %>% 
+      left_join(baselines, by = 'Dataset') %>%
+      rename(Baseline = Max.y, Max = Max.x, Min = Min.x, Task_type = Task_type.x, 
+             grouping = paste0(grouping, '.x')) %>%
+      mutate(Win  = ifelse(Max > Baseline,  1, 0)) %>%
+      mutate(Lose = ifelse(Max < Baseline,  1, 0)) %>%
+      mutate(Tie  = ifelse(Max == Baseline, 1, 0)) %>%
+      group_by(Dataset, grouping) %>%
+      summarise(Minimum = round(min(Max), 4),
+                Maximum = round(max(Max), 4),
+                Wins    = sum(Win),
+                Loses   = sum(Lose),
+                Ties    = sum(Tie),
+                Baseline = round(mean(Baseline), 4),
+                Win   = round(min(max((Wins  / (Wins + Loses + Ties)), 0), 1), 5),
+                Loss  = round(min(max((Loses / (Wins + Loses + Ties)), 0), 1), 5),
+                Tie   = round(min(max((Ties  / (Wins + Loses + Ties)), 0), 1), 5),
+                Postive_preprocessibility  = round(max(Maximum - Baseline, 0), 5),
+                Negative_preprocessibility = round(min(Minimum - Baseline, 0), 5)) %>%
+      select(Dataset, Maximum, Minimum, Baseline, Postive_preprocessibility, Negative_preprocessibility, Wins, Loses, Ties, Win, Loss, Tie, grouping) %>%
+      left_join(baselines, by = 'Dataset') %>%
+      select(Dataset, Task_type, Maximum, Minimum, Baseline, Postive_preprocessibility, Negative_preprocessibility, Wins, Loses, Ties, Win, Loss, Tie, Fields, grouping)
+    preprocessibility$Dataset <- as.factor(preprocessibility$Dataset)
+    preprocessibility$Dataset <- fct_reorder(preprocessibility$Dataset, preprocessibility$Fields)
+  } else {
+    preprocessibility <- data %>% 
+      left_join(baselines, by = 'Dataset') %>%
+      rename(Baseline = Max.y, Max = Max.x, Min = Min.x, Task_type = Task_type.x, 
+             grouping = paste0(grouping, '.x'), grouping2 = paste0(grouping2, '.x')) %>%
+      mutate(Win  = ifelse(Max > Baseline,  1, 0)) %>%
+      mutate(Lose = ifelse(Max < Baseline,  1, 0)) %>%
+      mutate(Tie  = ifelse(Max == Baseline, 1, 0)) %>%
+      group_by(Dataset, grouping, grouping2) %>%
+      summarise(Minimum = round(min(Max), 4),
+                Maximum = round(max(Max), 4),
+                Wins    = sum(Win),
+                Loses   = sum(Lose),
+                Ties    = sum(Tie),
+                Baseline = round(mean(Baseline), 4),
+                Win   = round(min(max((Wins  / (Wins + Loses + Ties)), 0), 1), 5),
+                Loss  = round(min(max((Loses / (Wins + Loses + Ties)), 0), 1), 5),
+                Tie   = round(min(max((Ties  / (Wins + Loses + Ties)), 0), 1), 5),
+                Postive_preprocessibility  = round(max(Maximum - Baseline, 0), 5),
+                Negative_preprocessibility = round(min(Minimum - Baseline, 0), 5)) %>%
+      select(Dataset, Maximum, Minimum, Baseline, Postive_preprocessibility, Negative_preprocessibility, Wins, Loses, Ties, Win, Loss, Tie, grouping, grouping2) %>%
+      left_join(baselines, by = 'Dataset') %>%
+      select(Dataset, Task_type, Maximum, Minimum, Baseline, Postive_preprocessibility, Negative_preprocessibility, Wins, Loses, Ties, Win, Loss, Tie, Fields, grouping, grouping2)
+    preprocessibility$Dataset <- as.factor(preprocessibility$Dataset)
+    preprocessibility$Dataset <- fct_reorder(preprocessibility$Dataset, preprocessibility$Fields)
+  }
+  return(preprocessibility)
+}
+datatable(calculate_preprocessibility(all_engines_mcl, all_engines_mcl_baselines, 'Imputation', 'Removal'), width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+## All Models
+
+In this case we calculate the results for all models.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+preprocessibility_bin <- calculate_preprocessibility(all_engines_bin, all_engines_bin_baselines, NULL)
+preprocessibility_mcl <- calculate_preprocessibility(all_engines_mcl, all_engines_mcl_baselines, NULL)
+preprocessibility_reg <- calculate_preprocessibility(all_engines_reg, all_engines_reg_baselines, NULL)
+
+preprocessibility <- rbind(preprocessibility_bin, preprocessibility_mcl, preprocessibility_reg)
+datatable(preprocessibility, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=12, fig.width=20, echo=FALSE, warning=FALSE}
+a <- ggplot(data = preprocessibility, aes(color = Task_type, fill = Task_type)) + 
+  geom_segment(aes(x = Maximum, xend = Minimum, y = Dataset, yend = Dataset), size = 1) +
+  geom_point(aes(x = Maximum, y = Dataset), size = 4) +
+  geom_point(aes(x = Minimum, y = Dataset), size = 4) +
+  geom_point(aes(x = Baseline, y = Dataset), shape = 13, size = 7) +
+  labs(title = 'Performance range',
+       subtitle = 'X-mark stands for baseline preprocessing \nAccuracy for clasification, R2 for regression',
+       x = 'Accuracy / R2',
+       y = 'Dataset',
+       color = 'Task type',
+       fill  = 'Task type') +
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y = element_blank(),
+        legend.position = "bottom")
+
+b <- ggplot(data = preprocessibility, aes(color = Task_type, fill = Task_type)) + 
+  geom_segment(aes(x = Postive_preprocessibility, xend = Negative_preprocessibility, y = Dataset, yend = Dataset), size = 1) +
+  geom_point(aes(x = Postive_preprocessibility, y = Dataset), size = 4) +
+  geom_point(aes(x = Negative_preprocessibility, y = Dataset), size = 4) +
+  labs(title = 'Preprocessibility',
+       subtitle = 'Left marker for negative \nRight for positive',
+       x = 'Preprocessibility',
+       y = 'Dataset') +
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y= element_blank(),
+        axis.text.y  = element_blank(),
+        legend.position = "none")
+
+c <- ggplot(data = tidyr::pivot_longer(preprocessibility, cols = c(Loss, Tie, Win)), aes(color = name, fill = name)) +
+  geom_bar(aes(x = value, y = Dataset), stat = 'identity') +
+  labs(title = 'Comparison to baseline',
+       subtitle = 'For each preprocessing strategy',
+       x = 'Fraction',
+       y = 'Dataset',
+       color = 'Result',
+       fill  = 'Result') +
+  paper_theme() +
+    #scale_color_manual(values = c("#f97c7c", "#e2e2e2", "#ededaf")) +
+    #scale_fill_manual(values =  c("#f97c7c", "#e2e2e2", "#fcfcda")) +
+    scale_color_manual(values = c("#FF6B6B", "#889696", "#C3EB78")) +
+    scale_fill_manual(values =  c("#FF6B6B", "#889696", "#C3EB78")) +
+  theme(axis.title.y = element_blank(),
+        axis.text.y  = element_blank(),
+        legend.position = "bottom")
+
+a | b | c
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+calcualte_stats <- function(preprocessibility, verbose = FALSE) {
+  percentage_of_wins  <- round(sum(preprocessibility$Wins)  / (sum(preprocessibility$Wins) + sum(preprocessibility$Loses) + sum(preprocessibility$Ties)), 3)
+  percentage_of_ties  <- round(sum(preprocessibility$Ties)  / (sum(preprocessibility$Wins) + sum(preprocessibility$Loses) + sum(preprocessibility$Ties)), 3)
+  percentage_of_loses <- round(sum(preprocessibility$Loses) / (sum(preprocessibility$Wins) + sum(preprocessibility$Loses) + sum(preprocessibility$Ties)), 3)
+  
+  postive_preprocessibility_count  <- sum(preprocessibility$Postive_preprocessibility > 0)
+  neutral_preprocessibility_count  <- nrow(preprocessibility[preprocessibility$Postive_preprocessibility == 0 & 
+                                                            preprocessibility$Negative_preprocessibility == 0, ])
+  negative_preprocessibility_count <- sum(preprocessibility$Negative_preprocessibility < 0)
+  
+  postive_preprocessibility_mean   <- round(mean(abs(preprocessibility$Postive_preprocessibility)), 3)
+  negative_preprocessibility_mean  <- round(mean(abs(preprocessibility$Negative_preprocessibility)), 3)
+  
+  if (verbose) {
+    cat('Percentage of wins: ', percentage_of_wins,  '\n')
+    cat('Percentage of ties: ', percentage_of_ties,  '\n')
+    cat('Percentage of loses:', percentage_of_loses, '\n\n')
+    
+    cat('Positive preprocessibility count:', postive_preprocessibility_count,  '\n')
+    cat('Neutral  preprocessibility count:', neutral_preprocessibility_count,  '\n')
+    cat('Negative preprocessibility count:', negative_preprocessibility_count, '\n\n')
+    
+    cat('Positive preprocessibility mean:', postive_preprocessibility_mean,  '\n')
+    cat('Negative preprocessibility mean:', negative_preprocessibility_mean, '\n')
+  }
+  
+  df <- data.frame(Percentage_of_wins  = percentage_of_wins,
+                   Percentage_of_ties  = percentage_of_ties,
+                   Percentage_of_loses = percentage_of_loses,
+                   Postive_preprocessibility_count  = postive_preprocessibility_count,
+                   Neutral_preprocessibility_count  = neutral_preprocessibility_count,
+                   Negative_preprocessibility_count = negative_preprocessibility_count,
+                   Postive_preprocessibility_mean   = postive_preprocessibility_mean,
+                   Negative_preprocessibility_mean  = negative_preprocessibility_mean)
+  return(df)
+}
+
+stats_preprocessibility <- calcualte_stats(preprocessibility, TRUE)
+```
+
+Overall performance across all preprocessing methods in most cases doesn't lead to any improvement.
+
+In 15.5% of cases, performance was improved, while in 28% diminished in comparison to baseline.
+
+The improvements were also smaller than the degradations. (0.01 vs 0.05).
+
+It shows that majority (57%) of preprocessing methods seem to be redundant, yet the rest (43%) have impact on the outcomes, thus we should investigate that.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+a <- ggplot(data = preprocessibility) + 
+  geom_boxplot(aes(x = Postive_preprocessibility, y = Task_type), alpha = 0.5) +
+  geom_point(aes(x = Postive_preprocessibility, y = Task_type), size = 3) +
+  labs(x = 'Value',
+       y = 'Dataset',
+       color = 'Is FS used?',
+       fill  = 'Is FS used?') +
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        legend.position = "bottom")
+
+b <- ggplot(data = preprocessibility) + 
+  geom_boxplot(aes(x = Negative_preprocessibility, y = Task_type), alpha = 0.5) +
+  geom_point(aes(x = Negative_preprocessibility, y = Task_type), size = 3) +
+  labs(title = 'Tunability aggregated by task type',
+       subtitle = 'calculated for all strategies, divied by FS usage',
+       x = 'Value',
+       y = 'Dataset',
+       color = 'Is FS used?',
+       fill  = 'Is FS used?') +
+  paper_theme() +
+  scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "bottom")
+
+b | a
+```
+
+## Feature Selection Impact
+
+In this case we calculate the results depeding on the fact, whether we use feature selectio metods or not.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+all_engines_bin_fs <- all_engines_bin
+all_engines_bin_fs$Feature_selection <- ifelse(all_engines_bin_fs$Feature_selection != 'None', 'Yes', 'No')
+all_engines_mcl_fs <- all_engines_mcl
+all_engines_mcl_fs$Feature_selection <- ifelse(all_engines_mcl_fs$Feature_selection != 'None', 'Yes', 'No')
+all_engines_reg_fs <- all_engines_reg
+all_engines_reg_fs$Feature_selection <- ifelse(all_engines_reg_fs$Feature_selection != 'None', 'Yes', 'No')
+
+preprocessibility_bin_fs <- calculate_preprocessibility(all_engines_bin_fs, all_engines_bin_baselines, 'Feature_selection')
+preprocessibility_mcl_fs <- calculate_preprocessibility(all_engines_mcl_fs, all_engines_mcl_baselines, 'Feature_selection')
+preprocessibility_reg_fs <- calculate_preprocessibility(all_engines_reg_fs, all_engines_reg_baselines, 'Feature_selection')
+preprocessibility_fs <- rbind(preprocessibility_bin_fs, preprocessibility_mcl_fs, preprocessibility_reg_fs)
+datatable(preprocessibility_fs, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=16, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot <- function(data, grouping_name = 'grouping') {
+  a <- ggplot(data = data, aes(color = grouping, fill = grouping)) + 
+    geom_segment(aes(x = Maximum, xend = Minimum, y = grouping, yend = grouping), size = 1) +
+    geom_point(aes(x = Maximum, y = grouping), size = 4) +
+    geom_point(aes(x = Minimum, y = grouping), size = 4) +
+    geom_point(aes(x = Baseline, y = grouping), shape = 13, size = 7) +
+    labs(title = 'Performance range',
+         subtitle = 'X-mark stands for baseline preprocessing \nAccuracy for clasification, R2 for regression',
+         x = 'Accuracy / R2',
+         y = 'Dataset',
+         color = grouping_name,
+         fill  = grouping_name) +
+    paper_theme() +
+    scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+    scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+    theme(axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          legend.position = "bottom") +
+    facet_wrap(~fct_rev(Dataset), ncol = 1, switch = 'y', dir = 'v', strip.position = 'right') +
+    theme(panel.spacing = unit(0.5, "lines"))
+  
+  b <- ggplot(data = data, aes(color = grouping, fill = grouping)) + 
+    geom_segment(aes(x = Postive_preprocessibility, xend = Negative_preprocessibility, y = grouping, yend = grouping), size = 1) +
+    geom_point(aes(x = Postive_preprocessibility, y = grouping), size = 4) +
+    geom_point(aes(x = Negative_preprocessibility, y = grouping), size = 4) +
+    labs(title = 'Preprocessibility',
+         subtitle = 'Left marker for negative \nRigth for positive',
+         x = 'Preprocessibility',
+         y = 'Dataset',
+         color = grouping_name,
+         fill  = grouping_name) +
+    paper_theme() +
+    scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+    scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+    theme(axis.title.y= element_blank(),
+          axis.text.y  = element_blank(),
+          legend.position = "none") +
+    facet_wrap(~fct_rev(Dataset), ncol = 1, switch = 'y', dir = 'v', strip.position = 'right') +
+    theme(strip.text.y.left = element_blank(),
+          panel.spacing = unit(0.5, "lines"))
+  
+  c <- ggplot(data = tidyr::pivot_longer(data, cols = c(Loss, Tie, Win)), aes(color = name, fill = name)) +
+    geom_bar(aes(x = value, y = grouping), stat = 'identity') +
+    labs(title = 'Comparison to baseline',
+         subtitle = 'For each preprocessing strategy',
+         x = 'Fraction',
+         y = 'Dataset',
+         color = 'Result',
+         fill  = 'Result') +
+    paper_theme() +
+    #scale_color_manual(values = c("#f97c7c", "#e2e2e2", "#ededaf")) +
+    #scale_fill_manual(values =  c("#f97c7c", "#e2e2e2", "#fcfcda")) +
+    scale_color_manual(values = c("#FF6B6B", "#889696", "#C3EB78")) +
+    scale_fill_manual(values =  c("#FF6B6B", "#889696", "#C3EB78")) +
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y  = element_blank(),
+          legend.position = "bottom") +
+    facet_wrap(~fct_rev(Dataset), ncol = 1, switch = 'y', dir = 'v', strip.position = 'right') +
+    theme(strip.text.y.left = element_blank(),
+          panel.spacing = unit(0.5, "lines"))
+  
+  a | b | c
+}
+
+detailed_plot(preprocessibility_fs, 'Is Feature Selection used?')
+
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+stats_preprocessibility_fs_yes <- calcualte_stats(preprocessibility_fs[preprocessibility_fs$grouping == 'Yes', ])
+stats_preprocessibility_fs_no  <- calcualte_stats(preprocessibility_fs[preprocessibility_fs$grouping == 'No', ])
+stats_preprocessibility_fs     <- rbind(stats_preprocessibility_fs_yes, stats_preprocessibility_fs_no)
+rownames(stats_preprocessibility_fs) <- c('FS', 'No FS')
+kable(t(stats_preprocessibility_fs))
+```
+
+The most influential aspect of the preprocessing is the feature selection.
+
+If we use such methods, only 49% of times we achieved ties, whereas when it wasn't used it was 71%.
+
+However it doesn't necessary mean that the changes are for the better, as percentage of grows from 12% to 17%, but the degradations from 17% to 34%.
+
+Additionally, the mean positive preprocessibility grows from 0.006 to 0.009, but the negative one grows from 0.013 to 0.47.
+
+It shows that feature selection is powerful tool, but it should be used with caution.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+
+aggregated_plot <- function(data, grouping_name = 'grouping', aggregation = 'aggregation', line = 0.05) {
+  a <- ggplot(data = data, aes(color = grouping, fill = grouping)) + 
+    geom_boxplot(aes(x = Negative_preprocessibility, y = Task_type), alpha = 0.7, outlier.size = 5) +
+    geom_vline(xintercept = -line, linetype = 'dashed', color = '#7C843C', linewidth = 1) +
+    labs(title = 'Preprocessibility distribution ',
+         subtitle = paste0('aggregated by task type, and grouped by ', aggregation),
+         x = 'Negative preprocessibility',
+         y = 'Dataset',
+         color = grouping_name,
+         fill  = grouping_name) +
+    paper_theme() +
+    scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+    scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+    theme(axis.title.y = element_blank(),
+          legend.position = "bottom")
+  
+  b <- ggplot(data = data, aes(color = grouping, fill = grouping)) + 
+    geom_boxplot(aes(x = Postive_preprocessibility, y = Task_type), alpha = 0.7, outlier.size = 5) +
+    geom_vline(xintercept = line, linetype = 'dashed', color = '#7C843C', linewidth = 1) +
+    labs(x = 'Positive preprocessibility',
+         y = 'Dataset',
+         color = grouping_name,
+         fill  = grouping_name) +
+    paper_theme() +
+    scale_color_manual(values = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+    scale_fill_manual(values  = c("#afc968", "#74533d", "#7C843C", "#B1805B", '#D6E29C')) +
+    xlim(0, line) +
+    theme(axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          legend.position = "bottom")
+  
+  
+  (a | b) / guide_area() + plot_layout(guides = "collect") + plot_layout(height = c(1, 0.05)) 
+}
+
+aggregated_plot(preprocessibility_fs, 'Is Feature selection used?', 'feature selection usage')
+
+```
+
+## Removal Impact
+
+In this case we calculate the results depeding on which removal strategy we use.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+preprocessibility_bin_rm <- calculate_preprocessibility(all_engines_bin, all_engines_bin_baselines, 'Removal')
+preprocessibility_mcl_rm <- calculate_preprocessibility(all_engines_mcl, all_engines_mcl_baselines, 'Removal')
+preprocessibility_reg_rm <- calculate_preprocessibility(all_engines_reg, all_engines_reg_baselines, 'Removal')
+preprocessibility_rm <- rbind(preprocessibility_bin_rm, preprocessibility_mcl_rm, preprocessibility_reg_rm)
+datatable(preprocessibility_rm, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=16, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(preprocessibility_rm, 'Removal strategy')
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+stats_preprocessibility_rm_min <- calcualte_stats(preprocessibility_rm[preprocessibility_rm$grouping == 'Min', ])
+stats_preprocessibility_rm_med <- calcualte_stats(preprocessibility_rm[preprocessibility_rm$grouping == 'Med', ])
+stats_preprocessibility_rm_max <- calcualte_stats(preprocessibility_rm[preprocessibility_rm$grouping == 'Max', ])
+
+stats_preprocessibility_rm <- rbind(stats_preprocessibility_rm_min, stats_preprocessibility_rm_med, stats_preprocessibility_rm_max)
+rownames(stats_preprocessibility_rm) <- c('Min', 'Med', 'Max')
+knitr::kable(t(stats_preprocessibility_rm))
+```
+
+The general comparison of removal options on all datasets, shows us only that the maximal strategy with highly correlated features removal is the least neutral one, but its effects are in most cases negative. The minimal, and medium approaches seems to be much better.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(preprocessibility_rm, 'Removal strategy', 'removal strategy')
+```
+
+## Removal impact without FS
+
+In this case we calculate the results depeding on which removal strategy we use, additionally we include only strategies without feature selection methods.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+preprocessibility_bin_rm_no_fs <- calculate_preprocessibility(all_engines_bin[all_engines_bin$Feature_selection == 'None', ], all_engines_bin_baselines, 'Removal')
+preprocessibility_mcl_rm_no_fs <- calculate_preprocessibility(all_engines_mcl[all_engines_mcl$Feature_selection == 'None', ], all_engines_mcl_baselines, 'Removal')
+preprocessibility_reg_rm_no_fs <- calculate_preprocessibility(all_engines_reg[all_engines_reg$Feature_selection == 'None', ], all_engines_reg_baselines, 'Removal')
+preprocessibility_rm_no_fs <- rbind(preprocessibility_bin_rm_no_fs, preprocessibility_mcl_rm_no_fs, preprocessibility_reg_rm_no_fs)
+datatable(preprocessibility_rm_no_fs, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=20, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(preprocessibility_rm_no_fs, 'Removal strategy')
+```
+
+### Stats
+
+```{r}
+stats_preprocessibility_rm_no_fs_min <- calcualte_stats(preprocessibility_rm_no_fs[preprocessibility_rm_no_fs$grouping == 'Min', ])
+stats_preprocessibility_rm_no_fs_med <- calcualte_stats(preprocessibility_rm_no_fs[preprocessibility_rm_no_fs$grouping == 'Med', ])
+stats_preprocessibility_rm_no_fs_max <- calcualte_stats(preprocessibility_rm_no_fs[preprocessibility_rm_no_fs$grouping == 'Max', ])
+
+stats_preprocessibility_rm_no_fs <- rbind(stats_preprocessibility_rm_no_fs_min, stats_preprocessibility_rm_no_fs_med, stats_preprocessibility_rm_no_fs_max)
+rownames(stats_preprocessibility_rm_no_fs) <- c('Min', 'Med', 'Max')
+knitr::kable(t(stats_preprocessibility_rm_no_fs))
+```
+
+The comparison of results without feature selection is more interesting.
+
+Firstly, it shows that removal options are relatively safe, as the percentage of ties is the highest, and the percentage of loses is the lowest.
+
+We can also observe, that the more complex strategy we use, the less ties we get, and the more wins and loses.
+
+Additionally, we can witness that maximal strategy leads to a massive number of poor results, as the negative preprocessibility, and percentage of looses are the highest. It proves that we should not remove highly correlated features.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(preprocessibility_rm_no_fs, 'Removal strategy', 'removal strategy')
+```
+
+## Removal impact with only FS
+
+In this case we calculate the results depeding on which removal strategy we use, additioanlyl we include only the methods that use feature selection.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+preprocessibility_bin_rm_fs <- calculate_preprocessibility(all_engines_bin[all_engines_bin$Feature_selection != 'None', ], all_engines_bin_baselines, 'Removal')
+preprocessibility_mcl_rm_fs <- calculate_preprocessibility(all_engines_mcl[all_engines_mcl$Feature_selection != 'None', ], all_engines_mcl_baselines, 'Removal')
+preprocessibility_reg_rm_fs <- calculate_preprocessibility(all_engines_reg[all_engines_reg$Feature_selection != 'None', ], all_engines_reg_baselines, 'Removal')
+preprocessibility_rm_fs <- rbind(preprocessibility_bin_rm_fs, preprocessibility_mcl_rm_fs, preprocessibility_reg_rm_fs)
+datatable(preprocessibility_rm_fs, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=16, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(preprocessibility_rm_fs, 'Removal strategy')
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+stats_preprocessibility_rm_fs_min <- calcualte_stats(preprocessibility_rm_fs[preprocessibility_rm_fs$grouping == 'Min', ])
+stats_preprocessibility_rm_fs_med <- calcualte_stats(preprocessibility_rm_fs[preprocessibility_rm_fs$grouping == 'Med', ])
+stats_preprocessibility_rm_fs_max <- calcualte_stats(preprocessibility_rm_fs[preprocessibility_rm_fs$grouping == 'Max', ])
+
+stats_preprocessibility_rm_fs <- rbind(stats_preprocessibility_rm_fs_min, stats_preprocessibility_rm_fs_med, stats_preprocessibility_rm_fs_max)
+rownames(stats_preprocessibility_rm_fs) <- c('Min', 'Med', 'Max')
+knitr::kable(t(stats_preprocessibility_rm_fs))
+```
+
+If we include only strategies with feature selection, we can observe that the number of ties is greatly diminished.
+
+Once more we can see that it doesn't improve the results, as mostly the number of loses grows.
+
+Another important finding is that addign the feature selection methods more negatively affected the minimal strategy, whereas the medium one benefit the most from it.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(preprocessibility_rm_fs, 'Removal strategy', 'removal strategy')
+```
+
+## Feature Selection Methods Impact
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+preprocessibility_bin_fs_only <- calculate_preprocessibility(all_engines_bin, all_engines_bin_baselines, 'Feature_selection')
+preprocessibility_mcl_fs_only <- calculate_preprocessibility(all_engines_mcl, all_engines_mcl_baselines, 'Feature_selection')
+preprocessibility_reg_fs_only <- calculate_preprocessibility(all_engines_reg, all_engines_reg_baselines, 'Feature_selection')
+preprocessibility_fs_only <- rbind(preprocessibility_bin_fs_only, preprocessibility_mcl_fs_only, preprocessibility_reg_fs_only)
+datatable(preprocessibility_fs_only, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=26, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(preprocessibility_fs_only, 'Feature selection method')
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+stats_preprocessibility_fs_only_BORUTA <- calcualte_stats(preprocessibility_fs_only[preprocessibility_fs_only$grouping == 'Boruta', ])
+stats_preprocessibility_fs_only_MCFS   <- calcualte_stats(preprocessibility_fs_only[preprocessibility_fs_only$grouping == 'MCFS', ])
+stats_preprocessibility_fs_only_MI     <- calcualte_stats(preprocessibility_fs_only[preprocessibility_fs_only$grouping == 'MI', ])
+stats_preprocessibility_fs_only_VI     <- calcualte_stats(preprocessibility_fs_only[preprocessibility_fs_only$grouping == 'VI', ])
+stats_preprocessibility_fs_only_none   <- calcualte_stats(preprocessibility_fs_only[preprocessibility_fs_only$grouping == 'None', ])
+
+stats_preprocessibility_fs_only <- rbind(stats_preprocessibility_fs_only_BORUTA, stats_preprocessibility_fs_only_MCFS, stats_preprocessibility_fs_only_MI,
+                                         stats_preprocessibility_fs_only_VI, stats_preprocessibility_fs_only_none)
+rownames(stats_preprocessibility_fs_only) <- c('Boruta', 'MCFS', 'MI', 'VI', 'None')
+knitr::kable(t(stats_preprocessibility_fs_only))
+```
+
+The comparison of feature selection methods shows us that although most methods seem not worth considering, because of high percentage of loses (MI 45%, VI 41%), or generally low impact (MCFS 76% of ties), the Boruta is an interesting exception.
+
+It achieves simlar wins and loses percentages (22.5% vs 24.5%), and the comparison of positive preprocessibility to negative preprocessibility is the best among all methods (0.008 vs 0.013), beating, even the option without FS (0.006 vs 0.013).
+
+It is unfortunate, that the preprocessing time of Boruta is among the longest ones.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(preprocessibility_fs_only, 'Feature selection method', 'feature selection method')
+```
+
+## Imputation impact
+
+In this case we calculate the results depeding on which imputation method we use.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+all_engines_bin_imp_no_fs <- all_engines_bin[all_engines_bin$Dataset %in% c('breast-w', 'credit-approval', "credit-g-mod", "phoneme-mod", 
+                                                                            "car-mod", "satimage-mod", "elevators-mod", "kin8nm-mod"), ]
+all_engines_bin_imp_no_fs <- all_engines_bin_imp_no_fs[all_engines_bin_imp_no_fs$Feature_selection == 'None', ]
+
+all_engines_mcl_imp_no_fs <- all_engines_mcl[all_engines_mcl$Dataset %in% c('breast-w', 'credit-approval', "credit-g-mod", "phoneme-mod", 
+                                                                            "car-mod", "satimage-mod", "elevators-mod", "kin8nm-mod"), ]
+all_engines_mcl_imp_no_fs <- all_engines_mcl_imp_no_fs[all_engines_mcl_imp_no_fs$Feature_selection == 'None', ]
+
+all_engines_reg_imp_no_fs <- all_engines_reg[all_engines_reg$Dataset %in% c('breast-w', 'credit-approval', "credit-g-mod", "phoneme-mod", 
+                                                                            "car-mod", "satimage-mod", "elevators-mod", "kin8nm-mod"), ]
+all_engines_reg_imp_no_fs <- all_engines_reg_imp_no_fs[all_engines_reg_imp_no_fs$Feature_selection == 'None', ]
+
+all_engines_bin_imp_no_fs <- calculate_preprocessibility(all_engines_bin_imp_no_fs, all_engines_bin_baselines, 'Imputation')
+all_engines_mcl_imp_no_fs <- calculate_preprocessibility(all_engines_mcl_imp_no_fs, all_engines_mcl_baselines, 'Imputation')
+all_engines_reg_imp_no_fs <- calculate_preprocessibility(all_engines_reg_imp_no_fs, all_engines_reg_baselines, 'Imputation')
+preprocessibility_imp_no_fs <- rbind(all_engines_bin_imp_no_fs, all_engines_mcl_imp_no_fs, all_engines_reg_imp_no_fs)
+datatable(preprocessibility_imp_no_fs, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=10, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(preprocessibility_imp_no_fs, 'Imputation method')
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+stats_preprocessibility_imp_no_fs_knn              <- calcualte_stats(preprocessibility_imp_no_fs[preprocessibility_imp_no_fs$grouping == 'KNN', ])
+stats_preprocessibility_imp_no_fs_median_frequency <- calcualte_stats(preprocessibility_imp_no_fs[preprocessibility_imp_no_fs$grouping == 'Median-frequency', ])
+stats_preprocessibility_imp_no_fs_median_other     <- calcualte_stats(preprocessibility_imp_no_fs[preprocessibility_imp_no_fs$grouping == 'Median-other', ])
+stats_preprocessibility_imp_no_fs_mice             <- calcualte_stats(preprocessibility_imp_no_fs[preprocessibility_imp_no_fs$grouping == 'MICE', ])
+
+stats_preprocessibility_imp_no_fs <- rbind(stats_preprocessibility_imp_no_fs_knn, stats_preprocessibility_imp_no_fs_median_frequency,
+                                           stats_preprocessibility_imp_no_fs_median_other, stats_preprocessibility_imp_no_fs_mice)
+rownames(stats_preprocessibility_imp_no_fs) <- c('KNN', 'Median-frequency', 'Median-other', 'MICE')
+knitr::kable(t(stats_preprocessibility_imp_no_fs))
+```
+
+The comparison of imputation methods shows that the KNN is the best option, with the highest percentage of wins (58%) and the lowest percentage of loses (17%). Additionally it yields the best ratio of positive and negative preprocessibility (0.007 vs 0.011).
+
+Quite surprisingly, MICE which is also an advanced imputation algotihm seems to be the worst, and lose to the basic median-something approaches.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(preprocessibility_imp_no_fs, 'Imputation method', 'imputation method')
+```
+
+## Models comparison
+
+In this case we calculate the results depeding on the tree-based mdoels used.
+
+### New function
+
+As this time we always groupd by the Dataset and Engine we have make the following changes to the calcualte preprocessibility function.
+
+```{r}
+calculate_preprocessibility_2 <- function(data, baselines, grouping) {
+  preprocessibility <- data %>% 
+    left_join(baselines, by = c('Dataset', grouping)) %>%
+    rename(Baseline = Max.y, Max = Max.x, Min = Min.x, Task_type = Task_type.x) %>%
+    mutate(Win  = ifelse(Max > Baseline,  1, 0)) %>%
+    mutate(Lose = ifelse(Max < Baseline,  1, 0)) %>%
+    mutate(Tie  = ifelse(Max == Baseline, 1, 0)) %>%
+    group_by(Dataset, Engine) %>%
+    summarise(Minimum = round(min(Max), 4),
+              Maximum = round(max(Max), 4),
+              Wins    = sum(Win),
+              Loses   = sum(Lose),
+              Ties    = sum(Tie),
+              Baseline = round(mean(Baseline), 4),
+              Win   = round(min(max((Wins  / (Wins + Loses + Ties)), 0), 1), 5),
+              Loss  = round(min(max((Loses / (Wins + Loses + Ties)), 0), 1), 5),
+              Tie   = round(min(max((Ties  / (Wins + Loses + Ties)), 0), 1), 5),
+              Postive_preprocessibility  = round(max(Maximum - Baseline, 0), 5),
+              Negative_preprocessibility = round(min(Minimum - Baseline, 0), 5)) %>%
+    select(Dataset, Maximum, Minimum, Baseline, Postive_preprocessibility, Negative_preprocessibility, Wins, Loses, Ties, Win, Loss, Tie, grouping, Engine) %>%
+    left_join(baselines, by = c('Dataset', 'Engine')) %>%
+    select(Dataset, Task_type, Maximum, Minimum, Baseline, Postive_preprocessibility, Negative_preprocessibility, Wins, Loses, Ties, Win, Loss, Tie, Fields, grouping) %>%
+    rename(grouping = Engine)
+  preprocessibility$Dataset <- as.factor(preprocessibility$Dataset)
+
+  return(preprocessibility)
+}
+```
+
+### Data preprartion
+
+We prepare the data for engine analysis.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+tree_engines <- validation_summary_table[validation_summary_table$Engine != 'All', ]
+
+tree_engines_bin           <- tree_engines[tree_engines$Task_type == 'Binary' & tree_engines$Metric == 'accuracy', ]
+tree_engines_mcl           <- tree_engines[tree_engines$Task_type == 'Multiclass' & tree_engines$Metric == 'accuracy', ]
+tree_engines_reg           <- tree_engines[tree_engines$Task_type == 'Regression' & tree_engines$Metric == 'r2', ]
+
+tree_engines_bin_baselines <- tree_engines_bin[which(tree_engines_bin$Removal =='Min' & 
+                                                   tree_engines_bin$Imputation =='Median-other' & 
+                                                   tree_engines_bin$Feature_selection =='None'), ]
+tree_engines_mcl_baselines <- tree_engines_mcl[which(tree_engines_mcl$Removal =='Min' & 
+                                                   tree_engines_mcl$Imputation =='Median-other' & 
+                                                   tree_engines_mcl$Feature_selection =='None'), ]
+tree_engines_reg_baselines <- tree_engines_reg[which(tree_engines_reg$Removal =='Min' & 
+                                                   tree_engines_reg$Imputation =='Median-other' & 
+                                                   tree_engines_reg$Feature_selection =='None'), ]
+
+tree_engines_bin_baselines$Fields  <- tree_engines_bin_baselines$Rows * tree_engines_bin_baselines$Columns
+tree_engines_mcl_baselines$Fields  <- tree_engines_mcl_baselines$Rows * tree_engines_mcl_baselines$Columns
+tree_engines_reg_baselines$Fields  <- tree_engines_reg_baselines$Rows * tree_engines_reg_baselines$Columns
+
+tree_engines_bin_baselines$Dataset <- as.factor(tree_engines_bin_baselines$Dataset)
+tree_engines_bin_baselines$Dataset <- fct_reorder(tree_engines_bin_baselines$Dataset, tree_engines_bin_baselines$Fields)
+
+tree_engines_mcl_baselines$Dataset <- as.factor(tree_engines_mcl_baselines$Dataset)
+tree_engines_mcl_baselines$Dataset <- fct_reorder(tree_engines_mcl_baselines$Dataset, tree_engines_mcl_baselines$Fields)
+
+tree_engines_reg_baselines$Dataset <- as.factor(tree_engines_reg_baselines$Dataset)
+tree_engines_reg_baselines$Dataset <- fct_reorder(tree_engines_reg_baselines$Dataset, tree_engines_reg_baselines$Fields)
+
+tree_engines_baselines <- rbind(tree_engines_bin_baselines, tree_engines_mcl_baselines, tree_engines_reg_baselines)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+tree_engines_bin_preprocessibility <- calculate_preprocessibility_2(tree_engines_bin, tree_engines_bin_baselines, 'Engine')
+tree_engines_mcl_preprocessibility <- calculate_preprocessibility_2(tree_engines_mcl, tree_engines_mcl_baselines, 'Engine')
+tree_engines_reg_preprocessibility <- calculate_preprocessibility_2(tree_engines_reg, tree_engines_reg_baselines, 'Engine')
+tree_engines_preprocessibility <- rbind(tree_engines_bin_preprocessibility, tree_engines_mcl_preprocessibility, tree_engines_reg_preprocessibility)
+datatable(tree_engines_preprocessibility, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=26, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(tree_engines_preprocessibility, 'Tree-based model')
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+stats_tree_preprocessibility_decision_tree <- calcualte_stats(tree_engines_preprocessibility[tree_engines_preprocessibility$grouping == 'Decision tree', ])
+stats_tree_preprocessibility_ranger        <- calcualte_stats(tree_engines_preprocessibility[tree_engines_preprocessibility$grouping == 'Random forest', ])
+stats_tree_preprocessibility_xgboost       <- calcualte_stats(tree_engines_preprocessibility[tree_engines_preprocessibility$grouping == 'XGBoost', ])
+stats_tree_preprocessibility_lightgbm      <- calcualte_stats(tree_engines_preprocessibility[tree_engines_preprocessibility$grouping == 'LightGBM', ])
+stats_tree_preprocessibility_catboost      <- calcualte_stats(tree_engines_preprocessibility[tree_engines_preprocessibility$grouping == 'CatBoost', ])
+
+stats_tree_preprocessibility <- rbind(stats_tree_preprocessibility_decision_tree, stats_tree_preprocessibility_ranger, stats_tree_preprocessibility_xgboost,
+                                      stats_tree_preprocessibility_lightgbm, stats_tree_preprocessibility_catboost)
+rownames(stats_tree_preprocessibility) <- c('Decision tree', 'Random forest', 'XGBoost', 'LightGBM', 'CatBoost')
+knitr::kable(t(stats_tree_preprocessibility))
+```
+
+```{r}
+tree_engines_preprocessibility %>%
+  group_by(grouping) %>%
+  summarise(Maximum = mean(Maximum))
+
+```
+
+The model comnparison is a very interesting one. We can notice that random forest can benefit the most in term of mean positive preprocessiblity value ,yet if also look at its peroformance we will notice that it is the weakest model (0.694).
+
+The second-best option is XGBoost as it has second best performance (0.845), and good positive and negative preprocessibilities (0.01 vs 0.043).
+
+The best one hwoever is the CatBoost, as it achieves the highest scores (0.866), biggest amount of wins (0.22), and also get good positive preprocessibility value (0.01 vs 0.07).
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(tree_engines_preprocessibility, 'Tree-based model', 'tree-based model')
+```
+
+## Models comparison fs only
+
+In this case we calculate the results depeding on the tree-based models used, and focus on the examples where feature seelction was used.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+tree_engines_bin_fs_only <- tree_engines_bin[tree_engines_bin$Feature_selection != 'None', ]
+tree_engines_mcl_fs_only <- tree_engines_mcl[tree_engines_mcl$Feature_selection != 'None', ]
+tree_engines_reg_fs_only <- tree_engines_reg[tree_engines_reg$Feature_selection != 'None', ]
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+tree_engines_bin_fs_only <- calculate_preprocessibility_2(tree_engines_bin_fs_only, tree_engines_bin_baselines, 'Engine')
+tree_engines_mcl_fs_only <- calculate_preprocessibility_2(tree_engines_mcl_fs_only, tree_engines_mcl_baselines, 'Engine')
+tree_engines_reg_fs_only <- calculate_preprocessibility_2(tree_engines_reg_fs_only, tree_engines_reg_baselines, 'Engine')
+tree_preprocessibility_fs_only <- rbind(tree_engines_bin_fs_only, tree_engines_mcl_fs_only, tree_engines_reg_fs_only)
+datatable(tree_preprocessibility_fs_only, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=20, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(tree_preprocessibility_fs_only, 'Tree-based model')
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+stats_tree_preprocessibility_fs_only_decision_tree <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'Decision tree', ])
+stats_tree_preprocessibility_fs_only_ranger        <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'Random forest', ])
+stats_tree_preprocessibility_fs_only_xgboost       <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'XGBoost', ])
+stats_tree_preprocessibility_fs_only_lightgbm      <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'LightGBM', ])
+stats_tree_preprocessibility_fs_only_catboost      <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'CatBoost', ])
+
+stats_tree_preprocessibility_fs_only <- rbind(stats_tree_preprocessibility_fs_only_decision_tree, stats_tree_preprocessibility_fs_only_ranger, stats_tree_preprocessibility_fs_only_xgboost, stats_tree_preprocessibility_fs_only_lightgbm, stats_tree_preprocessibility_fs_only_catboost)
+rownames(stats_tree_preprocessibility_fs_only) <- c('Decision tree', 'Random forest', 'XGBoost', 'LightGBM', 'CatBoost')
+knitr::kable(t(stats_tree_preprocessibility_fs_only))
+```
+
+When we look only on the cases when feature selection is used the results are not so different, although we tend to lose to baselines more often than before.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(tree_preprocessibility_fs_only, 'Tree-based model', 'tree-based model')
+```
+
+## Models comparison no fs
+
+In this case we calculate the results depeding on the tree-based models used, and focus on the examples where feature seelction was not used.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+tree_engines_bin_fs_only           <- tree_engines_bin[tree_engines_bin$Feature_selection == 'None', ]
+tree_engines_mcl_fs_only           <- tree_engines_mcl[tree_engines_mcl$Feature_selection == 'None', ]
+tree_engines_reg_fs_only           <- tree_engines_reg[tree_engines_reg$Feature_selection == 'None', ]
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+tree_engines_bin_fs_only <- calculate_preprocessibility_2(tree_engines_bin_fs_only, tree_engines_bin_baselines, 'Engine')
+tree_engines_mcl_fs_only <- calculate_preprocessibility_2(tree_engines_mcl_fs_only, tree_engines_mcl_baselines, 'Engine')
+tree_engines_reg_fs_only <- calculate_preprocessibility_2(tree_engines_reg_fs_only, tree_engines_reg_baselines, 'Engine')
+tree_preprocessibility_fs_only <- rbind(tree_engines_bin_fs_only, tree_engines_mcl_fs_only, tree_engines_reg_fs_only)
+datatable(tree_preprocessibility_fs_only, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+### Detailed plot
+
+```{r fig.height=20, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(tree_preprocessibility_fs_only, 'Tree-based model')
+```
+
+### Stats
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+stats_tree_preprocessibility_fs_only_decision_tree <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'Decision tree', ])
+stats_tree_preprocessibility_fs_only_ranger        <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'Random forest', ])
+stats_tree_preprocessibility_fs_only_xgboost       <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'XGBoost', ])
+stats_tree_preprocessibility_fs_only_lightgbm      <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'LightGBM', ])
+stats_tree_preprocessibility_fs_only_catboost      <- calcualte_stats(tree_preprocessibility_fs_only[tree_preprocessibility_fs_only$grouping == 'CatBoost', ])
+
+stats_tree_preprocessibility_fs_only <- rbind(stats_tree_preprocessibility_fs_only_decision_tree, stats_tree_preprocessibility_fs_only_ranger, stats_tree_preprocessibility_fs_only_xgboost, stats_tree_preprocessibility_fs_only_lightgbm, stats_tree_preprocessibility_fs_only_catboost)
+rownames(stats_tree_preprocessibility_fs_only) <- c('Decision tree', 'Random forest', 'XGBoost', 'LightGBM', 'CatBoost')
+knitr::kable(t(stats_tree_preprocessibility_fs_only))
+```
+
+If no feature selection is used the number of loses dimisnishes drastivally, and both positivie and negative preprocessibility values get shrinked.
+
+### Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(tree_preprocessibility_fs_only, 'Tree-based model', 'tree-based model')
+```
+
+## Parallel plots
+
+We additionally want to check if something interesting can be seen on the parallel plot, however it doesn't give us any meaningful results.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+tree_engines_bin_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_bin, tree_engines_bin_baselines, 'Engine', 'Imputation')
+tree_engines_mcl_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_mcl, tree_engines_mcl_baselines, 'Engine', 'Imputation')
+tree_engines_reg_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_reg, tree_engines_reg_baselines, 'Engine', 'Imputation')
+tree_preprocessibility_imputation <- rbind(tree_engines_bin_preprocessibility_imputation, tree_engines_mcl_preprocessibility_imputation, tree_engines_reg_preprocessibility_imputation)
+tree_preprocessibility_imputation <- tree_preprocessibility_imputation[rep(c(rep(FALSE, 4), TRUE), 500), ]
+parcoord_1 <- tree_preprocessibility_imputation[, c(1, 6, 7, 15, 16)] %>% pivot_wider(names_from = grouping2, values_from = Postive_preprocessibility)
+parcoord_4 <- tree_preprocessibility_imputation[, c(1, 6, 7, 15, 16)] %>% pivot_wider(names_from = grouping2, values_from = Negative_preprocessibility)
+
+tree_engines_bin_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_bin, tree_engines_bin_baselines, 'Engine', 'Removal')
+tree_engines_mcl_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_mcl, tree_engines_mcl_baselines, 'Engine', 'Removal')
+tree_engines_reg_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_reg, tree_engines_reg_baselines, 'Engine', 'Removal')
+tree_preprocessibility_imputation <- rbind(tree_engines_bin_preprocessibility_imputation, tree_engines_mcl_preprocessibility_imputation, tree_engines_reg_preprocessibility_imputation)
+tree_preprocessibility_imputation <- tree_preprocessibility_imputation[rep(c(rep(FALSE, 4), TRUE), 375), ]
+parcoord_2 <- tree_preprocessibility_imputation[, c(1, 6, 7, 15, 16)] %>% pivot_wider(names_from = grouping2, values_from = Postive_preprocessibility)
+parcoord_5 <- tree_preprocessibility_imputation[, c(1, 6, 7, 15, 16)] %>% pivot_wider(names_from = grouping2, values_from = Negative_preprocessibility)
+
+tree_engines_bin_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_bin, tree_engines_bin_baselines, 'Engine', 'Feature_selection')
+tree_engines_mcl_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_mcl, tree_engines_mcl_baselines, 'Engine', 'Feature_selection')
+tree_engines_reg_preprocessibility_imputation <- calculate_preprocessibility(tree_engines_reg, tree_engines_reg_baselines, 'Engine', 'Feature_selection')
+tree_preprocessibility_imputation <- rbind(tree_engines_bin_preprocessibility_imputation, tree_engines_mcl_preprocessibility_imputation, tree_engines_reg_preprocessibility_imputation)
+tree_preprocessibility_imputation <- tree_preprocessibility_imputation[rep(c(rep(FALSE, 4), TRUE), 625), ]
+parcoord_3 <- tree_preprocessibility_imputation[, c(1, 6, 7, 15, 16)] %>% pivot_wider(names_from = grouping2, values_from = Postive_preprocessibility)
+parcoord_6 <- tree_preprocessibility_imputation[, c(1, 6, 7, 15, 16)] %>% pivot_wider(names_from = grouping2, values_from = Negative_preprocessibility)
+datatable(parcoord_3, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+```{r fig.height=12, fig.width=24, echo=FALSE, warning=FALSE}
+a <- ggparcoord(parcoord_1, columns = c(4:7), groupColumn = 3, scale = "globalminmax", showPoints = TRUE) +
+  labs(title = 'Parallel plot',
+       subtitle = 'for imputation methods',
+       x = 'Imputation method',
+       y = 'Positive preprocessibility',
+       color = 'Tree-based model',
+       fill  = 'Tree-based model') +
+  ylim(0, 0.255) +
+  paper_theme() +
+  scale_color_manual(values = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = "none")
+
+b <- ggparcoord(parcoord_2, columns = c(4:6), groupColumn = 3, scale = "globalminmax", showPoints = TRUE) +
+  labs(title = 'Parallel plot',
+       subtitle = 'for removal strategies',
+       x = 'Removal strategy',
+       y = 'Positive preprocessibility',
+       color = 'Tree-based model',
+       fill  = 'Tree-based model') +
+  ylim(0, 0.255) +
+  paper_theme() +
+  scale_color_manual(values = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = "none")
+
+c <- ggparcoord(parcoord_3, columns = c(4:8), groupColumn = 3, scale = "globalminmax", showPoints = TRUE) +
+  labs(title = 'Parallel plot',
+       subtitle = 'for feature selection methods',
+       x = 'Feature selection method',
+       y = 'Positive preprocessibility',
+       color = 'Tree-based model',
+       fill  = 'Tree-based model') +
+  ylim(0, 0.255) +
+  paper_theme() +
+  scale_color_manual(values = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = "none")
+
+a1 <- ggparcoord(parcoord_4, columns = c(4:7), groupColumn = 3, scale = "globalminmax", showPoints = TRUE) +
+  labs(title = 'Parallel plot',
+       subtitle = 'for imputation methods',
+       x = 'Imputation method',
+       y = 'Negative preprocessibility',
+       color = 'Tree-based model',
+       fill  = 'Tree-based model') +
+  ylim(-1, 0) +
+  paper_theme() +
+  scale_color_manual(values = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  theme(plot.title = element_blank(),
+        plot.subtitle = element_blank(),
+        legend.position = "none")
+
+b1 <- ggparcoord(parcoord_5, columns = c(4:6), groupColumn = 3, scale = "globalminmax", showPoints = TRUE) +
+  labs(title = 'Parallel plot',
+       subtitle = 'for removal strategies',
+       x = 'Removal strategy',
+       y = 'Negative preprocessibility',
+       color = 'Tree-based model',
+       fill  = 'Tree-based model') +
+  ylim(-1, 0) +
+  paper_theme() +
+  scale_color_manual(values = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  theme(plot.title = element_blank(),
+        plot.subtitle = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        legend.position = "bottom")
+
+c1 <- ggparcoord(parcoord_6, columns = c(4:8), groupColumn = 3, scale = "globalminmax", showPoints = TRUE) +
+  labs(title = 'Parallel plot',
+       subtitle = 'for feature selection methods',
+       x = 'Feature selection method',
+       y = 'Negative preprocessibility',
+       color = 'Tree-based model',
+       fill  = 'Tree-based model') +
+  ylim(-1, 0) +
+  paper_theme() +
+  scale_color_manual(values = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  scale_fill_manual(values  = c("#74533d", "#7C843C", "#afc968", "#B1805B", '#D6E29C')) +
+  theme(plot.title = element_blank(),
+        plot.subtitle = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        legend.position = "none")
+
+(a | b | c) / (a1 | b1 | c1)
+```
+
+# Summary
+
+Now, let's try to summarise all information we have gathered so far:
+
+5.3 - All models
+
+-   Preprocessing strategies in most cases (56,5%) doesn't have impact on tree-based models performance,
+-   It doesn't howver mean that they don't need preprocessing as in 15.5% of cases it has a positive impact, and in 28% it is negative,
+-   We should notice that average improvements are much smaller than degradations (preprocessibility: 0.01 vs 0.05).
+
+5.4 - Feature selection
+
+-   Feature selection yields the biggest impact on tree-based models performance, as the comaprison of ties percentage with FS is 48.5%, whereas without 70.5%,
+-   Unfortunately, it is mostly negative impact, as wins percentage of grows from 12% to 17%, but the degradations from 17% to 34%,
+-   Furthermore the mean positive preprocessibility grows from 0.006 to 0.009, but the negative one grows from 0.013 to 0.47,
+-   It shows that feature selection is powerful tool, but it should be used with caution.
+
+5.5 - Removal - all models
+
+-   Removal strategies have the smallest impact on tree-based models performance, as the comparison of ties percentage for min, med, and max strategies are 63%, 61%, and 45% respectively,
+-   It is also the most balanced strategy, as the postive preprocessibilities are 0.008, 0.008, and 0.007, and the negative ones are 0.04, 0.036, and 0.039,
+-   We can also notice, that trees deal pretty well with highly correlated columns, as the max strategy has the highest percentage of degradations of 38%, when other approaches stay at 24%, and 23%.
+
+5.6- Removal - no feature selection
+
+-   Without concerning FS, we get much more ties than before (85%, 71%, and 55%), which shows that removal strategies are the most neutral approach,
+-   Once more max strategy seems to be the worst, as it looses much more often than the others (5%, 15%, 32%), and wins similarly (10%, 13%, 13%),
+-   We should probably use min or med approaches, as they show positive impact on final results (0.005 vs 0.002, 0.005, vs 0.003, 0.005 vs 0.011).
+
+5.7- Removal - feature selection only
+
+-   FS methods, once more prove to lower the performance, as each removal strategy looses more often than wins (14.5% vs 31%, 19% vs 30%, 19.5% vs 41%)
+-   However, this time medium approach benefits the most from feature selection, thus it should be used when we also include fs.
+
+5.8 - Feature selection methods impact
+
+-   Different FS methods contribute to the performance differently,
+-   Two worst methods, are MI, and VI as they have much more losses than wins (14.5% vs 35%, 22.5% vs 41%),
+-   MCFS seems to balance the results even more than lack of fs, as the number of ties is higher (76%, 70.5%), and the preprocessibilities ratios are smaller (0.001 vs 0.01, 0.006 vs 0.13), however it is still a rather negative outcome,
+-   The best method, beating the lack of FS is Boruta, as it has higher positive preprocessibility (0.008 vs 0.013). It also wins the almost the same amount of times as loses (22.5% vs 24.5%).
+
+5.9 - Imputation impact
+
+-   The KNN algorithm is the strongest imputation method as it wins in majority of cases (58% vs 16.5%). Furthermore it has the highest postitive impact (0.017), and the lowest negative one (0.011),
+-   The MICE algorithm on the other hand is the worst, as it has lows winratio, and the highest number of loses (29% vs 58%),
+-   The median approaches are similar, and relatively neutral (29% vs 29%, 27.5% vs 32.5%).
+
+5.10 - Models comaprison
+
+-   Random forest can benefit the most in term of mean positive preprocessiblity value ,yet if also look at its peroformance we will notice that it is the weakest model (0.694).
+-   The second-best option is XGBoost as it has second best performance (0.845), and good positive and negative preprocessibilities (0.01 vs 0.043).
+-   The best one is the CatBoost, as it achieves the highest scores (0.866), biggest amount of wins (0.22), and also get good positive preprocessibility value (0.01 vs 0.07).
+-   The other models does not benefit from preprocessing, and loose more often.
+
+5.11 and 5.12 - nothing new
+
+Thus, theoretically, if we want to get the best possible results, we should choose lack of preprocessing or Boruta, random forest, XGBoost, or CatBoost models, medium data preprocessing, and KNN as an imputation method
+
+# Experimental validation
+
+Eventually we want to validate our findings thus we check if lack of preprocessing or Boruta, random forest, XGBoost, or CatBoost models, medium data preprocessing, and knn as an imputation method will lead us to the best improvements possible.
+
+# Data preparation
+
+```{r}
+tree_engines_top <- validation_summary_table[validation_summary_table$Engine %in% c('CatBoost', 'XGBoost', 'Random forest') &
+                                           validation_summary_table$Imputation %in% c('KNN') &
+                                           validation_summary_table$Feature_selection %in% c('Boruta', 'None') &
+                                           validation_summary_table$Removal %in% c('Med'), ]
+
+tree_engines_top_bin           <- tree_engines_top[tree_engines_top$Task_type == 'Binary' & tree_engines_top$Metric == 'accuracy', ]
+tree_engines_top_mcl           <- tree_engines_top[tree_engines_top$Task_type == 'Multiclass' & tree_engines_top$Metric == 'accuracy', ]
+tree_engines_top_reg           <- tree_engines_top[tree_engines_top$Task_type == 'Regression' & tree_engines_top$Metric == 'r2', ]
+
+
+
+tree_engines_top_baselines <- validation_summary_table[validation_summary_table$Engine %in% c('CatBoost', 'XGBoost', 'Random forest') &
+                                                         validation_summary_table$Removal =='Min' & 
+                                                         validation_summary_table$Imputation =='Median-other' & 
+                                                         validation_summary_table$Feature_selection =='None', ]
+
+tree_engines_top_bin_baselines <- tree_engines_top_baselines[tree_engines_top_baselines$Task_type == 'Binary' & tree_engines_top_baselines$Metric == 'accuracy', ]
+tree_engines_top_mcl_baselines <- tree_engines_top_baselines[tree_engines_top_baselines$Task_type == 'Multiclass' & tree_engines_top_baselines$Metric == 'accuracy', ]
+tree_engines_top_reg_baselines <- tree_engines_top_baselines[tree_engines_top_baselines$Task_type == 'Regression' & tree_engines_top_baselines$Metric == 'r2', ]
+
+tree_engines_top_bin_baselines$Fields  <- tree_engines_top_bin_baselines$Rows * tree_engines_top_bin_baselines$Columns
+tree_engines_top_mcl_baselines$Fields  <- tree_engines_top_mcl_baselines$Rows * tree_engines_top_mcl_baselines$Columns
+tree_engines_top_reg_baselines$Fields  <- tree_engines_top_reg_baselines$Rows * tree_engines_top_reg_baselines$Columns
+
+tree_engines_top_bin_baselines$Dataset <- as.factor(tree_engines_top_bin_baselines$Dataset)
+tree_engines_top_bin_baselines$Dataset <- fct_reorder(tree_engines_top_bin_baselines$Dataset, tree_engines_top_bin_baselines$Fields)
+
+tree_engines_top_mcl_baselines$Dataset <- as.factor(tree_engines_top_mcl_baselines$Dataset)
+tree_engines_top_mcl_baselines$Dataset <- fct_reorder(tree_engines_top_mcl_baselines$Dataset, tree_engines_top_mcl_baselines$Fields)
+
+tree_engines_top_reg_baselines$Dataset <- as.factor(tree_engines_top_reg_baselines$Dataset)
+tree_engines_top_reg_baselines$Dataset <- fct_reorder(tree_engines_top_reg_baselines$Dataset, tree_engines_top_reg_baselines$Fields)
+
+tree_engines_top_baselines <- rbind(tree_engines_top_bin_baselines, tree_engines_top_mcl_baselines, tree_engines_top_reg_baselines)
+
+tree_engines_top_bin_preprocessibility <- calculate_preprocessibility_2(tree_engines_top_bin, tree_engines_top_bin_baselines, 'Engine')
+tree_engines_top_mcl_preprocessibility <- calculate_preprocessibility_2(tree_engines_top_mcl, tree_engines_top_mcl_baselines, 'Engine')
+tree_engines_top_reg_preprocessibility <- calculate_preprocessibility_2(tree_engines_top_reg, tree_engines_top_reg_baselines, 'Engine')
+tree_engines_top_preprocessibility <- rbind(tree_engines_top_bin_preprocessibility, tree_engines_top_mcl_preprocessibility, tree_engines_top_reg_preprocessibility)
+datatable(tree_engines_top_preprocessibility, width = '100%', options = list(scrollX = TRUE, paging = TRUE, pageLength = 5))
+```
+
+## Detailed plot
+
+```{r fig.height=18, fig.width=20, echo=FALSE, warning=FALSE}
+detailed_plot(tree_engines_top_preprocessibility, 'Tree-based model')
+```
+
+## Stats
+
+```{r}
+stats_tree_engines_top_preprocessibility_1 <- calcualte_stats(tree_engines_top_preprocessibility, FALSE)
+stats_tree_engines_top_preprocessibility_2 <- calcualte_stats(tree_engines_top_preprocessibility[tree_engines_top_preprocessibility$grouping == 'CatBoost', ], FALSE)
+stats_tree_engines_top_preprocessibility_3 <- calcualte_stats(tree_engines_top_preprocessibility[tree_engines_top_preprocessibility$grouping == 'XGBoost', ], FALSE)
+stats_tree_engines_top_preprocessibility_4 <- calcualte_stats(tree_engines_top_preprocessibility[tree_engines_top_preprocessibility$grouping == 'Random forest', ], FALSE)
+
+stats_tree_engines_top_preprocessibility <- rbind(stats_tree_engines_top_preprocessibility_1, stats_tree_engines_top_preprocessibility_2, stats_tree_engines_top_preprocessibility_3, stats_tree_engines_top_preprocessibility_4)
+rownames(stats_tree_engines_top_preprocessibility) <- c('All', 'CatBoost', 'XGBoost', 'Random forest')
+knitr::kable(t(stats_tree_engines_top_preprocessibility))
+```
+
+The results show us that the models after such filtering win more often than loose, their positive preprocessibilties are a few times higher than the negative ones. It proves that our guide for good preprocessing strategy works.
+
+```{r}
+tree_engines_top_preprocessibility %>%
+  group_by(grouping) %>%
+  summarise(Maximum = mean(Maximum))
+```
+
+## Aggregated plot
+
+```{r fig.height=8, fig.width=18, echo=FALSE, warning=FALSE}
+aggregated_plot(tree_engines_top_preprocessibility, 'Tree-based model', 'tree-based model')
+```
