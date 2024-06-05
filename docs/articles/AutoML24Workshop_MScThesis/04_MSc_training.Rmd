@@ -1,0 +1,324 @@
+---
+title: "Masters Thesis forester: Model training"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    code_folding: hide
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Downloads
+
+The necessary downloads required for the forester package to work properly, if downloaded, the user can skip this part.
+
+```{r eval = FALSE}
+install.packages("devtools")
+devtools::install_github("ModelOriented/forester")
+devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')
+devtools::install_github('ricardo-bion/ggradar', dependencies = TRUE)
+install.packages('tinytex')
+install.packages('RhpcBLASctl')
+tinytex::install_tinytex()
+```
+
+# Imports
+
+Importing the necessary libraries.
+
+```{r warning=FALSE, message=FALSE}
+library(forester)
+```
+
+```{r}
+setwd('/net/ascratch/people/plghubertruczynski/forester')
+getwd()
+```
+
+
+# Import of outcomes
+
+At this step we import the outcomes obtained by the `ablation_study_preprocessing` .
+
+```{r}
+files <- list.files('MSc_preprocessing_data', pattern = 'RData')
+data  <- list()
+for (i in 1:length(files)) {
+  data[[i]] <- readRDS(paste0('MSc_preprocessing_data/', files[i]))
+}
+```
+
+# Training
+
+## Parameters preparation
+
+We copy the parameters vectors from the `ablation_study_preprocessing` to use them for naming new outcomes.
+
+```{r}
+imp_method <- c('median-other',     'median-other',     'median-other',                     # RM
+                'median-frequency', 'knn',              'mice',                             # Imp
+                'median-other',     'median-other',     'median-other',     'median-other', # FS
+                'median-frequency', 'knn',              'mice',                             # RM + Imp 
+                'median-frequency', 'knn',              'mice',                             # RM + Imp 
+                'median-other',     'median-other',     'median-other',     'median-other', # RM + FS
+                'median-other',     'median-other',     'median-other',     'median-other', # RM + FS
+                'median-frequency', 'knn',              'mice',                             # Imp + FS 
+                'median-frequency', 'knn',              'mice',                             # Imp + FS 
+                'median-frequency',  'knn',             'median-frequency', 'knn',          # RM + Imp + FS 
+                'median-frequency',  'knn',             'median-frequency', 'knn')          # RM + Imp + FS
+
+fs_method <- c('none',   'none',   'none',             # RM
+               'none',   'none',   'none',             # Imp
+               'VI',     'MCFS',   'MI',     'BORUTA', # FS
+               'none',   'none',   'none',   'none',   # RM + Imp 
+               'none',   'none',   'none',   'none',   # RM + Imp 
+               'VI',     'MCFS',   'MI',     'BORUTA', # RM + FS
+               'VI',     'MCFS',   'MI',     'BORUTA', # RM + FS
+               'MI',     'MI',     'MI',               # Imp + FS 
+               'BORUTA', 'BORUTA', 'BORUTA',           # Imp + FS
+               'MI',     'MI',     'BORUTA', 'BORUTA', # RM + Imp + FS
+               'MI',     'MI',     'BORUTA', 'BORUTA') # RM + Imp + FS
+
+rmv_names <- c('removal_min', 'removal_med', 'removal_max',                # RM
+               'removal_min', 'removal_min', 'removal_min',                # Imp
+               'removal_min', 'removal_min', 'removal_min', 'removal_min', # FS
+               'removal_med', 'removal_med', 'removal_med',                # RM + Imp 
+               'removal_max', 'removal_max', 'removal_max',                # RM + Imp
+               'removal_med', 'removal_med', 'removal_med', 'removal_med', # RM + FS
+               'removal_max', 'removal_max', 'removal_max', 'removal_max', # RM + FS
+               'removal_min', 'removal_min', 'removal_min',                # Imp + FS 
+               'removal_min', 'removal_min', 'removal_min',                # Imp + FS 
+               'removal_med', 'removal_med', 'removal_med', 'removal_med', # RM + Imp + FS 
+               'removal_max', 'removal_max', 'removal_max', 'removal_max') # RM + Imp + FS 
+```
+
+## Training function for a single dataset
+
+This function performs a training for a single major dataset like `banknote-authentication` , so it results in training 39 models 1 per each preprocessed dataset. Function parameters are similar to the function conducting the preprocessing in `ablation_study_preprocessing` script, and it follows the same saving pattern.
+
+```{r}
+single_dataset_training <- function(data, y, imp_method, fs_method, rmv_names, dataset_name, task = 'binary', verbose = 'part') {
+  list_times  <- c()
+  names_times <- c()
+  out_data    <- list()
+  
+  if (verbose == 'part') {
+    text_verbose <- TRUE
+    exp_verbose  <- FALSE
+  } else if (verbose == 'all') {
+    text_verbose <- TRUE
+    exp_verbose  <- TRUE
+  } else if (verbose == 'none') {
+    text_verbose <- FALSE
+    exp_verbose  <- FALSE
+  }
+  
+  # Create directory for the training results of the ablation study, if it exists
+  # nothing happens.
+  dir.create('MSc_results', showWarnings = FALSE)
+  
+  # Create subdirectories for separate tasks, and attempt to read the lists of
+  # durations spent on the trainig. If error araises it means we have no proper
+  # files, thus we create them from scratch.
+  if (task == 'binary') {
+    dir.create(paste0('MSc_results/binary_', dataset_name), showWarnings = FALSE)
+    tryCatch({
+      suppressWarnings(list_times  <- readRDS(paste0(getwd(), '/MSc_results/binary_', dataset_name, '/list_times.RData')))
+      suppressWarnings(names_times <- readRDS(paste0(getwd(), '/MSc_results/binary_', dataset_name, '/names_times.RData')))
+      print('Loaded times list.')
+    }, error = function(cond) {
+      print('No times list.')
+    })
+  } else if (task == 'regression') {
+    dir.create(paste0('MSc_results/regression_', dataset_name), showWarnings = FALSE)
+    tryCatch({
+      suppressWarnings(list_times  <- readRDS(paste0(getwd(), '/MSc_results/regression_', dataset_name, '/list_times.RData')))
+      suppressWarnings(names_times <- readRDS(paste0(getwd(), '/MSc_results/regression_', dataset_name, '/names_times.RData')))
+      print('Loaded times list.')
+    }, error = function(cond) {
+      print('No times list.')
+    })
+  } else if (task == 'multiclass') {
+    dir.create(paste0('MSc_results/multiclass_', dataset_name), showWarnings = FALSE)
+    tryCatch({
+      suppressWarnings(list_times  <- readRDS(paste0(getwd(), '/MSc_results/multiclass_', dataset_name, '/list_times.RData')))
+      suppressWarnings(names_times <- readRDS(paste0(getwd(), '/MSc_results/multiclass_', dataset_name, '/names_times.RData')))
+      print('Loaded times list.')
+    }, error = function(cond) {
+      print('No times list.')
+    })
+  }
+  # Iterate through differently prepared datsets and train the forester on them.
+  for (i in 1:38) {
+    verbose_cat('\n Iteration:', i, 'Removal:', rmv_names[i], 'Imputation:', 
+                imp_method[i], 'Feature Selection:', fs_method[i], '\n', verbose = text_verbose)
+    
+    # We train new models only if we don't have an outcome for provided dataset.
+    if (!file.exists(paste0('MSc_results/binary_', dataset_name, '/', i, '.RData')) &&
+        !file.exists(paste0('MSc_results/regression_', dataset_name, '/', i,  '.RData')) &&
+        !file.exists(paste0('MSc_results/multiclass_', dataset_name, '/', i,  '.RData'))) {
+        # Calculate start end stop times for each training.
+        start          <- as.numeric(Sys.time())
+        names_times[i] <- paste0('Training: ', dataset_name, ' Removal: ', rmv_names[i], 
+                                 ' Imputation: ', imp_method[i], ' Feature Selection: ', fs_method[i])
+        script_wd      <- getwd()
+        outcomes <- train(data                 = data$prep_data[[i]]$data, 
+                          y                    = y,
+                          engine               = c('ranger', 'xgboost', 'decision_tree', 'lightgbm', 'catboost'),
+                          verbose              = exp_verbose,
+                          check_correlation    = FALSE,
+                          train_test_split     = c(0.6, 0.2, 0.2),
+                          split_seed           = 123,
+                          bayes_iter           = 0,
+                          random_evals         = 20,
+                          parallel             = FALSE, 
+                          custom_preprocessing = data$prep_data[[i]])
+
+        setwd(script_wd)
+        stop          <- as.numeric(Sys.time())
+        list_times[i] <- round(stop - start, 1)
+        
+        # Save new outcomes as a new file and re-save both list_times and names_times.
+        if (task == 'binary') {
+          saveRDS(outcomes,    paste0(getwd(), '/MSc_results/binary_', dataset_name, '/', i, '.RData'))
+          saveRDS(list_times,  paste0(getwd(), '/MSc_results/binary_', dataset_name, '/list_times.RData'))
+          saveRDS(names_times, paste0(getwd(), '/MSc_results/binary_', dataset_name, '/names_times.RData'))
+        } else if (task == 'regression'){
+          saveRDS(outcomes,    paste0(getwd(), '/MSc_results/regression_', dataset_name, '/', i, '.RData'))
+          saveRDS(list_times,  paste0(getwd(), '/MSc_results/regression_', dataset_name, '/list_times.RData'))
+          saveRDS(names_times, paste0(getwd(), '/MSc_results/regression_', dataset_name, '/names_times.RData'))
+        } else if (task == 'multiclass') {
+          saveRDS(outcomes,    paste0(getwd(), '/MSc_results/multiclass_', dataset_name, '/', i, '.RData'))
+          saveRDS(list_times,  paste0(getwd(), '/MSc_results/multiclass_', dataset_name, '/list_times.RData'))
+          saveRDS(names_times, paste0(getwd(), '/MSc_results/multiclass_', dataset_name, '/names_times.RData'))
+        }
+    }
+  }
+}
+
+```
+
+# All datasets training
+
+In this section we present the function conducting multiple training for different datasets.
+
+## Parameters preparation
+
+Firstly we prepare lists of additional parameters describing the datasets.
+
+```{r}
+targets_binary     <- c('Class', 'Class', 'Class', 'class', 'class', 'class', 'class', 'class', 'Class', 'Class')
+targets_regression <- c('y', 'rej', 'Goal', 'Goal', 'y', 'y', 'y')
+targets_multiclass <- c('class', 'class', 'class', 'class', 'class', 'class', 'class', 'quality')
+
+names_binary       <- c('banknote-authentication', 'blood-transfusion-service-center',
+                        'breast-w', 'credit-approval', 'credit-g-mod', 'credit-g', 'diabetes',  
+                        'kr-vs-kp', 'phoneme-mod', 'phoneme')
+names_regression   <- c('2dplanes', 'bank32nh', 'elevators-mod', 'elevators', 'kin8nm-mod', 'kin8nm',
+                       'Mercedes_Benz_Greener_Manufacturing')
+names_multiclass   <- c("balance-scale", "car-mod", "car", "dna", "mfeat-karhunen", "satimage-mod", "satimage", 'wine_quality')
+```
+
+## Multiple training
+
+The function is similar to the previous one, and it helps with executing the preprocessing of multiple datasets at once.
+
+```{r}
+multiple_training <- function(data, targets, imp_method, fs_method, rmv_names, dataset_names, task = 'binary', verbose = 'part') {
+  
+  if (verbose == 'part') {
+    text_verbose <- TRUE
+  } else if (verbose == 'all') {
+    text_verbose <- TRUE
+  } else if (verbose == 'none') {
+    text_verbose <- FALSE
+  }
+  
+  for (i in 1:length(data)) {
+    if (!file.exists(paste0('MSc_results/binary_', dataset_names[i], '.RData')) &&
+        !file.exists(paste0('MSc_results/regression_', dataset_names[i], '.RData')) &&
+        !file.exists(paste0('MSc_results/multiclass_', dataset_names[i],  '.RData'))) {
+      
+      verbose_cat('The results file for the', i, 'dataset, called', dataset_names[i], 
+                  'does not exist, proceeding with training.\n', verbose = text_verbose)
+      
+      single_dataset_training(data         = data[[i]], 
+                              y            = targets[i], 
+                              imp_method   = imp_method, 
+                              fs_method    = fs_method, 
+                              rmv_names    = rmv_names, 
+                              dataset_name = dataset_names[i], 
+                              task         = task,
+                              verbose      = verbose)
+    } else {
+      verbose_cat('The results file for the', i, 'dataset, called', dataset_names[i], 
+                  'exists, skipping the training.\n', verbose = text_verbose)
+    }
+  }
+}
+```
+
+# Training execution
+
+The code executing the training for both binary classification and regression tasks.
+
+## Binary
+
+```{r eval = FALSE}
+multiple_training(data          = data[1:10], 
+                  targets       = targets_binary, 
+                  imp_method    = imp_method, 
+                  fs_method     = fs_method, 
+                  rmv_names     = rmv_names, 
+                  dataset_names = names_binary,
+                  task          = 'binary', 
+                  verbose       = 'part')
+```
+## Multiclass
+
+```{r eval = FALSE}
+multiple_training(data          = data[11:18],
+                  targets       = targets_multiclass,
+                  imp_method    = imp_method, 
+                  fs_method     = fs_method, 
+                  rmv_names     = rmv_names, 
+                  dataset_names = names_multiclass,
+                  task          = 'multiclass',
+                  verbose       = 'part')
+```
+
+## Regression
+
+```{r eval = FALSE}
+multiple_training(data          = data[19:25],
+                  targets       = targets_regression,
+                  imp_method    = imp_method, 
+                  fs_method     = fs_method, 
+                  rmv_names     = rmv_names, 
+                  dataset_names = names_regression,
+                  task          = 'regression',
+                  verbose       = 'part')
+```
+

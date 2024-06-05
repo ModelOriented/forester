@@ -1,0 +1,119 @@
+---
+title: "MSc multiclass datasets selection.Rmd"
+author: "Hubert Ruczyński"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    theme: lumen
+    toc_depth: 3
+    number_sections: yes
+    code_folding: hide
+    latex_engine: xelatex
+---
+
+```{css, echo=FALSE}
+body .main-container {
+  max-width: 1820px !important;
+  width: 1820px !important;
+}
+body {
+  max-width: 1820px !important;
+  width: 1820px !important;
+  font-family: Helvetica !important;
+  font-size: 16pt !important;
+}
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt !important;
+}
+```
+
+# Imports
+
+We import the forester package to use the check_data function.
+
+```{r message=FALSE, warning=FALSE}
+library(forester)
+```
+
+# Loading data
+
+We load the data from the RData files.
+
+```{r}
+CC18 <- readRDS("CC18.RData")
+regression <- readRDS("regression_bench.RData")
+```
+
+# Multiclass tasks selection
+
+At first we check which CC18 datasets are multiclass, as the benhcmark cosnists of both bianry and multilcass classification tasks.
+
+```{r}
+multiclass_indexes <-c()
+for (i in 1:length(CC18)) {
+  if (length(levels(CC18[[i]]$class)) > 2) {
+    multiclass_indexes <- c(multiclass_indexes, i)
+  }
+}
+multiclass_indexes
+multiclass_CC18 <- CC18[multiclass_indexes]
+```
+
+# Selecting a subset of tasks
+
+Later, we analyse the sizes of the multiclass datasets, and ensure that we choose the representants with different characteristics, and reasonable sizes (not too big or too small).
+
+```{r}
+for (i in 1:length(multiclass_CC18)) {
+  cat('Dataset Index:', i, '\n  Name:', names(multiclass_CC18)[i], '\n  Dimensionality:', dim(multiclass_CC18[[i]]), '\n')
+}
+```
+
+Eventually we end up with the following selection of datasets:
+
+```{r}
+small_idx <- c(2, 3, 4, 5, 7, 10, 15, 16, 17, 21)
+multiclass_CC18_small <- multiclass_CC18[small_idx]
+multiclass_CC18 <- multiclass_CC18_small[c(1, 4, 6, 7, 10)]
+for (i in 1:length(multiclass_CC18)) {
+  cat('Dataset Index:', i, '\n  Name:', names(multiclass_CC18)[i], '\n  Dimensionality:', dim(multiclass_CC18[[i]]), '\n')
+}
+```
+
+# Adding wine_quality task
+
+However, as a mistake, one of the regression datasets called `wine_quality` is actually a multiclass task, thus we also add it here
+
+```{r}
+multiclass_CC18[[6]] <- regression[[2]]
+names(multiclass_CC18)[6] <- "wine_quality"
+for (i in 1:length(multiclass_CC18)) {
+  cat('Dataset Index:', i, '\n  Name:', names(multiclass_CC18)[i], '\n  Dimensionality:', dim(multiclass_CC18[[i]]), '\n')
+}
+```
+
+# Data check
+
+Additionally, we calculate the foresters data check for all tasks.
+
+```{r warning=FALSE}
+for (i in 1:length(multiclass_CC18)) {
+  cat('Dataset Index:', i, '\n  Name:', names(multiclass_CC18)[i], '\n  Dimensionality:', dim(multiclass_CC18[[i]]), '\n\n')
+  if (i != 6) {
+    check_data(multiclass_CC18[[i]], 'class')
+  } else {
+    check_data(multiclass_CC18[[i]], 'quality')
+  }
+}
+```
+
+
+# Saving the outcomes
+
+```{r}
+saveRDS(multiclass_CC18, "multiclass_CC18.RData")
+```
+
