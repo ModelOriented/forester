@@ -1,6 +1,6 @@
 # Description
 
-This folder contains the source codes, initial datasets, and aggregated results of @HubertR21 Master's Thesis named 'The impact of data preprocessing on the quality of tree-based models with forester package', which are also the results of poster, and paper called 'Do tree-based models need data preprocessing?'. The experiments were conducted with forester in version 1.6.1.
+This folder contains the source codes, initial datasets, and aggregated results of [@HuberR21](https://github.com/HubertR21) Master's Thesis named 'The impact of data preprocessing on the quality of tree-based models with forester package', which are also the results of poster, and paper called 'Do tree-based models need data preprocessing?'. The experiments were conducted with forester in version 1.6.1.
 
 # Structure
 
